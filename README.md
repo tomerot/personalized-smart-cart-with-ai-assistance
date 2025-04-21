@@ -1,1 +1,1 @@
-# Smart-Cart
+# Personalized Smart Cart with AI Assistance
