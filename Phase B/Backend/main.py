@@ -4,6 +4,7 @@ from beanie import init_beanie
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import db, client
+from models import CartSession, OTP, Product, Purchase_history, ShoppingList, User
 
 
 @asynccontextmanager
@@ -18,7 +19,12 @@ async def lifespan(app: FastAPI):
     await init_beanie(
         database=db,
         document_models=[
-            # HERE MODELS
+            CartSession,
+            OTP,
+            Product,
+            Purchase_history,
+            ShoppingList,
+            User,
         ],
     )
     print("✅ Beanie initialized with all models")
