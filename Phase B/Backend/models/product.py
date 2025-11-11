@@ -15,6 +15,7 @@ class NutritionalInfo(BaseModel):
 class Product(Document):
     barcode: str = Field(..., unique=True, index=True)
     name: str
+    image_url: str = Field(default="https://via.placeholder.com/150")
     company: str
     category: str = Field(
         ..., index=True, description="Detailed category ('in small', not 'in big')"
