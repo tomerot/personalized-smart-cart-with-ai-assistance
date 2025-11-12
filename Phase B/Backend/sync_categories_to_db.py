@@ -66,10 +66,7 @@ async def sync_categories():
                 print(f"[OK] {category_name} (letter: {letter}) -> ({x}, {y})")
         else:
             # Create new category
-            new_category = Category(
-                name=category_name,
-                location={"x": x, "y": y}
-            )
+            new_category = Category(name=category_name, location={"x": x, "y": y})
             await new_category.insert()
             print(f"[CREATED] {category_name} (letter: {letter}) -> ({x}, {y})")
             created += 1
