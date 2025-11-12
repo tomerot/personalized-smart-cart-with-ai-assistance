@@ -102,6 +102,7 @@ async def get_forgotten_items(phone: str, cart_items: List[Item]) -> List[Dict[s
                         "company": product.company,
                         "category": product.category,
                         "price": product.price,
+                        "size": product.size,
                         "total_purchased": item.quantity,  # How many times bought
                     })
 

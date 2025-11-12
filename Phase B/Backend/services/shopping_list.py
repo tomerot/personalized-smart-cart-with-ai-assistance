@@ -168,6 +168,7 @@ async def get_shopping_list_with_products(phone: str) -> Dict[str, Any]:
                         "company": product.company,
                         "category": product.category,
                         "price": product.price,
+                        "size": product.size,
                         "allergens": product.allergens,
                         "dietary_tags": product.dietary_tags,
                         "nutritional_info": {

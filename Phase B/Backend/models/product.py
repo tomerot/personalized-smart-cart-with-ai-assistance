@@ -21,6 +21,7 @@ class Product(Document):
         ..., index=True, description="Detailed category ('in small', not 'in big')"
     )
     price: float = Field(..., gt=0)
+    size: Optional[str] = None
     ingredients: List[str] = Field(default_factory=list)
     allergens: List[str] = Field(default_factory=list)
     dietary_tags: List[str] = Field(default_factory=list)

@@ -199,6 +199,7 @@ async def find_alternative_products(barcode: str, phone: str) -> Dict[str, Any]:
                         "company": alt_product.company,
                         "price": alt_product.price,
                         "category": alt_product.category,
+                        "size": alt_product.size,
                         "dietary_tags": alt_product.dietary_tags,
                         "allergens": alt_product.allergens,
                     }

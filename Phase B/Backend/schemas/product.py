@@ -21,6 +21,7 @@ class ProductResponse(BaseModel):
     company: str
     category: str
     price: float = Field(..., gt=0)
+    size: Optional[str] = None
     ingredients: List[str] = []
     allergens: List[str] = []
     dietary_tags: List[str] = []
@@ -67,6 +68,7 @@ class AlternativeProductInfo(BaseModel):
     company: str
     price: float
     category: str
+    size: Optional[str] = None
     dietary_tags: List[str]
     allergens: List[str]
 
