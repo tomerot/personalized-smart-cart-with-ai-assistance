@@ -13,6 +13,7 @@ from .product import (
 )
 from .user import UserResponse, UpdateAllergiesRequest, UpdateDietaryNeedsRequest
 from .purchase_history import (
+    PurchaseItem,
     SavePurchaseRequest,
     PurchaseHistoryResponse,
     CheckForgottenItemsRequest,
@@ -29,6 +30,7 @@ from .cart_session import CartSyncRequest, CartSessionResponse
 
 __all__ = [
     Item,
+    PurchaseItem,
     OTPSendRequest,
     OTPVerifyRequest,
     ProductResponse,

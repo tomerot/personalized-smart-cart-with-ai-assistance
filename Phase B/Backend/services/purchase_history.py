@@ -1,9 +1,11 @@
-from models import Purchase_history, CartSession
-from schemas import Item
+from models import Purchase_history, Product
+from schemas import PurchaseItem
 from typing import List, Dict, Any
 
 
-async def save_purchase_history(phone: str, purchased_items: List[Item]) -> Purchase_history:
+async def save_purchase_history(
+    phone: str, purchased_items: List[PurchaseItem]
+) -> Purchase_history:
     """
     Save or update user's purchase history with cumulative quantities.
 
@@ -44,9 +46,9 @@ async def save_purchase_history(phone: str, purchased_items: List[Item]) -> Purc
                 # New item - add to dict
                 existing_items_dict[barcode] = purchased_item.quantity
 
-        # Convert back to list of Items
+        # Convert back to list of PurchaseItems
         updated_items = [
-            Item(product_barcode=barcode, quantity=quantity)
+            PurchaseItem(product_barcode=barcode, quantity=quantity)
             for barcode, quantity in existing_items_dict.items()
         ]
 
@@ -62,21 +64,21 @@ async def save_purchase_history(phone: str, purchased_items: List[Item]) -> Purc
         raise
 
 
-async def get_forgotten_items(phone: str, cart_items: List[Item]) -> List[Dict[str, Any]]:
+async def get_forgotten_items(
+    phone: str, cart_items: List[PurchaseItem]
+) -> List[Dict[str, Any]]:
     """
     Get top 3 frequently bought items that are NOT in the current cart.
     Helps remind users of items they usually buy but forgot this time.
 
     Args:
         phone: User's phone number
-        cart_items: List of items currently in the cart (from frontend)
+        cart_items: List of items currently in the cart (only barcode is used for comparison)
 
     Returns:
         List of top 3 forgotten items with product details, sorted by purchase frequency
     """
     try:
-        from models import Product
-
         # Get purchase history
         history = await Purchase_history.find_one(Purchase_history.phone == phone)
         if not history or not history.items:
@@ -96,15 +98,17 @@ async def get_forgotten_items(phone: str, cart_items: List[Item]) -> List[Dict[s
                 )
 
                 if product and product.available:
-                    forgotten.append({
-                        "barcode": product.barcode,
-                        "name": product.name,
-                        "company": product.company,
-                        "category": product.category,
-                        "price": product.price,
-                        "size": product.size,
-                        "total_purchased": item.quantity,  # How many times bought
-                    })
+                    forgotten.append(
+                        {
+                            "barcode": product.barcode,
+                            "name": product.name,
+                            "company": product.company,
+                            "category": product.category,
+                            "price": product.price,
+                            "size": product.size,
+                            "total_purchased": item.quantity,  # How many times bought
+                        }
+                    )
 
         # Sort by total_purchased (most frequently bought first)
         forgotten.sort(key=lambda x: x["total_purchased"], reverse=True)
