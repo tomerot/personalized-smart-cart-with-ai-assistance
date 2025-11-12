@@ -122,9 +122,9 @@ async def find_alternative_products(barcode: str, phone: str) -> Dict[str, Any]:
     This is a composite function that:
     1. Gets the product by barcode
     2. Gets user preferences
-    3. Fetches all products from same category
-    4. Filters out products with conflicts
-    5. Returns safe alternatives
+    3. Checks conflicts with original product
+    4. If conflict exists, fetches all products from same category and filters safe alternatives
+    5. Returns original product info, conflict status, and alternatives (if conflict exists)
 
     Args:
         barcode: Original product barcode
@@ -133,9 +133,10 @@ async def find_alternative_products(barcode: str, phone: str) -> Dict[str, Any]:
     Returns:
         Dict with:
         {
+            "has_conflict": bool,
             "original_product": {...},
             "conflict_with_original": {...},
-            "alternatives": [...],
+            "alternatives": [...],  # Empty if no conflict
             "total_alternatives": int
         }
     """
@@ -145,6 +146,7 @@ async def find_alternative_products(barcode: str, phone: str) -> Dict[str, Any]:
         if not product:
             return {
                 "error": f"Product with barcode '{barcode}' not found",
+                "has_conflict": False,
                 "original_product": None,
                 "conflict_with_original": None,
                 "alternatives": [],
@@ -156,6 +158,7 @@ async def find_alternative_products(barcode: str, phone: str) -> Dict[str, Any]:
         if not user:
             return {
                 "error": f"User with phone '{phone}' not found",
+                "has_conflict": False,
                 "original_product": {
                     "barcode": product.barcode,
                     "name": product.name,
@@ -171,46 +174,49 @@ async def find_alternative_products(barcode: str, phone: str) -> Dict[str, Any]:
             product, user.allergies, user.dietary_needs
         )
 
-        # 3. Fetch all products from same category
-        all_products = await get_products_by_category(product.category)
-
-        # 4. Filter products without conflicts
+        # Only fetch alternatives if there's a conflict
         safe_alternatives = []
-        for alt_product in all_products:
-            # Skip the original product
-            if alt_product.barcode == barcode:
-                continue
+        if original_conflict["has_conflict"]:
+            # 3. Fetch all products from same category
+            all_products = await get_products_by_category(product.category)
 
-            # Skip unavailable products
-            if not alt_product.available:
-                continue
+            # 4. Filter products without conflicts
+            for alt_product in all_products:
+                # Skip the original product
+                if alt_product.barcode == barcode:
+                    continue
 
-            # Check for conflicts
-            conflict_check = check_product_conflicts(
-                alt_product, user.allergies, user.dietary_needs
-            )
+                # Skip unavailable products
+                if not alt_product.available:
+                    continue
 
-            if not conflict_check["has_conflict"]:
-                safe_alternatives.append(
-                    {
-                        "barcode": alt_product.barcode,
-                        "name": alt_product.name,
-                        "image_url": alt_product.image_url,
-                        "company": alt_product.company,
-                        "price": alt_product.price,
-                        "category": alt_product.category,
-                        "size": alt_product.size,
-                        "dietary_tags": alt_product.dietary_tags,
-                        "allergens": alt_product.allergens,
-                    }
+                # Check for conflicts
+                conflict_check = check_product_conflicts(
+                    alt_product, user.allergies, user.dietary_needs
                 )
 
-        print(f"Found {len(safe_alternatives)} safe alternatives for product {barcode}")
+                if not conflict_check["has_conflict"]:
+                    safe_alternatives.append(
+                        {
+                            "barcode": alt_product.barcode,
+                            "name": alt_product.name,
+                            "image_url": alt_product.image_url,
+                            "company": alt_product.company,
+                            "price": alt_product.price,
+                            "category": alt_product.category,
+                            "size": alt_product.size,
+                            "dietary_tags": alt_product.dietary_tags,
+                            "allergens": alt_product.allergens,
+                        }
+                    )
+
+            print(f"Found {len(safe_alternatives)} safe alternatives for product {barcode}")
 
         # Limit to 3 alternatives
         limited_alternatives = safe_alternatives[:3]
 
         return {
+            "has_conflict": original_conflict["has_conflict"],
             "original_product": {
                 "barcode": product.barcode,
                 "name": product.name,

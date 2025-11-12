@@ -177,15 +177,16 @@ async def find_alternative_products(barcode: str, phone: str):
     This composite endpoint:
     1. Gets the original product
     2. Checks conflicts with user preferences
-    3. Finds all products in same category
-    4. Filters safe alternatives
+    3. If conflict exists: finds all products in same category and filters safe alternatives
+    4. If no conflict: returns empty alternatives list
 
     Args:
         barcode: Original product barcode
         phone: User's phone number
 
     Returns:
-        FindAlternativesResponse: Original product info and list of safe alternatives
+        FindAlternativesResponse: Includes has_conflict flag, original product info,
+        conflict details, and list of safe alternatives (only if conflict exists)
     """
     result = await product_service.find_alternative_products(barcode, phone)
 

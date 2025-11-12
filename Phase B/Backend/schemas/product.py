@@ -74,6 +74,7 @@ class AlternativeProductInfo(BaseModel):
 
 
 class FindAlternativesResponse(BaseModel):
+    has_conflict: bool  # Top-level flag for easy frontend check
     original_product: Dict[str, Any]
     conflict_with_original: ConflictCheckResponse
     alternatives: List[AlternativeProductInfo]
