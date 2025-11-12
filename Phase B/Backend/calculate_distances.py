@@ -18,9 +18,7 @@ def calculate_and_save_distances():
     print(f"Grid size: {len(layout['grid'][0])}x{len(layout['grid'])}")
 
     # Build locations dict
-    locations = {
-        "E": (layout["entrance"]["x"], layout["entrance"]["y"])
-    }
+    locations = {"E": (layout["entrance"]["x"], layout["entrance"]["y"])}
 
     for category, cat_data in layout["category_mapping"].items():
         locations[category] = (cat_data["x"], cat_data["y"])
@@ -28,7 +26,6 @@ def calculate_and_save_distances():
     print(f"\nLocations to process: {list(locations.keys())}")
 
     # Calculate distance matrix
-    print("\nCalculating distances using BFS...")
     distance_matrix = calculate_distance_matrix(layout["grid"], locations)
 
     # Convert tuple keys to string keys for JSON serialization
@@ -43,25 +40,6 @@ def calculate_and_save_distances():
 
     print(f"\n[SUCCESS] Distance matrix saved to distance_matrix.json")
     print(f"  Total pairs calculated: {len(distance_matrix_json)}")
-
-    # Print some examples
-    print("\nSample distances:")
-    sample_pairs = [
-        ("E", "Dairy"),
-        ("E", "Snacks"),
-        ("E", "Bakery"),
-        ("Dairy", "Snacks"),
-        ("Snacks", "Bakery")
-    ]
-
-    for from_loc, to_loc in sample_pairs:
-        key = f"{from_loc}->{to_loc}"
-        if key in distance_matrix_json:
-            dist = distance_matrix_json[key]
-            if dist == float('inf'):
-                print(f"  {from_loc} -> {to_loc}: NO PATH")
-            else:
-                print(f"  {from_loc} -> {to_loc}: {dist} steps")
 
 
 if __name__ == "__main__":
