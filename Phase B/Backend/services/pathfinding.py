@@ -1,13 +1,16 @@
 from typing import List, Dict, Tuple, Optional
 from collections import deque
 
+# Symbols that represent unwalkable cells
+UNWALKABLE_SYMBOLS = {"#", "*", "%"}
+
 
 def bfs_distance(grid: List[List[str]], start: Tuple[int, int], end: Tuple[int, int]) -> Optional[int]:
     """
     Calculate shortest walking distance between two points using BFS.
 
     Args:
-        grid: 2D grid where # = wall, everything else is walkable
+        grid: 2D grid where # = wall, * = cash register, % = restroom (all unwalkable)
         start: Starting (x, y) coordinates
         end: Ending (x, y) coordinates
 
@@ -29,8 +32,8 @@ def bfs_distance(grid: List[List[str]], start: Tuple[int, int], end: Tuple[int, 
     if not (0 <= end_x < cols and 0 <= end_y < rows):
         return None
 
-    # Check if start or end is a wall
-    if grid[start_y][start_x] == "#" or grid[end_y][end_x] == "#":
+    # Check if start or end is unwalkable
+    if grid[start_y][start_x] in UNWALKABLE_SYMBOLS or grid[end_y][end_x] in UNWALKABLE_SYMBOLS:
         return None
 
     # BFS
@@ -55,7 +58,7 @@ def bfs_distance(grid: List[List[str]], start: Tuple[int, int], end: Tuple[int, 
             # Check bounds
             if 0 <= nx < cols and 0 <= ny < rows:
                 # Check if walkable and not visited
-                if grid[ny][nx] != "#" and (nx, ny) not in visited:
+                if grid[ny][nx] not in UNWALKABLE_SYMBOLS and (nx, ny) not in visited:
                     visited.add((nx, ny))
                     queue.append((nx, ny, dist + 1))
 
