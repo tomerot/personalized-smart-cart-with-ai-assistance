@@ -80,7 +80,9 @@ async def get_shopping_list(phone: str):
     return shopping_list
 
 
-@router.get("/{phone}/with-products", response_model=ShoppingListWithProductsResponse)
+@router.get(
+    "/{phone}/with-products-info", response_model=ShoppingListWithProductsResponse
+)
 async def get_shopping_list_with_products(phone: str):
     """
     Get user's shopping list with full product information for each item.
