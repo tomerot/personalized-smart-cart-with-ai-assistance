@@ -148,10 +148,10 @@ async def get_product_location(barcode: str):
 #     return conflict_result
 
 
-@router.get("/{barcode}/alternatives/{phone}", response_model=FindAlternativesResponse)
+@router.get("/{barcode}/{phone}", response_model=FindAlternativesResponse)
 async def find_alternative_products(barcode: str, phone: str):
     """
-    Find alternative products that don't conflict with user preferences.
+    Get product and find alternative products that don't conflict with user preferences.
 
     This composite endpoint:
     1. Gets the original product
@@ -177,7 +177,7 @@ async def find_alternative_products(barcode: str, phone: str):
     return result
 
 
-@router.get("/{barcode}/all-from-category", response_model=List[ProductResponse])
+@router.get("/{barcode}/all-same-category", response_model=List[ProductResponse])
 async def get_all_products_from_same_category(barcode: str):
     """
     Get all products from the same category as the specified product.
