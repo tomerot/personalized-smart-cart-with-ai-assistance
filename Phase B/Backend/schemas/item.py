@@ -7,5 +7,6 @@ class Item(BaseModel):
     quantity: int = 1
     name: str
     price: float
+    category: str
     size: Optional[str] = None
     image_url: Optional[str] = None
