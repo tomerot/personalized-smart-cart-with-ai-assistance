@@ -13,8 +13,8 @@ from .product import (
 )
 from .user import (
     UserResponse,
-    UpdateDietaryNeedsRequest,
     AddAllergyRequest,
+    AddDietaryNeedRequest,
 )
 from .purchase_history import (
     PurchaseItem,
@@ -47,8 +47,8 @@ __all__ = [
     AlternativeProductInfo,
     FindAlternativesResponse,
     UserResponse,
-    UpdateDietaryNeedsRequest,
     AddAllergyRequest,
+    AddDietaryNeedRequest,
     SavePurchaseRequest,
     PurchaseHistoryResponse,
     CheckForgottenItemsRequest,

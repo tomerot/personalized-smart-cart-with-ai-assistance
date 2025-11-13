@@ -53,60 +53,6 @@ async def get_user_profile(phone: str) -> Optional[User]:
         raise
 
 
-async def update_user_allergies(phone: str, allergies: List[str]) -> Optional[User]:
-    """
-    Update user's allergies list.
-
-    Args:
-        phone: User's phone number
-        allergies: New list of allergies to set
-
-    Returns:
-        User: Updated user object if found, None otherwise
-    """
-    try:
-        user = await User.find_one(User.phone == phone)
-        if not user:
-            print(f"User not found for phone: {phone}")
-            return None
-
-        user.allergies = allergies
-        await user.save()
-        print(f"Updated allergies for phone: {phone} - {allergies}")
-        return user
-    except Exception as e:
-        print(f"Error in update_user_allergies: {e}")
-        raise
-
-
-async def update_user_dietary_needs(
-    phone: str, dietary_needs: List[str]
-) -> Optional[User]:
-    """
-    Update user's dietary needs list.
-
-    Args:
-        phone: User's phone number
-        dietary_needs: New list of dietary needs to set
-
-    Returns:
-        User: Updated user object if found, None otherwise
-    """
-    try:
-        user = await User.find_one(User.phone == phone)
-        if not user:
-            print(f"User not found for phone: {phone}")
-            return None
-
-        user.dietary_needs = dietary_needs
-        await user.save()
-        print(f"Updated dietary needs for phone: {phone} - {dietary_needs}")
-        return user
-    except Exception as e:
-        print(f"Error in update_user_dietary_needs: {e}")
-        raise
-
-
 async def add_user_allergy(phone: str, allergy: str) -> tuple[Optional[User], bool]:
     """
     Add a single allergy to user's allergies list.
@@ -199,4 +145,105 @@ async def clear_user_allergies(phone: str) -> Optional[User]:
         return user
     except Exception as e:
         print(f"Error in clear_user_allergies: {e}")
+        raise
+
+
+async def add_user_dietary_need(
+    phone: str, dietary_need: str
+) -> tuple[Optional[User], bool]:
+    """
+    Add a single dietary need to user's dietary needs list.
+
+    Args:
+        phone: User's phone number
+        dietary_need: Single dietary need to add (will be converted to lowercase)
+
+    Returns:
+        tuple: (User object if found/None, True if added/False if already exists)
+    """
+    try:
+        user = await User.find_one(User.phone == phone)
+        if not user:
+            print(f"User not found for phone: {phone}")
+            return None, False
+
+        # Convert dietary need to lowercase for consistency
+        dietary_need_lower = dietary_need.lower()
+
+        # Check if dietary need already exists
+        if dietary_need_lower in user.dietary_needs:
+            print(
+                f"Dietary need '{dietary_need_lower}' already exists for phone: {phone}"
+            )
+            return user, False
+
+        # Add the new dietary need
+        user.dietary_needs.append(dietary_need_lower)
+        await user.save()
+        print(f"Added dietary need '{dietary_need_lower}' for phone: {phone}")
+        return user, True
+    except Exception as e:
+        print(f"Error in add_user_dietary_need: {e}")
+        raise
+
+
+async def remove_user_dietary_need(
+    phone: str, dietary_need: str
+) -> tuple[Optional[User], bool]:
+    """
+    Remove a specific dietary need from user's dietary needs list.
+
+    Args:
+        phone: User's phone number
+        dietary_need: Single dietary need to remove (will be converted to lowercase)
+
+    Returns:
+        tuple: (User object if found/None, True if removed/False if not found)
+    """
+    try:
+        user = await User.find_one(User.phone == phone)
+        if not user:
+            print(f"User not found for phone: {phone}")
+            return None, False
+
+        # Convert dietary need to lowercase for consistency
+        dietary_need_lower = dietary_need.lower()
+
+        # Check if dietary need exists
+        if dietary_need_lower not in user.dietary_needs:
+            print(f"Dietary need '{dietary_need_lower}' not found for phone: {phone}")
+            return user, False
+
+        # Remove the dietary need
+        user.dietary_needs.remove(dietary_need_lower)
+        await user.save()
+        print(f"Removed dietary need '{dietary_need_lower}' for phone: {phone}")
+        return user, True
+    except Exception as e:
+        print(f"Error in remove_user_dietary_need: {e}")
+        raise
+
+
+async def clear_user_dietary_needs(phone: str) -> Optional[User]:
+    """
+    Clear all dietary needs from user's dietary needs list.
+
+    Args:
+        phone: User's phone number
+
+    Returns:
+        User: Updated user object if found, None otherwise
+    """
+    try:
+        user = await User.find_one(User.phone == phone)
+        if not user:
+            print(f"User not found for phone: {phone}")
+            return None
+
+        user.dietary_needs = []
+        await user.save()
+        print(f"Cleared all dietary needs for phone: {phone}")
+        return user
+    except Exception as e:
+        print(f"Error in clear_user_dietary_needs: {e}")
         raise

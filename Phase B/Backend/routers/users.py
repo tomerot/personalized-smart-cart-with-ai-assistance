@@ -2,8 +2,8 @@ from fastapi import APIRouter, HTTPException, status
 from services import user as user_service
 from schemas import (
     UserResponse,
-    UpdateDietaryNeedsRequest,
     AddAllergyRequest,
+    AddDietaryNeedRequest,
 )
 
 router = APIRouter(prefix="/users", tags=["Users"])
@@ -61,23 +61,82 @@ async def add_user_allergy(phone: str, request: AddAllergyRequest):
 
 
 @router.put("/{phone}/dietary-needs", response_model=UserResponse)
-async def update_user_dietary_needs(phone: str, request: UpdateDietaryNeedsRequest):
+async def add_user_dietary_need(phone: str, request: AddDietaryNeedRequest):
     """
-    Update user's dietary needs list.
+    Add a single dietary need to user's dietary needs list.
 
     Args:
         phone: User's phone number
-        request: UpdateDietaryNeedsRequest with new dietary needs list
+        request: AddDietaryNeedRequest with dietary need to add
 
     Returns:
         UserResponse: Updated user profile
     """
-    user = await user_service.update_user_dietary_needs(phone, request.dietary_needs)
+    user, was_added = await user_service.add_user_dietary_need(
+        phone, request.dietary_need
+    )
 
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"User with phone '{phone}' not found",
+        )
+
+    if not was_added:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Dietary need '{request.dietary_need}' is already in user's dietary needs list",
+        )
+
+    return user
+
+
+@router.delete("/{phone}/dietary-needs", response_model=UserResponse)
+async def clear_user_dietary_needs(phone: str):
+    """
+    Clear all dietary needs from user's dietary needs list.
+
+    Args:
+        phone: User's phone number
+
+    Returns:
+        UserResponse: Updated user profile with empty dietary needs list
+    """
+    user = await user_service.clear_user_dietary_needs(phone)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with phone '{phone}' not found",
+        )
+
+    return user
+
+
+@router.delete("/{phone}/dietary-needs/{dietary_need}", response_model=UserResponse)
+async def remove_user_dietary_need(phone: str, dietary_need: str):
+    """
+    Remove a specific dietary need from user's dietary needs list.
+
+    Args:
+        phone: User's phone number
+        dietary_need: The specific dietary need to remove
+
+    Returns:
+        UserResponse: Updated user profile
+    """
+    user, was_removed = await user_service.remove_user_dietary_need(phone, dietary_need)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with phone '{phone}' not found",
+        )
+
+    if not was_removed:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Dietary need '{dietary_need}' not found in user's dietary needs list",
         )
 
     return user
