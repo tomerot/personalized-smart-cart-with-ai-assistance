@@ -146,11 +146,6 @@ async def find_alternative_products(barcode: str, phone: str) -> Dict[str, Any]:
         if not product:
             return {
                 "error": f"Product with barcode '{barcode}' not found",
-                "has_conflict": False,
-                "original_product": None,
-                "conflict_with_original": None,
-                "alternatives": [],
-                "total_alternatives": 0,
             }
 
         # 2. Get user preferences
@@ -158,15 +153,6 @@ async def find_alternative_products(barcode: str, phone: str) -> Dict[str, Any]:
         if not user:
             return {
                 "error": f"User with phone '{phone}' not found",
-                "has_conflict": False,
-                "original_product": {
-                    "barcode": product.barcode,
-                    "name": product.name,
-                    "category": product.category,
-                },
-                "conflict_with_original": None,
-                "alternatives": [],
-                "total_alternatives": 0,
             }
 
         # Check conflict with original product
@@ -210,7 +196,9 @@ async def find_alternative_products(barcode: str, phone: str) -> Dict[str, Any]:
                         }
                     )
 
-            print(f"Found {len(safe_alternatives)} safe alternatives for product {barcode}")
+            print(
+                f"Found {len(safe_alternatives)} safe alternatives for product {barcode}"
+            )
 
         # Limit to 3 alternatives
         limited_alternatives = safe_alternatives[:3]
@@ -223,6 +211,7 @@ async def find_alternative_products(barcode: str, phone: str) -> Dict[str, Any]:
                 "company": product.company,
                 "category": product.category,
                 "price": product.price,
+                "image": product.image_url,
             },
             "conflict_with_original": original_conflict,
             "alternatives": limited_alternatives,

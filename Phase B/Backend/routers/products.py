@@ -22,28 +22,6 @@ async def get_all_products():
     return products
 
 
-@router.get("/{barcode}", response_model=ProductResponse)
-async def get_product_by_barcode(barcode: str):
-    """
-    Get product details by barcode.
-
-    Args:
-        barcode: Product barcode
-
-    Returns:
-        ProductResponse: Full product details
-    """
-    product = await Product.find_one(Product.barcode == barcode)
-
-    if not product:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Product with barcode '{barcode}' not found",
-        )
-
-    return product
-
-
 @router.get("/{barcode}/nutritional-info", response_model=NutritionalInfoResponse)
 async def get_product_nutritional_info(barcode: str):
     """
@@ -132,41 +110,42 @@ async def get_product_location(barcode: str):
     return location
 
 
-@router.get("/{barcode}/check-conflicts/{phone}", response_model=ConflictCheckResponse)
-async def check_product_conflicts(barcode: str, phone: str):
-    """
-    Check if a product conflicts with user's allergies and dietary needs.
+# in case we will need this - for now in comment
+# @router.get("/{barcode}/check-conflicts/{phone}", response_model=ConflictCheckResponse)
+# async def check_product_conflicts(barcode: str, phone: str):
+#     """
+#     Check if a product conflicts with user's allergies and dietary needs.
 
-    Args:
-        barcode: Product barcode
-        phone: User's phone number
+#     Args:
+#         barcode: Product barcode
+#         phone: User's phone number
 
-    Returns:
-        ConflictCheckResponse: Conflict details
-    """
+#     Returns:
+#         ConflictCheckResponse: Conflict details
+#     """
 
-    # Get product
-    product = await Product.find_one(Product.barcode == barcode)
-    if not product:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Product with barcode '{barcode}' not found",
-        )
+#     # Get product
+#     product = await Product.find_one(Product.barcode == barcode)
+#     if not product:
+#         raise HTTPException(
+#             status_code=status.HTTP_404_NOT_FOUND,
+#             detail=f"Product with barcode '{barcode}' not found",
+#         )
 
-    # Get user
-    user = await User.find_one(User.phone == phone)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User with phone '{phone}' not found",
-        )
+#     # Get user
+#     user = await User.find_one(User.phone == phone)
+#     if not user:
+#         raise HTTPException(
+#             status_code=status.HTTP_404_NOT_FOUND,
+#             detail=f"User with phone '{phone}' not found",
+#         )
 
-    # Check conflicts
-    conflict_result = product_service.check_product_conflicts(
-        product, user.allergies, user.dietary_needs
-    )
+#     # Check conflicts
+#     conflict_result = product_service.check_product_conflicts(
+#         product, user.allergies, user.dietary_needs
+#     )
 
-    return conflict_result
+#     return conflict_result
 
 
 @router.get("/{barcode}/alternatives/{phone}", response_model=FindAlternativesResponse)

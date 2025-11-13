@@ -5,6 +5,7 @@ from schemas import (
     ShoppingListResponse,
     ShoppingListWithProductsResponse,
 )
+from models import User
 
 router = APIRouter(prefix="/shopping-list", tags=["Shopping List"])
 
@@ -24,6 +25,14 @@ async def create_or_update_shopping_list(phone: str, request: ShoppingListReques
     Returns:
         ShoppingListResponse: Created or updated shopping list
     """
+    # Validate user exists
+    user = await User.find_one(User.phone == phone)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with phone '{phone}' not found",
+        )
+
     try:
         shopping_list = await shopping_list_service.create_or_update_shopping_list(
             phone, request.items

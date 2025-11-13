@@ -8,3 +8,4 @@ class Item(BaseModel):
     name: str
     price: float
     size: Optional[str] = None
+    image_url: Optional[str] = None

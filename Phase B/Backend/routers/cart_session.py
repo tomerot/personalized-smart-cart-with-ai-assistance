@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 from schemas import CartSyncRequest, CartSessionResponse
 from services import cart_session
+from models import User
 
 router = APIRouter(prefix="/cart-session", tags=["Cart Session"])
 
@@ -20,6 +21,14 @@ async def sync_cart(phone: str, request: CartSyncRequest):
     Returns:
         CartSessionResponse: Saved cart session with timestamp
     """
+    # Validate user exists
+    user = await User.find_one(User.phone == phone)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with phone '{phone}' not found",
+        )
+
     cart = await cart_session.sync_cart_session(phone, request.items)
     return cart
 

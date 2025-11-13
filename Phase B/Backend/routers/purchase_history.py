@@ -6,6 +6,7 @@ from schemas import (
     CheckForgottenItemsRequest,
     ForgottenItemsResponse,
 )
+from models import User
 
 router = APIRouter(prefix="/purchase-history", tags=["Purchase History"])
 
@@ -26,6 +27,14 @@ async def save_purchase_history(phone: str, request: SavePurchaseRequest):
     Returns:
         PurchaseHistoryResponse: Updated purchase history
     """
+    # Validate user exists
+    user = await User.find_one(User.phone == phone)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with phone '{phone}' not found",
+        )
+
     try:
         history = await history_service.save_purchase_history(phone, request.items)
         return history
