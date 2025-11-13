@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status
-from schemas import CartSyncRequest, CartSessionResponse
+from schemas import CartSyncRequest, CartSessionResponse, CartRecoveryResponse
 from services import cart_session
 from models import User
 
@@ -33,32 +33,37 @@ async def sync_cart(phone: str, request: CartSyncRequest):
     return cart
 
 
-@router.get("/{phone}", response_model=CartSessionResponse)
+@router.get("/{phone}", response_model=CartRecoveryResponse)
 async def get_cart(phone: str):
     """
-    Retrieve cart session for recovery.
+    Check for active cart session and retrieve for recovery if exists.
 
-    Used when app restarts after crash to check if user has a saved cart session
-    that can be recovered.
+    Used when user logs in to check if they have a saved cart session
+    that needs to be recovered (e.g., after app crash).
 
     Args:
         phone: User's phone number
 
     Returns:
-        CartSessionResponse: Saved cart session
-
-    Raises:
-        404: No cart session found for this user
+        CartRecoveryResponse:
+            - has_active_session: true if cart exists, false otherwise
+            - cart_session: The saved cart data if exists, null otherwise
+            - message: Description of the result
     """
     cart = await cart_session.get_cart_session(phone)
 
     if not cart:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No cart session found for this user"
+        return CartRecoveryResponse(
+            has_active_session=False,
+            cart_session=None,
+            message="No active cart session found. User can start fresh shopping."
         )
 
-    return cart
+    return CartRecoveryResponse(
+        has_active_session=True,
+        cart_session=cart,
+        message="Active cart session found. Ready for recovery."
+    )
 
 
 @router.delete("/{phone}")

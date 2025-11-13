@@ -30,7 +30,7 @@ from .shopping_list import (
     ShoppingListItemWithProduct,
     ShoppingListWithProductsResponse,
 )
-from .cart_session import CartSyncRequest, CartSessionResponse
+from .cart_session import CartSyncRequest, CartSessionResponse, CartRecoveryResponse
 
 __all__ = [
     Item,
@@ -60,4 +60,5 @@ __all__ = [
     ShoppingListWithProductsResponse,
     CartSyncRequest,
     CartSessionResponse,
+    CartRecoveryResponse,
 ]
