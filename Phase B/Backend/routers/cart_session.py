@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status
-from schemas import CartSyncRequest, CartSessionResponse, CartRecoveryResponse
+from schemas import CartSyncRequest, CartSessionResponse
 from services import cart_session
 from models import User
 
@@ -33,37 +33,32 @@ async def sync_cart(phone: str, request: CartSyncRequest):
     return cart
 
 
-@router.get("/{phone}", response_model=CartRecoveryResponse)
+@router.get("/{phone}", response_model=CartSessionResponse)
 async def get_cart(phone: str):
     """
-    Check for active cart session and retrieve for recovery if exists.
+    Retrieve cart session for the user.
 
-    Used when user logs in to check if they have a saved cart session
-    that needs to be recovered (e.g., after app crash).
+    Used to fetch cart data when user status indicates an active cart exists.
+    Call /users/{phone}/status first to check if cart exists before calling this.
 
     Args:
         phone: User's phone number
 
     Returns:
-        CartRecoveryResponse:
-            - has_active_session: true if cart exists, false otherwise
-            - cart_session: The saved cart data if exists, null otherwise
-            - message: Description of the result
+        CartSessionResponse: The saved cart session with items
+
+    Raises:
+        404: No cart session found for this user
     """
     cart = await cart_session.get_cart_session(phone)
 
     if not cart:
-        return CartRecoveryResponse(
-            has_active_session=False,
-            cart_session=None,
-            message="No active cart session found.",
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No cart session found for this user",
         )
 
-    return CartRecoveryResponse(
-        has_active_session=True,
-        cart_session=cart,
-        message="Active cart session found. Ready for recovery.",
-    )
+    return cart
 
 
 @router.delete("/{phone}")

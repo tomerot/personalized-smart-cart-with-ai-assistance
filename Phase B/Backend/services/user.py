@@ -1,5 +1,6 @@
-from models import User
+from models import User, CartSession, ShoppingList
 from typing import List, Optional
+from schemas import UserStatusResponse
 
 
 async def get_or_create_user(phone: str) -> User:
@@ -246,4 +247,36 @@ async def clear_user_dietary_needs(phone: str) -> Optional[User]:
         return user
     except Exception as e:
         print(f"Error in clear_user_dietary_needs: {e}")
+        raise
+
+
+async def get_user_status(phone: str) -> UserStatusResponse:
+    """
+    Get user status including cart session and shopping list availability.
+
+    Used after login to determine what UI elements to show/enable.
+
+    Args:
+        phone: User's phone number
+
+    Returns:
+        UserStatusResponse: Status flags for active cart and shopping list
+    """
+    try:
+        # Check for active cart session
+        cart_session = await CartSession.find_one(CartSession.phone == phone)
+        has_active_cart = cart_session is not None
+
+        # Check for shopping list
+        shopping_list = await ShoppingList.find_one(ShoppingList.phone == phone)
+        has_shopping_list = shopping_list is not None
+
+        print(f"User status for {phone}: cart={has_active_cart}, list={has_shopping_list}")
+
+        return UserStatusResponse(
+            has_active_cart=has_active_cart,
+            has_shopping_list=has_shopping_list
+        )
+    except Exception as e:
+        print(f"Error in get_user_status: {e}")
         raise

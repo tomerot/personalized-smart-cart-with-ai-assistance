@@ -11,6 +11,12 @@ class UserResponse(BaseModel):
         from_attributes = True
 
 
+class UserStatusResponse(BaseModel):
+    """Response schema for user status check after login"""
+    has_active_cart: bool
+    has_shopping_list: bool
+
+
 class AddAllergyRequest(BaseModel):
     allergy: str = Field(
         ..., description="Single allergy to add (e.g., 'peanuts', 'dairy', 'gluten')"

@@ -13,6 +13,7 @@ from .product import (
 )
 from .user import (
     UserResponse,
+    UserStatusResponse,
     AddAllergyRequest,
     AddDietaryNeedRequest,
 )
@@ -30,7 +31,7 @@ from .shopping_list import (
     ShoppingListItemWithProduct,
     ShoppingListWithProductsResponse,
 )
-from .cart_session import CartSyncRequest, CartSessionResponse, CartRecoveryResponse
+from .cart_session import CartSyncRequest, CartSessionResponse
 
 __all__ = [
     Item,
@@ -47,6 +48,7 @@ __all__ = [
     AlternativeProductInfo,
     FindAlternativesResponse,
     UserResponse,
+    UserStatusResponse,
     AddAllergyRequest,
     AddDietaryNeedRequest,
     SavePurchaseRequest,
@@ -60,5 +62,4 @@ __all__ = [
     ShoppingListWithProductsResponse,
     CartSyncRequest,
     CartSessionResponse,
-    CartRecoveryResponse,
 ]

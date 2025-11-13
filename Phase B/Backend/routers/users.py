@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 from services import user as user_service
 from schemas import (
     UserResponse,
+    UserStatusResponse,
     AddAllergyRequest,
     AddDietaryNeedRequest,
 )
@@ -29,6 +30,24 @@ async def get_user_profile(phone: str):
         )
 
     return user
+
+
+@router.get("/{phone}/status", response_model=UserStatusResponse)
+async def get_user_status(phone: str):
+    """
+    Get user status including cart session and shopping list availability.
+
+    Called after login to determine what UI elements to show/enable:
+    - If has_active_cart is true: Auto-load cart session
+    - If has_shopping_list is true: Enable "Load List" button
+
+    Args:
+        phone: User's phone number
+
+    Returns:
+        UserStatusResponse: Flags indicating active cart and shopping list presence
+    """
+    return await user_service.get_user_status(phone)
 
 
 @router.put("/{phone}/allergies", response_model=UserResponse)
