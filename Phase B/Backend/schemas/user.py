@@ -11,14 +11,14 @@ class UserResponse(BaseModel):
         from_attributes = True
 
 
-class UpdateAllergiesRequest(BaseModel):
-    allergies: List[str] = Field(
-        ..., description="List of user allergies (e.g., ['peanuts', 'dairy', 'gluten'])"
-    )
-
-
 class UpdateDietaryNeedsRequest(BaseModel):
     dietary_needs: List[str] = Field(
         ...,
         description="List of dietary requirements (e.g., ['vegan', 'kosher', 'halal'])",
+    )
+
+
+class AddAllergyRequest(BaseModel):
+    allergy: str = Field(
+        ..., description="Single allergy to add (e.g., 'peanuts', 'dairy', 'gluten')"
     )

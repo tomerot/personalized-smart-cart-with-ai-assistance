@@ -1,6 +1,10 @@
 from fastapi import APIRouter, HTTPException, status
 from services import user as user_service
-from schemas import UserResponse, UpdateAllergiesRequest, UpdateDietaryNeedsRequest
+from schemas import (
+    UserResponse,
+    UpdateDietaryNeedsRequest,
+    AddAllergyRequest,
+)
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -28,23 +32,29 @@ async def get_user_profile(phone: str):
 
 
 @router.put("/{phone}/allergies", response_model=UserResponse)
-async def update_user_allergies(phone: str, request: UpdateAllergiesRequest):
+async def add_user_allergy(phone: str, request: AddAllergyRequest):
     """
-    Update user's allergies list.
+    Add a single allergy to user's allergies list.
 
     Args:
         phone: User's phone number
-        request: UpdateAllergiesRequest with new allergies list
+        request: AddAllergyRequest with allergy to add
 
     Returns:
         UserResponse: Updated user profile
     """
-    user = await user_service.update_user_allergies(phone, request.allergies)
+    user, was_added = await user_service.add_user_allergy(phone, request.allergy)
 
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"User with phone '{phone}' not found",
+        )
+
+    if not was_added:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Allergy '{request.allergy}' is already in user's allergies list",
         )
 
     return user
@@ -68,6 +78,57 @@ async def update_user_dietary_needs(phone: str, request: UpdateDietaryNeedsReque
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"User with phone '{phone}' not found",
+        )
+
+    return user
+
+
+@router.delete("/{phone}/allergies", response_model=UserResponse)
+async def clear_user_allergies(phone: str):
+    """
+    Clear all allergies from user's allergies list.
+
+    Args:
+        phone: User's phone number
+
+    Returns:
+        UserResponse: Updated user profile with empty allergies list
+    """
+    user = await user_service.clear_user_allergies(phone)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with phone '{phone}' not found",
+        )
+
+    return user
+
+
+@router.delete("/{phone}/allergies/{allergy}", response_model=UserResponse)
+async def remove_user_allergy(phone: str, allergy: str):
+    """
+    Remove a specific allergy from user's allergies list.
+
+    Args:
+        phone: User's phone number
+        allergy: The specific allergy to remove
+
+    Returns:
+        UserResponse: Updated user profile
+    """
+    user, was_removed = await user_service.remove_user_allergy(phone, allergy)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with phone '{phone}' not found",
+        )
+
+    if not was_removed:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Allergy '{allergy}' not found in user's allergies list",
         )
 
     return user
