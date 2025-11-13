@@ -56,13 +56,13 @@ async def get_cart(phone: str):
         return CartRecoveryResponse(
             has_active_session=False,
             cart_session=None,
-            message="No active cart session found. User can start fresh shopping."
+            message="No active cart session found.",
         )
 
     return CartRecoveryResponse(
         has_active_session=True,
         cart_session=cart,
-        message="Active cart session found. Ready for recovery."
+        message="Active cart session found. Ready for recovery.",
     )
 
 
@@ -88,7 +88,7 @@ async def delete_cart(phone: str):
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="No cart session found for this user"
+            detail="No cart session found for this user",
         )
 
     return {"message": f"Cart session deleted successfully for phone '{phone}'"}

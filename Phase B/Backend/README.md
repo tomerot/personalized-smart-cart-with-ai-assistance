@@ -38,11 +38,11 @@ Backend/
 │   └── route_optimizer.py    # TSP solver using Google OR-Tools
 │
 └── routers/                   # API endpoints (thin controllers)
-    ├── users.py              # User profile & preferences
-    ├── products.py           # Product info, conflicts, alternatives
-    ├── shopping_list.py      # Shopping list management
-    ├── purchase_history.py   # Purchase tracking, recommender -> forgotten_items
-    ├── cart_session.py       # Cart sync
-    ├── otp.py                # Authentication
+    ├── users.py              
+    ├── products.py           
+    ├── shopping_list.py      
+    ├── purchase_history.py  
+    ├── cart_session.py       
+    ├── otp.py                
     └── store.py              # Store layout
 ```
