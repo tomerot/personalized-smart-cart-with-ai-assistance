@@ -24,4 +24,6 @@ async def get_store_layout():
     except json.JSONDecodeError:
         raise HTTPException(status_code=500, detail="Invalid store layout file format")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error loading store layout: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error loading store layout: {str(e)}"
+        )

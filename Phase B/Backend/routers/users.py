@@ -16,7 +16,7 @@ async def get_user_profile(phone: str):
     Get user profile by phone number.
 
     Args:
-        phone: User's phone number (e.g., +972123456789)
+        phone: User's phone number
 
     Returns:
         UserResponse: User profile with allergies and dietary needs
@@ -38,7 +38,7 @@ async def get_user_status(phone: str):
     Get user status including cart session and shopping list availability.
 
     Called after login to determine what UI elements to show/enable:
-    - If has_active_cart is true: Auto-load cart session
+    - If has_active_cart is true: we can load cart session - maybe auto load, and pop msg
     - If has_shopping_list is true: Enable "Load List" button
 
     Args:

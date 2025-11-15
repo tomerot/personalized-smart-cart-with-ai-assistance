@@ -70,7 +70,7 @@ async def delete_shopping_list(phone: str):
 @router.get("/{phone}", response_model=ShoppingListResponse)
 async def get_shopping_list(phone: str):
     """
-    Get user's shopping list (items only with barcodes and quantities).
+    Get user's shopping list (Items).
 
     Args:
         phone: User's phone number
@@ -95,12 +95,6 @@ async def get_shopping_list(phone: str):
 async def get_shopping_list_with_products(phone: str):
     """
     Get user's shopping list with full product information for each item.
-
-    Returns shopping list items enriched with complete product details including:
-    - Product name, company, category
-    - Price and availability
-    - Allergens and dietary tags
-    - Nutritional information
 
     Args:
         phone: User's phone number

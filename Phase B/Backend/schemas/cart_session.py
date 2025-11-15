@@ -5,12 +5,10 @@ from schemas.item import Item
 
 
 class CartSyncRequest(BaseModel):
-    """Request schema for syncing cart session"""
     items: List[Item]
 
 
 class CartSessionResponse(BaseModel):
-    """Response schema for cart session"""
     phone: str
     items: List[Item]
     last_updated: datetime

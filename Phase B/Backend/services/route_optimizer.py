@@ -8,7 +8,7 @@ import os
 def solve_tsp(
     distance_matrix: Dict[Tuple[str, str], int],
     locations: List[str],
-    start_location: str = "E"
+    start_location: str = "E",
 ) -> List[str]:
     """
     Solve TSP (Traveling Salesman Problem) to find optimal route.
@@ -42,16 +42,16 @@ def solve_tsp(
         for j in range(num_locations):
             from_loc = index_to_location[i]
             to_loc = index_to_location[j]
-            distance = distance_matrix.get((from_loc, to_loc), float('inf'))
+            distance = distance_matrix.get((from_loc, to_loc), float("inf"))
             # Convert to int (OR-Tools needs integers)
-            row.append(int(distance) if distance != float('inf') else 999999)
+            row.append(int(distance) if distance != float("inf") else 999999)
         distance_matrix_int.append(row)
 
     # Create routing model
     manager = pywrapcp.RoutingIndexManager(
         num_locations,
         1,  # Number of vehicles (1 = single route)
-        location_to_index[start_location]  # Start depot index
+        location_to_index[start_location],  # Start depot index
     )
     routing = pywrapcp.RoutingModel(manager)
 
@@ -85,7 +85,7 @@ def solve_tsp(
         route.append(index_to_location[node])
         index = solution.Value(routing.NextVar(index))
 
-    # Don't add end location (it's same as start)
+    # i didnt add end location because its not really end but our cashiers but if tome want then just uncomment
     # route.append(index_to_location[manager.IndexToNode(index)])
 
     return route

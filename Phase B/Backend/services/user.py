@@ -254,7 +254,7 @@ async def get_user_status(phone: str) -> UserStatusResponse:
     """
     Get user status including cart session and shopping list availability.
 
-    Used after login to determine what UI elements to show/enable.
+    Used after login to determine what UI elements to show/enable or for the session maybe just auto load it.
 
     Args:
         phone: User's phone number
@@ -271,11 +271,12 @@ async def get_user_status(phone: str) -> UserStatusResponse:
         shopping_list = await ShoppingList.find_one(ShoppingList.phone == phone)
         has_shopping_list = shopping_list is not None
 
-        print(f"User status for {phone}: cart={has_active_cart}, list={has_shopping_list}")
+        print(
+            f"User status for {phone}: cart={has_active_cart}, list={has_shopping_list}"
+        )
 
         return UserStatusResponse(
-            has_active_cart=has_active_cart,
-            has_shopping_list=has_shopping_list
+            has_active_cart=has_active_cart, has_shopping_list=has_shopping_list
         )
     except Exception as e:
         print(f"Error in get_user_status: {e}")

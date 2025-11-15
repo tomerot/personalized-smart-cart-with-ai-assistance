@@ -69,7 +69,6 @@ async def get_forgotten_items(
 ) -> List[Dict[str, Any]]:
     """
     Get top 3 frequently bought items that are NOT in the current cart.
-    Helps remind users of items they usually buy but forgot this time.
 
     Args:
         phone: User's phone number

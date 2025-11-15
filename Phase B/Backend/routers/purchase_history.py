@@ -18,7 +18,6 @@ async def save_purchase_history(phone: str, request: SavePurchaseRequest):
 
     - First purchase: Creates new purchase history document
     - Subsequent purchases: Merges items and adds quantities
-      (e.g., previous 5 milk + new 3 milk = 8 milk total)
 
     Args:
         phone: User's phone number

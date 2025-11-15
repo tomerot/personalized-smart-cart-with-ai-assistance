@@ -18,6 +18,9 @@ router = APIRouter(prefix="/products", tags=["Products"])
 
 @router.get("", response_model=List[ProductResponse])
 async def get_all_products():
+    """
+    Get all product
+    """
     products = await Product.find().to_list()
     return products
 
@@ -25,7 +28,7 @@ async def get_all_products():
 @router.get("/{barcode}/nutritional-info", response_model=NutritionalInfoResponse)
 async def get_product_nutritional_info(barcode: str):
     """
-    Get product nutritional information only (optimized for VAPI AI).
+    Get product nutritional information only.
 
     Args:
         barcode: Product barcode
@@ -47,7 +50,7 @@ async def get_product_nutritional_info(barcode: str):
 @router.get("/{barcode}/availability", response_model=ProductAvailabilityResponse)
 async def get_product_availability(barcode: str):
     """
-    Check product availability only (optimized for VAPI AI).
+    Check product availability only.
 
     Args:
         barcode: Product barcode
@@ -69,7 +72,7 @@ async def get_product_availability(barcode: str):
 @router.get("/{barcode}/ingredients", response_model=ProductIngredientsResponse)
 async def get_product_ingredients(barcode: str):
     """
-    Get product ingredients list only (optimized for VAPI AI).
+    Get product ingredients list only.
 
     Args:
         barcode: Product barcode
@@ -110,7 +113,7 @@ async def get_product_location(barcode: str):
     return location
 
 
-# in case we will need this - for now in comment
+# in case we will need this - for now commented
 # @router.get("/{barcode}/check-conflicts/{phone}", response_model=ConflictCheckResponse)
 # async def check_product_conflicts(barcode: str, phone: str):
 #     """
@@ -149,7 +152,7 @@ async def get_product_location(barcode: str):
 
 
 @router.get("/{barcode}/{phone}", response_model=FindAlternativesResponse)
-async def find_alternative_products(barcode: str, phone: str):
+async def scan_with_conflict_check_and_alternatives(barcode: str, phone: str):
     """
     Get product and find alternative products that don't conflict with user preferences.
 
@@ -167,7 +170,9 @@ async def find_alternative_products(barcode: str, phone: str):
         FindAlternativesResponse: Includes has_conflict flag, original product info,
         conflict details, and list of safe alternatives (only if conflict exists)
     """
-    result = await product_service.find_alternative_products(barcode, phone)
+    result = await product_service.scan_with_conflict_check_and_alternatives(
+        barcode, phone
+    )
 
     if "error" in result:
         raise HTTPException(
@@ -177,13 +182,10 @@ async def find_alternative_products(barcode: str, phone: str):
     return result
 
 
-@router.get("/{barcode}/all-same-category", response_model=List[ProductResponse])
+@router.get("/{barcode}/category", response_model=List[ProductResponse])
 async def get_all_products_from_same_category(barcode: str):
     """
     Get all products from the same category as the specified product.
-
-    Useful for AI to compare all alternatives and make recommendations
-    based on nutritional info, price, etc.
 
     Args:
         barcode: Product barcode to get category from

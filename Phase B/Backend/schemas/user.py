@@ -13,6 +13,7 @@ class UserResponse(BaseModel):
 
 class UserStatusResponse(BaseModel):
     """Response schema for user status check after login"""
+
     has_active_cart: bool
     has_shopping_list: bool
 
@@ -25,5 +26,5 @@ class AddAllergyRequest(BaseModel):
 
 class AddDietaryNeedRequest(BaseModel):
     dietary_need: str = Field(
-        ..., description="Single dietary need to add (e.g., 'vegan', 'kosher', 'halal')"
+        ..., description="Single dietary need to add (e.g., 'vegan')"
     )

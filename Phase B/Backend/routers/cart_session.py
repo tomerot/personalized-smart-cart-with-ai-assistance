@@ -6,7 +6,7 @@ from models import User
 router = APIRouter(prefix="/cart-session", tags=["Cart Session"])
 
 
-@router.post("/{phone}/sync", response_model=CartSessionResponse)
+@router.post("/{phone}/sync")
 async def sync_cart(phone: str, request: CartSyncRequest):
     """
     Sync/save cart session for crash recovery.
@@ -19,7 +19,7 @@ async def sync_cart(phone: str, request: CartSyncRequest):
         request: Cart items to save
 
     Returns:
-        CartSessionResponse: Saved cart session with timestamp
+        Success confirmation
     """
     # Validate user exists
     user = await User.find_one(User.phone == phone)
@@ -29,8 +29,8 @@ async def sync_cart(phone: str, request: CartSyncRequest):
             detail=f"User with phone '{phone}' not found",
         )
 
-    cart = await cart_session.sync_cart_session(phone, request.items)
-    return cart
+    await cart_session.sync_cart_session(phone, request.items)
+    return {"success": True}
 
 
 @router.get("/{phone}", response_model=CartSessionResponse)
@@ -66,8 +66,8 @@ async def delete_cart(phone: str):
     """
     Delete cart session.
 
-    Should be called after successful checkout or when user explicitly clears cart.
-    This removes the backup session from the database.
+    Should be called after successful checkout.
+    This removes the backup session(cart_session) from the database.
 
     Args:
         phone: User's phone number

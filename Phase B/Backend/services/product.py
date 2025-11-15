@@ -115,7 +115,9 @@ async def get_product_location(barcode: str) -> Optional[Dict[str, Any]]:
         raise
 
 
-async def find_alternative_products(barcode: str, phone: str) -> Dict[str, Any]:
+async def scan_with_conflict_check_and_alternatives(
+    barcode: str, phone: str
+) -> Dict[str, Any]:
     """
     Find alternative products in the same category that don't conflict with user preferences.
 
@@ -209,6 +211,7 @@ async def find_alternative_products(barcode: str, phone: str) -> Dict[str, Any]:
                 "barcode": product.barcode,
                 "name": product.name,
                 "company": product.company,
+                "size": product.size,
                 "category": product.category,
                 "price": product.price,
                 "image": product.image_url,

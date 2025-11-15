@@ -29,7 +29,7 @@ async def sync_cart_session(phone: str, items: List[Item]) -> CartSession:
         cart_session = CartSession(
             phone=phone,
             items=[Item(**item.model_dump()) for item in items],
-            last_updated=datetime.utcnow()
+            last_updated=datetime.utcnow(),
         )
         await cart_session.insert()
 
@@ -52,7 +52,7 @@ async def get_cart_session(phone: str) -> Optional[CartSession]:
 async def delete_cart_session(phone: str) -> bool:
     """
     Delete cart session for user.
-    Typically called after successful checkout or when user explicitly clears cart.
+    called after successful checkout.
 
     Args:
         phone: User's phone number
