@@ -1,5 +1,4 @@
 import os
-from beanie import init_beanie
 from dotenv import load_dotenv
 import motor.motor_asyncio
 
