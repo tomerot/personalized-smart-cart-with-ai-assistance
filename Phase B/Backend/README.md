@@ -2,6 +2,7 @@
 
 ```
 Backend/
+├── clients.py                 # Twilio and Genimi clients
 ├── main.py                    # FastAPI app entry point, CORS, DB init
 ├── database.py                # MongoDB connection setup
 ├── store_layout.json          # Store grid map & category positions
