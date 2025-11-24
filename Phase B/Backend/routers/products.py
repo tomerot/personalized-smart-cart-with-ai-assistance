@@ -16,12 +16,25 @@ from typing import List
 router = APIRouter(prefix="/products", tags=["Products"])
 
 
-@router.get("", response_model=List[ProductResponse])
-async def get_all_products():
+@router.get("/search", response_model=List[ProductResponse])
+async def search_products(q: str, limit: int = 5):
     """
-    Get all product
+    Search products by name.
+
+    Args:
+        q: Search query (product name)
+        limit: Maximum number of results to return (default: 5)
+
+    Returns:
+        List[ProductResponse]: Products matching the search query
     """
-    products = await Product.find().to_list()
+    # Use case-insensitive regex search on product name
+    products = (
+        await Product.find({"name": {"$regex": q, "$options": "i"}})
+        .limit(limit)
+        .to_list()
+    )
+
     return products
 
 
