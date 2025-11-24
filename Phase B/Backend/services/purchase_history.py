@@ -1,78 +1,85 @@
-from models import Purchase_history, Product
-from schemas import PurchaseItem
-from typing import List, Dict, Any
+from models import Purchase_history, CartSession
+from schemas.product_item import PurchaseData
+from typing import List, Dict, Any, Optional
+from datetime import datetime
 
 
-async def save_purchase_history(
-    phone: str, purchased_items: List[PurchaseItem]
-) -> Purchase_history:
+async def checkout_cart(phone: str) -> Optional[Purchase_history]:
     """
-    Save or update user's purchase history with cumulative quantities.
+    Checkout: Convert cart session to purchase and add to history.
 
-    If first purchase: Create new document
-    If existing: Merge items and add quantities (e.g., 5 milk + 3 milk = 8 milk total)
+    1. Get cart session
+    2. Calculate total amount and total items
+    3. Create PurchaseData from cart
+    4. Add to purchase history (keep max 3 purchases)
+    5. Delete cart session
 
     Args:
         phone: User's phone number
-        purchased_items: List of items just purchased
 
     Returns:
-        Purchase_history: Updated purchase history document
+        Purchase_history: Updated purchase history or None if cart not found
     """
     try:
-        # Check if user has existing purchase history
+        # Get cart session
+        cart_session = await CartSession.find_one(CartSession.phone == phone)
+        if not cart_session or not cart_session.items:
+            print(f"No cart session found for phone: {phone}")
+            return None
+
+        # Calculate totals
+        total_amount = sum(item.price * item.quantity for item in cart_session.items)
+        total_items = sum(item.quantity for item in cart_session.items)
+
+        # Create purchase data from cart
+        new_purchase = PurchaseData(
+            items=cart_session.items,
+            created_at=datetime.utcnow(),
+            total_amount=total_amount,
+            total_items=total_items,
+        )
+
+        # Get or create purchase history
         history = await Purchase_history.find_one(Purchase_history.phone == phone)
 
         if not history:
             # First purchase - create new document
-            history = Purchase_history(phone=phone, items=purchased_items)
+            history = Purchase_history(phone=phone, purchases=[new_purchase])
             await history.insert()
             print(f"Created new purchase history for phone: {phone}")
-            return history
+        else:
+            # Add new purchase to list
+            history.purchases.append(new_purchase)
 
-        # Existing history - merge items and update quantities
-        # Convert existing items to dict for easier lookup
-        existing_items_dict: Dict[str, int] = {
-            item.product_barcode: item.quantity for item in history.items
-        }
+            # Keep only last 3 purchases (remove oldest if > 3)
+            if len(history.purchases) > 3:
+                history.purchases = history.purchases[-3:]  # Keep last 3
 
-        # Add/update quantities from new purchase
-        for purchased_item in purchased_items:
-            barcode = purchased_item.product_barcode
-            if barcode in existing_items_dict:
-                # Item exists - add quantity
-                existing_items_dict[barcode] += purchased_item.quantity
-            else:
-                # New item - add to dict
-                existing_items_dict[barcode] = purchased_item.quantity
+            await history.save()
+            print(
+                f"Added purchase to history for phone: {phone}. Total purchases: {len(history.purchases)}"
+            )
 
-        # Convert back to list of PurchaseItems
-        updated_items = [
-            PurchaseItem(product_barcode=barcode, quantity=quantity)
-            for barcode, quantity in existing_items_dict.items()
-        ]
+        # Delete cart session after successful checkout
+        await cart_session.delete()
+        print(f"Deleted cart session for phone: {phone} after checkout")
 
-        # Update document
-        history.items = updated_items
-        await history.save()
-
-        print(f"Updated purchase history for phone: {phone}")
         return history
 
     except Exception as e:
-        print(f"Error in save_purchase_history: {e}")
+        print(f"Error in checkout_cart: {e}")
         raise
 
 
 async def get_forgotten_items(
-    phone: str, cart_items: List[PurchaseItem]
+    phone: str, cart_barcodes: List[str]
 ) -> List[Dict[str, Any]]:
     """
-    Get top 3 frequently bought items that are NOT in the current cart.
+    Get top 3 frequently bought items from last 3 purchases that are NOT in the current cart.
 
     Args:
         phone: User's phone number
-        cart_items: List of items currently in the cart (only barcode is used for comparison)
+        cart_barcodes: List of product barcodes currently in the cart
 
     Returns:
         List of top 3 forgotten items with product details, sorted by purchase frequency
@@ -80,37 +87,35 @@ async def get_forgotten_items(
     try:
         # Get purchase history
         history = await Purchase_history.find_one(Purchase_history.phone == phone)
-        if not history or not history.items:
+        if not history or not history.purchases:
             print(f"No purchase history found for phone: {phone}")
             return []
 
-        # Get cart barcodes from provided cart items
-        cart_barcodes = {item.product_barcode for item in cart_items}
+        # Count item frequencies across all purchases (last 3)
+        item_frequency: Dict[str, Dict[str, Any]] = {}
 
-        # Find items in history but NOT in cart
-        forgotten = []
-        for item in history.items:
-            if item.product_barcode not in cart_barcodes:
-                # Get product details
-                product = await Product.find_one(
-                    Product.barcode == item.product_barcode
-                )
-
-                if product and product.available:
-                    forgotten.append(
-                        {
-                            "barcode": product.barcode,
-                            "name": product.name,
-                            "company": product.company,
-                            "category": product.category,
-                            "price": product.price,
-                            "size": product.size,
-                            "total_purchased": item.quantity,  # How many times bought
+        for purchase in history.purchases:
+            for item in purchase.items:
+                barcode = item.barcode
+                if barcode not in cart_barcodes:  # Only items NOT in cart
+                    if barcode not in item_frequency:
+                        # Store first occurrence with full product data
+                        item_frequency[barcode] = {
+                            "barcode": item.barcode,
+                            "name": item.name,
+                            "company": item.company,
+                            "category": item.category,
+                            "price": item.price,
+                            "size": item.size,
+                            "image_url": item.image_url,
+                            "frequency": 0,
                         }
-                    )
+                    # Increment frequency (count how many times purchased)
+                    item_frequency[barcode]["frequency"] += item.quantity
 
-        # Sort by total_purchased (most frequently bought first)
-        forgotten.sort(key=lambda x: x["total_purchased"], reverse=True)
+        # Convert to list and sort by frequency
+        forgotten = list(item_frequency.values())
+        forgotten.sort(key=lambda x: x["frequency"], reverse=True)
 
         # Return top 3
         top_3_forgotten = forgotten[:3]
@@ -123,9 +128,9 @@ async def get_forgotten_items(
         raise
 
 
-async def get_purchase_history(phone: str) -> Purchase_history | None:
+async def get_purchase_history(phone: str) -> Optional[Purchase_history]:
     """
-    Get user's complete purchase history.
+    Get user's complete purchase history (last 3 purchases).
 
     Args:
         phone: User's phone number
@@ -136,7 +141,9 @@ async def get_purchase_history(phone: str) -> Purchase_history | None:
     try:
         history = await Purchase_history.find_one(Purchase_history.phone == phone)
         if history:
-            print(f"Retrieved purchase history for phone: {phone}")
+            print(
+                f"Retrieved purchase history for phone: {phone} ({len(history.purchases)} purchases)"
+            )
         else:
             print(f"No purchase history found for phone: {phone}")
         return history

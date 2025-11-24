@@ -79,3 +79,24 @@ class FindAlternativesResponse(BaseModel):
     conflict_with_original: ConflictCheckResponse
     alternatives: List[AlternativeProductInfo]
     total_alternatives: int
+
+
+class AIAlternativesRequest(BaseModel):
+    allergies: List[str] = Field(
+        default_factory=list, description="List of user's allergies"
+    )
+    dietary_needs: List[str] = Field(
+        default_factory=list, description="List of user's dietary needs"
+    )
+    requirement: str = Field(
+        ..., description="User's specific requirement for alternatives (e.g., 'less sugar', 'cheaper', 'organic')"
+    )
+
+
+class AIAlternativesResponse(BaseModel):
+    alternatives: List[ProductResponse] = Field(
+        default_factory=list, description="AI-recommended alternative products (up to 3)"
+    )
+    explanation: str = Field(
+        ..., description="AI-generated explanation for all alternatives, or error message if none found"
+    )

@@ -1,11 +1,11 @@
-from models import ShoppingList, Product
-from schemas import Item
+from models import ShoppingList
+from schemas.product_item import ShoppingListItemData
 from typing import List, Dict, Any, Optional
 from services.route_optimizer import calculate_shopping_route
 
 
 async def create_or_update_shopping_list(
-    phone: str, items: List[Item]
+    phone: str, items: List[ShoppingListItemData]
 ) -> ShoppingList:
     """
     Create or update user's shopping list.
@@ -17,7 +17,7 @@ async def create_or_update_shopping_list(
 
     Args:
         phone: User's phone number
-        items: List of items to set in shopping list
+        items: List of items with full product data + quantity + location
 
     Returns:
         ShoppingList: Created or updated shopping list with optimized route
@@ -39,12 +39,8 @@ async def create_or_update_shopping_list(
 
         # Calculate optimized route
         if items:
-            # Get unique categories from items
-            categories = []
-            for item in items:
-                product = await Product.find_one(Product.barcode == item.product_barcode)
-                if product and product.category:
-                    categories.append(product.category)
+            # Get unique categories from items (now directly from item data)
+            categories = [item.category for item in items if item.category]
 
             if categories:
                 # Calculate route using JSON-based optimizer
@@ -115,91 +111,4 @@ async def get_shopping_list(phone: str) -> Optional[ShoppingList]:
 
     except Exception as e:
         print(f"Error in get_shopping_list: {e}")
-        raise
-
-
-async def get_shopping_list_with_products(phone: str) -> Dict[str, Any]:
-    """
-    Get user's shopping list with full product information for each item.
-
-    Args:
-        phone: User's phone number
-
-    Returns:
-        Dict with shopping list and detailed product information:
-        {
-            "phone": str,
-            "items": [
-                {
-                    "product_barcode": str,
-                    "quantity": int,
-                    "product_details": {
-                        "name": str,
-                        "company": str,
-                        "category": str,
-                        "price": float,
-                        ...
-                    }
-                }
-            ]
-        }
-    """
-    try:
-        # Get shopping list
-        shopping_list = await ShoppingList.find_one(ShoppingList.phone == phone)
-
-        if not shopping_list:
-            print(f"No shopping list found for phone: {phone}")
-            return None
-
-        # Fetch product details for each item
-        items_with_details = []
-
-        for item in shopping_list.items:
-            product = await Product.find_one(Product.barcode == item.product_barcode)
-
-            if product:
-                items_with_details.append({
-                    "product_barcode": item.product_barcode,
-                    "quantity": item.quantity,
-                    "product_details": {
-                        "name": product.name,
-                        "image_url": product.image_url,
-                        "company": product.company,
-                        "category": product.category,
-                        "price": product.price,
-                        "size": product.size,
-                        "allergens": product.allergens,
-                        "dietary_tags": product.dietary_tags,
-                        "nutritional_info": {
-                            "calories_per_100g": product.nutritional_info.calories_per_100g,
-                            "fat_per_100g": product.nutritional_info.fat_per_100g,
-                            "sodium_per_100mg": product.nutritional_info.sodium_per_100mg,
-                            "carbs_per_100g": product.nutritional_info.carbs_per_100g,
-                            "sugar_per_100g": product.nutritional_info.sugar_per_100g,
-                            "protein_per_100g": product.nutritional_info.protein_per_100g,
-                        },
-                        "available": product.available,
-                    },
-                })
-            else:
-                # Product not found, include minimal info
-                items_with_details.append({
-                    "product_barcode": item.product_barcode,
-                    "quantity": item.quantity,
-                    "product_details": None,
-                })
-
-        print(
-            f"Retrieved shopping list with product details for phone: {phone} ({len(items_with_details)} items)"
-        )
-
-        return {
-            "phone": phone,
-            "items": items_with_details,
-            "optimized_route": shopping_list.optimized_route or []
-        }
-
-    except Exception as e:
-        print(f"Error in get_shopping_list_with_products: {e}")
         raise

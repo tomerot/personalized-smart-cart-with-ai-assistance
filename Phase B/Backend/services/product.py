@@ -1,5 +1,7 @@
 from models import Product, Category, User
 from typing import List, Optional, Dict, Any
+from clients import get_gemini_client
+import json
 
 
 async def get_products_by_category(category: str) -> List[Product]:
@@ -214,7 +216,7 @@ async def scan_with_conflict_check_and_alternatives(
                 "size": product.size,
                 "category": product.category,
                 "price": product.price,
-                "image": product.image_url,
+                "image_url": product.image_url,
             },
             "conflict_with_original": original_conflict,
             "alternatives": limited_alternatives,
@@ -223,4 +225,195 @@ async def scan_with_conflict_check_and_alternatives(
 
     except Exception as e:
         print(f"Error in find_alternative_products: {e}")
+        raise
+
+
+async def get_ai_recommended_alternatives(
+    barcode: str,
+    allergies: List[str],
+    dietary_needs: List[str],
+    requirement: str,
+) -> Dict[str, Any]:
+    """
+    Get AI-recommended alternative products using Google Gemini.
+
+    This function:
+    1. Finds all alternatives in the same category as the original product
+    2. Filters by availability and user restrictions (allergies/dietary needs)
+    3. Sends filtered alternatives to Gemini AI with user's requirement
+    4. Returns top 3 AI-recommended alternatives with explanations
+
+    Args:
+        barcode: Original product barcode
+        allergies: List of user's allergies
+        dietary_needs: List of user's dietary needs
+        requirement: User's specific requirement (e.g., "less sugar", "cheaper")
+
+    Returns:
+        Dict with:
+        {
+            "original_product": Product,
+            "requirement": str,
+            "top_alternatives": [
+                {
+                    "product": Product,
+                    "explanation": str
+                }
+            ]
+        }
+    """
+    try:
+        # 1. Get original product
+        original_product = await Product.find_one(Product.barcode == barcode)
+        if not original_product:
+            raise ValueError(f"Product with barcode '{barcode}' not found")
+
+        # 2. Get all products from same category
+        all_products = await get_products_by_category(original_product.category)
+
+        # 3. Filter alternatives (same category, available, no conflicts, not original)
+        safe_alternatives = []
+        for product in all_products:
+            # Skip original product
+            if product.barcode == barcode:
+                continue
+
+            # Skip unavailable products
+            if not product.available:
+                continue
+
+            # Check for conflicts
+            conflict_check = check_product_conflicts(product, allergies, dietary_needs)
+
+            if not conflict_check["has_conflict"]:
+                safe_alternatives.append(product)
+
+        print(f"Found {len(safe_alternatives)} safe alternatives for AI processing")
+
+        if len(safe_alternatives) == 0:
+            return {
+                "alternatives": [],
+                "explanation": "Couldn't find any alternatives that match your dietary restrictions",
+            }
+
+        # Determine how many alternatives to request (max 3)
+        num_alternatives = min(len(safe_alternatives), 3)
+
+        # 4. Prepare data for Gemini
+        alternatives_data = []
+        for product in safe_alternatives:
+            alternatives_data.append(
+                {
+                    "barcode": product.barcode,
+                    "name": product.name,
+                    "company": product.company,
+                    "price": product.price,
+                    "size": product.size,
+                    "ingredients": product.ingredients,
+                    "allergens": product.allergens,
+                    "dietary_tags": product.dietary_tags,
+                    "nutritional_info": {
+                        "calories_per_100g": product.nutritional_info.calories_per_100g,
+                        "fat_per_100g": product.nutritional_info.fat_per_100g,
+                        "sodium_per_100mg": product.nutritional_info.sodium_per_100mg,
+                        "carbs_per_100g": product.nutritional_info.carbs_per_100g,
+                        "sugar_per_100g": product.nutritional_info.sugar_per_100g,
+                        "protein_per_100g": product.nutritional_info.protein_per_100g,
+                    },
+                }
+            )
+
+        # 5. Get Gemini client
+        gemini_client = get_gemini_client()
+
+        # 6. Create prompt for Gemini
+        prompt = f"""
+You are a smart shopping assistant. Given the following list of alternative products and a user requirement,
+select the TOP {num_alternatives} BEST product(s) that match the requirement.
+
+User Requirement: "{requirement}"
+
+Original Product:
+- Name: {original_product.name}
+- Company: {original_product.company}
+- Price: ${original_product.price}
+- Size: {original_product.size}
+- Ingridiants: {original_product.ingredients}
+- Nutritional info: {original_product.nutritional_info}
+
+Available Alternatives (all safe for user's dietary restrictions):
+{json.dumps(alternatives_data, indent=2)}
+
+Your task:
+1. Analyze each alternative product based on the user's requirement
+2. Select the TOP {num_alternatives} product(s) that best match the requirement
+3. Provide ONE overall explanation (max 20 words) why these alternatives were chosen
+4. IMPORTANT: Each product must be UNIQUE - do NOT repeat the same barcode
+
+IMPORTANT: Return your response ONLY as a valid JSON object with exactly {num_alternatives} product(s) in this format:
+{{
+  "barcodes": ["barcode1", "barcode2", "barcode3"],
+  "explanation": "Brief overall explanation for all alternatives (max 20 words)"
+}}
+
+Do not include any other text, markdown formatting, or code blocks. Return ONLY the JSON object.
+"""
+
+        # 7. Get Gemini response
+        print(f"Sending request to Gemini with requirement: {requirement}")
+        response_text = gemini_client.generate_content(prompt)
+
+        # Remove markdown code blocks if present
+        if response_text.startswith("```json"):
+            response_text = response_text[7:]  # Remove ```json
+        if response_text.startswith("```"):
+            response_text = response_text[3:]  # Remove ```
+        if response_text.endswith("```"):
+            response_text = response_text[:-3]  # Remove ```
+        response_text = response_text.strip()
+
+        print(f"Gemini response: {response_text}")
+
+        # 8. Parse Gemini response
+        gemini_result = json.loads(response_text)
+
+        # 9. Build final response (ensure no duplicates)
+        recommended_barcodes = gemini_result.get("barcodes", [])
+        ai_explanation = gemini_result.get("explanation", "")
+
+        alternatives = []
+        seen_barcodes = set()
+
+        for barcode in recommended_barcodes:
+            # Skip if we've already added this product
+            if barcode in seen_barcodes:
+                continue
+
+            # Find the product object
+            product_obj = next(
+                (p for p in safe_alternatives if p.barcode == barcode),
+                None,
+            )
+
+            if product_obj:
+                alternatives.append(product_obj)
+                seen_barcodes.add(barcode)
+
+        # Use AI explanation if alternatives found, otherwise default message
+        if len(alternatives) == 0:
+            explanation_msg = "Couldn't find any alternatives"
+        else:
+            explanation_msg = ai_explanation
+
+        return {
+            "alternatives": alternatives,
+            "explanation": explanation_msg,
+        }
+
+    except json.JSONDecodeError as e:
+        print(f"Error parsing Gemini response: {e}")
+        print(f"Response text: {response_text}")
+        raise ValueError(f"Failed to parse AI response: {str(e)}")
+    except Exception as e:
+        print(f"Error in get_ai_recommended_alternatives: {e}")
         raise

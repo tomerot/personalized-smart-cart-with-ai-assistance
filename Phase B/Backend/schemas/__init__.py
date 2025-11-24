@@ -1,4 +1,9 @@
-from .item import Item
+from .product_item import (
+    ProductItemData,
+    ShoppingListItemData,
+    PurchaseData,
+    NutritionalInfoData,
+)
 from .otp import OTPCodeRequest
 from .product import (
     ProductResponse,
@@ -10,16 +15,16 @@ from .product import (
     ConflictCheckResponse,
     AlternativeProductInfo,
     FindAlternativesResponse,
+    AIAlternativesRequest,
+    AIAlternativesResponse,
 )
 from .user import (
     UserResponse,
     UserStatusResponse,
-    AddAllergyRequest,
-    AddDietaryNeedRequest,
+    AllergiesRequest,
+    DietaryNeedsRequest,
 )
 from .purchase_history import (
-    PurchaseItem,
-    SavePurchaseRequest,
     PurchaseHistoryResponse,
     CheckForgottenItemsRequest,
     ForgottenItemResponse,
@@ -28,14 +33,14 @@ from .purchase_history import (
 from .shopping_list import (
     ShoppingListRequest,
     ShoppingListResponse,
-    ShoppingListItemWithProduct,
-    ShoppingListWithProductsResponse,
 )
 from .cart_session import CartSyncRequest, CartSessionResponse
 
 __all__ = [
-    Item,
-    PurchaseItem,
+    ProductItemData,
+    ShoppingListItemData,
+    PurchaseData,
+    NutritionalInfoData,
     OTPCodeRequest,
     ProductResponse,
     NutritionalInfoResponse,
@@ -46,19 +51,18 @@ __all__ = [
     ConflictCheckResponse,
     AlternativeProductInfo,
     FindAlternativesResponse,
+    AIAlternativesRequest,
+    AIAlternativesResponse,
     UserResponse,
     UserStatusResponse,
-    AddAllergyRequest,
-    AddDietaryNeedRequest,
-    SavePurchaseRequest,
+    AllergiesRequest,
+    DietaryNeedsRequest,
     PurchaseHistoryResponse,
     CheckForgottenItemsRequest,
     ForgottenItemResponse,
     ForgottenItemsResponse,
     ShoppingListRequest,
     ShoppingListResponse,
-    ShoppingListItemWithProduct,
-    ShoppingListWithProductsResponse,
     CartSyncRequest,
     CartSessionResponse,
 ]

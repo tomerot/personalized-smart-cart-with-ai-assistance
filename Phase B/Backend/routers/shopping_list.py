@@ -3,7 +3,6 @@ from services import shopping_list as shopping_list_service
 from schemas import (
     ShoppingListRequest,
     ShoppingListResponse,
-    ShoppingListWithProductsResponse,
 )
 from models import User
 
@@ -87,27 +86,3 @@ async def get_shopping_list(phone: str):
         )
 
     return shopping_list
-
-
-@router.get(
-    "/{phone}/with-products-info", response_model=ShoppingListWithProductsResponse
-)
-async def get_shopping_list_with_products(phone: str):
-    """
-    Get user's shopping list with full product information for each item.
-
-    Args:
-        phone: User's phone number
-
-    Returns:
-        ShoppingListWithProductsResponse: Shopping list with detailed product info
-    """
-    result = await shopping_list_service.get_shopping_list_with_products(phone)
-
-    if not result:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No shopping list found for phone '{phone}'",
-        )
-
-    return result

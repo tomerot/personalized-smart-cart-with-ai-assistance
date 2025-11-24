@@ -1,11 +1,7 @@
 import datetime
 import random
-from twilio.rest import Client
-import os
+from clients import get_twilio_client
 from models import OTP
-
-# Initialize Twilio client (from environment variables)
-client = Client(os.getenv("TWILIO_ACCOUNT_SID"), os.getenv("TWILIO_AUTH_TOKEN"))
 
 
 def generate_otp() -> str:
@@ -19,20 +15,21 @@ def send_sms_with_otp(to_phone: str, otp_code: str) -> bool:
 
     Returns True if SMS sent successfully, False otherwise.
     """
-    # Check if Twilio client is properly initialized
-    if not client:
-        print(f"Twilio client not initialized. Cannot send SMS to {to_phone}")
-        return False
-
     try:
+        # Get Twilio client
+        twilio_client = get_twilio_client()
+
         # Send SMS with OTP code using Twilio API
-        message = client.messages.create(
-            body=f"Your OTP code is: {otp_code}. Valid for 3 minutes.",
-            from_=os.getenv("TWILIO_PHONE_NUMBER"),
+        message = twilio_client.send_sms(
             to=to_phone,
+            message=f"Your OTP code is: {otp_code}. Valid for 3 minutes.",
         )
         print(f"SMS sent successfully to {to_phone}")
         return True
+    except RuntimeError as e:
+        # Twilio client not initialized
+        print(f"Twilio client not initialized: {e}")
+        return False
     except Exception as e:
         # Log error and return False to indicate failure
         print(f"Failed to send SMS to {to_phone}: {e}")

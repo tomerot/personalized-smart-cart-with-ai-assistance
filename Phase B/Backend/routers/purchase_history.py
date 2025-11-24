@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 from services import purchase_history as history_service
 from schemas import (
-    SavePurchaseRequest,
     PurchaseHistoryResponse,
     CheckForgottenItemsRequest,
     ForgottenItemsResponse,
@@ -11,17 +10,19 @@ from models import User
 router = APIRouter(prefix="/purchase-history", tags=["Purchase History"])
 
 
-@router.post("/{phone}", response_model=PurchaseHistoryResponse)
-async def save_purchase_history(phone: str, request: SavePurchaseRequest):
+@router.post("/{phone}/checkout", response_model=PurchaseHistoryResponse)
+async def checkout(phone: str):
     """
-    Save or update user's purchase history with cumulative quantities.
+    Checkout: Convert cart session to purchase and add to history.
 
-    - First purchase: Creates new purchase history document
-    - Subsequent purchases: Merges items and adds quantities
+    Process:
+    1. Get cart session
+    2. Convert to purchase (with full product data)
+    3. Add to purchase history (keep last 3 purchases)
+    4. Delete cart session
 
     Args:
         phone: User's phone number
-        request: SavePurchaseRequest with list of purchased items
 
     Returns:
         PurchaseHistoryResponse: Updated purchase history
@@ -35,12 +36,17 @@ async def save_purchase_history(phone: str, request: SavePurchaseRequest):
         )
 
     try:
-        history = await history_service.save_purchase_history(phone, request.items)
+        history = await history_service.checkout_cart(phone)
+        if not history:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No cart session found for phone '{phone}'",
+            )
         return history
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to save purchase history: {str(e)}",
+            detail=f"Failed to checkout: {str(e)}",
         )
 
 
@@ -69,21 +75,21 @@ async def get_purchase_history(phone: str):
 @router.post("/{phone}/forgotten-items", response_model=ForgottenItemsResponse)
 async def check_forgotten_items(phone: str, request: CheckForgottenItemsRequest):
     """
-    Get top 3 frequently bought items that are NOT in the current cart.
+    Get top 3 frequently bought items from last 3 purchases that are NOT in the current cart.
 
-    Compares purchase history with current cart items (sent from frontend)
+    Compares purchase history with current cart barcodes (sent from frontend)
     to find items the user usually buys but forgot this time.
-    Always returns top 3 items sorted by purchase frequency.
+    Returns top 3 items sorted by purchase frequency.
 
     Args:
         phone: User's phone number
-        request: CheckForgottenItemsRequest with current cart items
+        request: CheckForgottenItemsRequest with current cart barcodes
 
     Returns:
         ForgottenItemsResponse: Top 3 forgotten items with details
     """
     try:
-        forgotten = await history_service.get_forgotten_items(phone, request.items)
+        forgotten = await history_service.get_forgotten_items(phone, request.cart_barcodes)
 
         return {
             "phone": phone,

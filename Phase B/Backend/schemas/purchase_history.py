@@ -1,29 +1,10 @@
 from pydantic import BaseModel, Field
-from typing import List
-
-
-class PurchaseItem(BaseModel):
-    """Item schema for purchase history - tracks only barcode and cumulative quantity"""
-    product_barcode: str
-    quantity: int = 1
-
-
-class SavePurchaseRequest(BaseModel):
-    items: List[PurchaseItem] = Field(
-        ..., description="List of items purchased with their quantities"
-    )
-
-
-class PurchaseHistoryResponse(BaseModel):
-    phone: str
-    items: List[PurchaseItem]
-
-    class Config:
-        from_attributes = True
+from typing import List, Optional
+from schemas.product_item import PurchaseData
 
 
 class CheckForgottenItemsRequest(BaseModel):
-    items: List[PurchaseItem] = Field(..., description="List of items currently in the cart (only barcode needed for comparison)")
+    cart_barcodes: List[str] = Field(..., description="List of product barcodes currently in the cart")
 
 
 class ForgottenItemResponse(BaseModel):
@@ -32,12 +13,20 @@ class ForgottenItemResponse(BaseModel):
     company: str
     category: str
     price: float
-    total_purchased: int = Field(
-        ..., description="Total quantity purchased across all past orders"
-    )
+    size: Optional[str] = None
+    image_url: str
+    frequency: int = Field(..., description="Total quantity purchased across last 3 purchases")
 
 
 class ForgottenItemsResponse(BaseModel):
     phone: str
     forgotten_items: List[ForgottenItemResponse]
     total_found: int
+
+
+class PurchaseHistoryResponse(BaseModel):
+    phone: str
+    purchases: List[PurchaseData]
+
+    class Config:
+        from_attributes = True
