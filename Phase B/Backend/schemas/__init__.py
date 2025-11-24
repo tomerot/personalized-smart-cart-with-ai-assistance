@@ -1,5 +1,5 @@
 from .item import Item
-from .otp import OTPSendRequest, OTPVerifyRequest
+from .otp import OTPCodeRequest
 from .product import (
     ProductResponse,
     NutritionalInfoResponse,
@@ -36,8 +36,7 @@ from .cart_session import CartSyncRequest, CartSessionResponse
 __all__ = [
     Item,
     PurchaseItem,
-    OTPSendRequest,
-    OTPVerifyRequest,
+    OTPCodeRequest,
     ProductResponse,
     NutritionalInfoResponse,
     ProductLocationResponse,
