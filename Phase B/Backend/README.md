@@ -9,7 +9,7 @@ Backend/
 ├── calculate_distances.py     # Script: Generate distance matrix
 ├── sync_categories_to_db.py   # Script: Sync categories JSON → MongoDB
 │
-├── clients.py                 # Twilio and Genimi clients
+├── clients.py                 # Twilio and Gemini clients
 │   ├── gemini_client.py
 │   ├── twilio_client.py
 │
