@@ -24,11 +24,11 @@ from .user import (
     AllergiesRequest,
     DietaryNeedsRequest,
 )
-from .purchase_history import (
-    PurchaseHistoryResponse,
-    CheckForgottenItemsRequest,
-    ForgottenItemResponse,
-    ForgottenItemsResponse,
+from .purchase_tracking import (
+    CheckoutResponse,
+    ReplenishmentSuggestionsRequest,
+    ReplenishmentSuggestionsResponse,
+    SuggestionItem,
 )
 from .shopping_list import (
     ShoppingListRequest,
@@ -57,10 +57,10 @@ __all__ = [
     UserStatusResponse,
     AllergiesRequest,
     DietaryNeedsRequest,
-    PurchaseHistoryResponse,
-    CheckForgottenItemsRequest,
-    ForgottenItemResponse,
-    ForgottenItemsResponse,
+    CheckoutResponse,
+    ReplenishmentSuggestionsRequest,
+    ReplenishmentSuggestionsResponse,
+    SuggestionItem,
     ShoppingListRequest,
     ShoppingListResponse,
     CartSyncRequest,

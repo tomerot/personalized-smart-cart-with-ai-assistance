@@ -20,11 +20,13 @@ class UserStatusResponse(BaseModel):
 
 class AllergiesRequest(BaseModel):
     allergies: List[str] = Field(
-        ..., description="List of allergies to add/remove (e.g., ['peanuts', 'dairy', 'gluten'])"
+        ...,
+        description="List of allergies to add/remove (e.g., ['peanuts', 'dairy', 'gluten'])",
     )
 
 
 class DietaryNeedsRequest(BaseModel):
     dietary_needs: List[str] = Field(
-        ..., description="List of dietary needs to add/remove (e.g., ['vegan', 'kosher'])"
+        ...,
+        description="List of dietary needs to add/remove (e.g., ['vegan', 'kosher'])",
     )
