@@ -19,14 +19,14 @@ Backend/
 │   ├── category.py
 │   ├── cart_session.py
 │   ├── shopping_list.py
-│   ├── purchase_history.py
+│   ├── product_purchase_tracking.py
 │   └── otp.py
 │
 ├── schemas/                   # Pydantic models for request/response
 │   ├── user.py
 │   ├── product.py
 │   ├── shopping_list.py
-│   ├── purchase_history.py
+│   ├── product_purchase_tracking.py
 │   ├── cart_session.py
 │   ├── item.py
 │   └── otp.py
@@ -35,7 +35,7 @@ Backend/
 │   ├── user.py
 │   ├── product.py
 │   ├── shopping_list.py
-│   ├── purchase_history.py
+│   ├── product_purchase_tracking.py
 │   ├── cart_session.py
 │   ├── otp.py
 │   ├── pathfinding.py        # BFS algorithm for store navigation
@@ -45,7 +45,7 @@ Backend/
     ├── users.py              
     ├── products.py           
     ├── shopping_list.py      
-    ├── purchase_history.py  
+    ├── product_purchase_tracking.py  
     ├── cart_session.py       
     ├── otp.py                
     └── store.py              # Store layout
