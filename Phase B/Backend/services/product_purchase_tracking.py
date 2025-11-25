@@ -4,10 +4,25 @@ from datetime import datetime
 from statistics import median
 
 # Configuration constants for abandonment detection and freeze logic
-ACTIVE_SHOPPER_THRESHOLD_DAYS = 14  # User shopped in last 14 days = active shopper
-ABANDONMENT_THRESHOLD_DAYS = 60  # If product overdue by 60+ days = likely abandoned
-INACTIVITY_THRESHOLD_DAYS = 30  # User hasn't shopped in 30+ days = inactive/away
-ABANDONMENT_MULTIPLIER = 2.5  # Or 2.5x average interval, whichever is larger
+
+# If user shopped within last 14 days → they are "actively shopping"
+# Used to detect: "Is user still shopping regularly, but ignoring THIS product?"
+ACTIVE_SHOPPER_THRESHOLD_DAYS = 14
+
+# If user hasn't shopped for 30+ days → they are "inactive/away" (vacation, illness, etc.)
+# Used in 2 places:
+#   1. FREEZE: If inactive for 30+ days, don't update averages on next purchase (preserve pattern)
+#   2. SUGGESTIONS: Don't return suggestions if user inactive for 30+ days (don't spam)
+INACTIVITY_THRESHOLD_DAYS = 30  # User hasn't shopped in 30+ days = inactive/away (ex. vacation) - we dont track the last purcahse interval
+
+# Used together to detect abandoned products:
+# Threshold = max(60 days, average_interval * 2.5)
+# If user is ACTIVE (shopped within 14 days) BUT specific product overdue by threshold → DELETE tracking
+# Examples:
+#   - Milk (7-day avg): threshold = max(60, 7×2.5) = 60 days
+#   - Shampoo (30-day avg): threshold = max(60, 30×2.5) = 75 days
+ABANDONMENT_MULTIPLIER = 2.5
+ABANDONMENT_THRESHOLD_DAYS = 60
 
 
 async def checkout_cart(phone: str) -> Dict[str, Any]:
