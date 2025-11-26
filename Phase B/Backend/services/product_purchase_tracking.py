@@ -217,19 +217,21 @@ def calculate_robust_average_interval(intervals: List[float]) -> float:
     1. If < 3 purchases, use mean (not enough data for outlier detection)
     2. If >= 3 purchases, use median (robust to outliers)
     3. Remove extreme outliers (>3x median) before calculating
+    4. Minimum return value is 1 day (prevents division by zero)
 
     Args:
         intervals: List of days between purchases
 
     Returns:
-        Average interval in days (median-based for robustness)
+        Average interval in days (median-based for robustness, minimum 1 day)
     """
     if not intervals:
-        return 0
+        return 1  # Minimum 1 day interval
 
     if len(intervals) < 3:
         # Not enough data for robust statistics, use simple mean
-        return sum(intervals) / len(intervals)
+        result = sum(intervals) / len(intervals)
+        return max(result, 1)  # Ensure at least 1 day
 
     # Use median (robust to outliers)
     median_val = median(intervals)
@@ -243,7 +245,8 @@ def calculate_robust_average_interval(intervals: List[float]) -> float:
         filtered = intervals
 
     # Return median of filtered data (most robust approach)
-    return median(filtered)
+    result = median(filtered)
+    return max(result, 1)  # Ensure at least 1 day (prevents division by zero)
 
 
 async def get_replenishment_suggestions(
@@ -315,6 +318,13 @@ async def get_replenishment_suggestions(
 
             days_since_last = (now - item.last_purchase_date).days
             avg_interval = item.average_interval_days
+
+            # Safety check: ensure avg_interval is at least 1 (prevents division by zero)
+            if avg_interval <= 0:
+                avg_interval = 1
+                print(
+                    f"⚠️ WARNING: {item.barcode} has avg_interval <= 0, setting to 1 day"
+                )
 
             # Calculate due window: (avg - 1 day) to (avg * 1.5)
             lower_bound = avg_interval - 1
