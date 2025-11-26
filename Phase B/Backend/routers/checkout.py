@@ -7,10 +7,10 @@ from schemas.purchase_tracking import (
 )
 from models import User
 
-router = APIRouter(prefix="/purchase-tracking", tags=["Purchase Tracking"])
+router = APIRouter(prefix="/checkout", tags=["Checkout"])
 
 
-@router.post("/{phone}/checkout", response_model=CheckoutResponse)
+@router.post("/{phone}", response_model=CheckoutResponse)
 async def checkout(phone: str):
     """
     Checkout: Track all cart items and clear cart.

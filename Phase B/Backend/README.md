@@ -1,17 +1,15 @@
-## Project Structure
+## 📁 Project Structure
 
 ```
 Backend/
 ├── main.py                    # FastAPI app entry point, CORS, DB init
 ├── database.py                # MongoDB connection setup
-├── store_layout.json          # Store grid map & category positions
+├── store_layout.json          # Store grid map
 ├── distance_matrix.json       # Pre-calculated walking distances
-├── calculate_distances.py     # Script: Generate distance matrix
-├── sync_categories_to_db.py   # Script: Sync categories JSON → MongoDB
 │
-├── clients.py                 # Twilio and Gemini clients
-│   ├── gemini_client.py
-│   ├── twilio_client.py
+├── clients/                   # External API clients
+│   ├── gemini_client.py       # Google Gemini AI client
+│   └── twilio_client.py       # Twilio SMS client
 │
 ├── models/                    # MongoDB document models (Beanie)
 │   ├── user.py
@@ -22,13 +20,13 @@ Backend/
 │   ├── product_purchase_tracking.py
 │   └── otp.py
 │
-├── schemas/                   # Pydantic models for request/response
+├── schemas/                   # Pydantic models for request/response validation
 │   ├── user.py
 │   ├── product.py
+│   ├── product_item.py
 │   ├── shopping_list.py
-│   ├── product_purchase_tracking.py
+│   ├── purchase_tracking.py
 │   ├── cart_session.py
-│   ├── item.py
 │   └── otp.py
 │
 ├── services/                  # Business logic layer
@@ -38,15 +36,19 @@ Backend/
 │   ├── product_purchase_tracking.py
 │   ├── cart_session.py
 │   ├── otp.py
-│   ├── pathfinding.py        # BFS algorithm for store navigation
-│   └── route_optimizer.py    # TSP solver using Google OR-Tools
+│   ├── pathfinding.py         # BFS algorithm for store navigation
+│   └── route_optimizer.py     # TSP solver using Google OR-Tools
 │
-└── routers/                   # API endpoints (thin controllers)
-    ├── users.py              
-    ├── products.py           
-    ├── shopping_list.py      
-    ├── product_purchase_tracking.py  
-    ├── cart_session.py       
-    ├── otp.py                
-    └── store.py              # Store layout
+├── routers/                   # API endpoints (thin controllers)
+│   ├── users.py
+│   ├── products.py
+│   ├── shopping_list.py
+│   ├── checkout.py
+│   ├── cart_session.py        # Cart sync/recovery
+│   └── otp.py                 # SMS authentication
+│
+└── maintenance/               # Maintenance scripts
+    ├── store_reference.json   # Store layout with category positions
+    ├── sync_categories_to_db.py  # Sync categories → MongoDB
+    └── calculate_distances.py    # Generate distance matrix
 ```
