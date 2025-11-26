@@ -1,9 +1,8 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Response
 from services import shopping_list as shopping_list_service
 from schemas import (
     ShoppingListRequest,
     ShoppingListResponse,
-    ShoppingListWithProductsResponse,
 )
 from models import User
 
@@ -17,6 +16,7 @@ async def create_or_update_shopping_list(phone: str, request: ShoppingListReques
 
     - If shopping list exists: Replaces items with new list
     - If not exists: Creates new shopping list
+    - If items is empty: Deletes shopping list and returns 204
 
     Args:
         phone: User's phone number
@@ -24,6 +24,7 @@ async def create_or_update_shopping_list(phone: str, request: ShoppingListReques
 
     Returns:
         ShoppingListResponse: Created or updated shopping list
+        204 No Content: If items is empty (list deleted)
     """
     # Validate user exists
     user = await User.find_one(User.phone == phone)
@@ -37,6 +38,11 @@ async def create_or_update_shopping_list(phone: str, request: ShoppingListReques
         shopping_list = await shopping_list_service.create_or_update_shopping_list(
             phone, request.items
         )
+
+        # If None returned, items were empty and list was deleted
+        if shopping_list is None:
+            return Response(status_code=status.HTTP_204_NO_CONTENT)
+
         return shopping_list
     except Exception as e:
         raise HTTPException(
@@ -70,13 +76,13 @@ async def delete_shopping_list(phone: str):
 @router.get("/{phone}", response_model=ShoppingListResponse)
 async def get_shopping_list(phone: str):
     """
-    Get user's shopping list (Items).
+    Get user's shopping list with items and optimized route.
 
     Args:
         phone: User's phone number
 
     Returns:
-        ShoppingListResponse: Shopping list with items
+        ShoppingListResponse: Shopping list with items, category order, and route coordinates
     """
     shopping_list = await shopping_list_service.get_shopping_list(phone)
 
@@ -87,27 +93,3 @@ async def get_shopping_list(phone: str):
         )
 
     return shopping_list
-
-
-@router.get(
-    "/{phone}/with-products-info", response_model=ShoppingListWithProductsResponse
-)
-async def get_shopping_list_with_products(phone: str):
-    """
-    Get user's shopping list with full product information for each item.
-
-    Args:
-        phone: User's phone number
-
-    Returns:
-        ShoppingListWithProductsResponse: Shopping list with detailed product info
-    """
-    result = await shopping_list_service.get_shopping_list_with_products(phone)
-
-    if not result:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No shopping list found for phone '{phone}'",
-        )
-
-    return result

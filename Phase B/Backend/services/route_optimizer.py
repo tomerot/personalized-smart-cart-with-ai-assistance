@@ -85,7 +85,7 @@ def solve_tsp(
         route.append(index_to_location[node])
         index = solution.Value(routing.NextVar(index))
 
-    # i didnt add end location because its not really end but our cashiers but if tome want then just uncomment
+    # Note: End location (cashier) not added to route - uncomment below if needed
     # route.append(index_to_location[manager.IndexToNode(index)])
 
     return route

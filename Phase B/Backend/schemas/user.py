@@ -18,13 +18,15 @@ class UserStatusResponse(BaseModel):
     has_shopping_list: bool
 
 
-class AddAllergyRequest(BaseModel):
-    allergy: str = Field(
-        ..., description="Single allergy to add (e.g., 'peanuts', 'dairy', 'gluten')"
+class AllergiesRequest(BaseModel):
+    allergies: List[str] = Field(
+        ...,
+        description="List of allergies to add/remove (e.g., ['peanuts', 'dairy', 'gluten'])",
     )
 
 
-class AddDietaryNeedRequest(BaseModel):
-    dietary_need: str = Field(
-        ..., description="Single dietary need to add (e.g., 'vegan')"
+class DietaryNeedsRequest(BaseModel):
+    dietary_needs: List[str] = Field(
+        ...,
+        description="List of dietary needs to add/remove (e.g., ['vegan', 'kosher'])",
     )

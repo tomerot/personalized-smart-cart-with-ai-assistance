@@ -7,21 +7,35 @@ from schemas import (
     ProductAvailabilityResponse,
     ProductIngredientsResponse,
     ProductLocationResponse,
-    ConflictCheckResponse,
     FindAlternativesResponse,
+    ProductScanRequest,
+    AIAlternativesRequest,
+    AIAlternativesResponse,
 )
-from models import User
 from typing import List
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
 
-@router.get("", response_model=List[ProductResponse])
-async def get_all_products():
+@router.get("/search", response_model=List[ProductResponse])
+async def search_products(q: str, limit: int = 5):
     """
-    Get all product
+    Search products by name.
+
+    Args:
+        q: Search query (product name)
+        limit: Maximum number of results to return (default: 5)
+
+    Returns:
+        List[ProductResponse]: Products matching the search query
     """
-    products = await Product.find().to_list()
+    # Use case-insensitive regex search on product name
+    products = (
+        await Product.find({"name": {"$regex": q, "$options": "i"}})
+        .limit(limit)
+        .to_list()
+    )
+
     return products
 
 
@@ -66,7 +80,7 @@ async def get_product_availability(barcode: str):
             detail=f"Product with barcode '{barcode}' not found",
         )
 
-    return {"barcode": product.barcode, "available": product.available}
+    return {"available": product.available}
 
 
 @router.get("/{barcode}/ingredients", response_model=ProductIngredientsResponse)
@@ -88,7 +102,7 @@ async def get_product_ingredients(barcode: str):
             detail=f"Product with barcode '{barcode}' not found",
         )
 
-    return {"barcode": product.barcode, "ingredients": product.ingredients}
+    return {"ingredients": product.ingredients}
 
 
 @router.get("/{barcode}/location", response_model=ProductLocationResponse)
@@ -113,65 +127,27 @@ async def get_product_location(barcode: str):
     return location
 
 
-# in case we will need this - for now commented
-# @router.get("/{barcode}/check-conflicts/{phone}", response_model=ConflictCheckResponse)
-# async def check_product_conflicts(barcode: str, phone: str):
-#     """
-#     Check if a product conflicts with user's allergies and dietary needs.
-
-#     Args:
-#         barcode: Product barcode
-#         phone: User's phone number
-
-#     Returns:
-#         ConflictCheckResponse: Conflict details
-#     """
-
-#     # Get product
-#     product = await Product.find_one(Product.barcode == barcode)
-#     if not product:
-#         raise HTTPException(
-#             status_code=status.HTTP_404_NOT_FOUND,
-#             detail=f"Product with barcode '{barcode}' not found",
-#         )
-
-#     # Get user
-#     user = await User.find_one(User.phone == phone)
-#     if not user:
-#         raise HTTPException(
-#             status_code=status.HTTP_404_NOT_FOUND,
-#             detail=f"User with phone '{phone}' not found",
-#         )
-
-#     # Check conflicts
-#     conflict_result = product_service.check_product_conflicts(
-#         product, user.allergies, user.dietary_needs
-#     )
-
-#     return conflict_result
-
-
-@router.get("/{barcode}/{phone}", response_model=FindAlternativesResponse)
-async def scan_with_conflict_check_and_alternatives(barcode: str, phone: str):
+@router.post("/{barcode}/scan", response_model=FindAlternativesResponse)
+async def scan_product_with_alternatives(barcode: str, request: ProductScanRequest):
     """
-    Get product and find alternative products that don't conflict with user preferences.
+    Scan a product and find alternatives if there are conflicts with user preferences.
 
-    This composite endpoint:
-    1. Gets the original product
-    2. Checks conflicts with user preferences
-    3. If conflict exists: finds all products in same category and filters safe alternatives
+    This endpoint:
+    1. Gets the scanned product
+    2. Checks conflicts with user's allergies and dietary needs
+    3. If conflict exists: finds safe alternative products in the same category
     4. If no conflict: returns empty alternatives list
 
     Args:
-        barcode: Original product barcode
-        phone: User's phone number
+        barcode: Product barcode being scanned
+        request: ProductScanRequest with user's allergies and dietary_needs
 
     Returns:
         FindAlternativesResponse: Includes has_conflict flag, original product info,
         conflict details, and list of safe alternatives (only if conflict exists)
     """
     result = await product_service.scan_with_conflict_check_and_alternatives(
-        barcode, phone
+        barcode, request.allergies, request.dietary_needs
     )
 
     if "error" in result:
@@ -182,27 +158,64 @@ async def scan_with_conflict_check_and_alternatives(barcode: str, phone: str):
     return result
 
 
-@router.get("/{barcode}/category", response_model=List[ProductResponse])
-async def get_all_products_from_same_category(barcode: str):
+@router.post("/{barcode}/ai-alternatives", response_model=AIAlternativesResponse)
+async def get_ai_recommended_alternatives(barcode: str, request: AIAlternativesRequest):
     """
-    Get all products from the same category as the specified product.
+    Get AI-recommended alternative products using Google Gemini.
+
+    This endpoint:
+    1. Finds alternatives in the same category as the original product
+    2. Filters by availability and user restrictions (allergies/dietary needs)
+    3. Uses Gemini AI to analyze alternatives based on user's specific requirement
+    4. Returns top 3 AI-recommended alternatives with explanations
 
     Args:
-        barcode: Product barcode to get category from
+        barcode: Original product barcode
+        request: AIAlternativesRequest with allergies, dietary_needs, and requirement
 
     Returns:
-        List[ProductResponse]: All products from the same category
-    """
-    # Get the product to find its category
-    product = await Product.find_one(Product.barcode == barcode)
+        AIAlternativesResponse: Alternatives list and overall explanation message
 
-    if not product:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Product with barcode '{barcode}' not found",
+    Example request body:
+    {
+        "allergies": ["peanuts", "dairy"],
+        "dietary_needs": ["vegan"],
+        "requirement": "I want something with less sugar"
+    }
+
+    Example response (with alternatives):
+    {
+        "alternatives": [
+            {...full product 1 data...},
+            {...full product 2 data...}
+        ],
+        "explanation": "These alternatives have 30% less sugar and use natural sweeteners"
+    }
+
+    Example response (no alternatives):
+    {
+        "alternatives": [],
+        "explanation": "Couldn't find any alternatives that match your dietary restrictions"
+    }
+    """
+    try:
+        result = await product_service.get_ai_recommended_alternatives(
+            barcode=barcode,
+            allergies=request.allergies,
+            dietary_needs=request.dietary_needs,
+            requirement=request.requirement,
         )
 
-    # Get all products from the same category
-    all_products = await Product.find(Product.category == product.category).to_list()
+        return result
 
-    return all_products
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except Exception as e:
+        print(f"Error in AI alternatives endpoint: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get AI recommendations: {str(e)}",
+        )

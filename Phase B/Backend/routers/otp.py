@@ -1,19 +1,19 @@
 from fastapi import APIRouter, HTTPException, status
 from services import otp as otp_service
 from services import user as user_service
-from schemas import OTPSendRequest, OTPVerifyRequest
+from schemas import OTPCodeRequest, UserResponse
 
 router = APIRouter(prefix="/otp", tags=["OTP"])
 
 
-@router.post("/send-otp")
-async def send_otp(request: OTPSendRequest):
+@router.post("/{phone}/send")
+async def send_otp(phone: str):
     """
     Send OTP code via SMS for phone verification.
     Generates a 6-digit OTP code and sends it to the user's phone via SMS.
 
     Args:
-        request: OTPSendRequest containing phone number
+        phone: Phone number (path parameter)
 
     Returns:
         Success message confirming OTP was sent
@@ -26,7 +26,7 @@ async def send_otp(request: OTPSendRequest):
     otp_code = otp_service.generate_otp()
 
     # Try to send SMS first before saving to database
-    sms_sent = otp_service.send_sms_with_otp(request.phone, otp_code)
+    sms_sent = otp_service.send_sms_with_otp(phone, otp_code)
     if not sms_sent:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -34,7 +34,7 @@ async def send_otp(request: OTPSendRequest):
         )
 
     # Save to database if SMS was sent successfully
-    saved_otp = await otp_service.create_or_update_otp(request.phone, otp_code)
+    saved_otp = await otp_service.create_or_update_otp(phone, otp_code)
     if not saved_otp:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -44,34 +44,40 @@ async def send_otp(request: OTPSendRequest):
     return {"message": "OTP sent successfully."}
 
 
-@router.post("/verify-otp")
-async def verify_otp(request: OTPVerifyRequest):
+@router.post("/{phone}/verify")
+async def verify_otp(phone: str, request: OTPCodeRequest):
     """
     Verify OTP code and authenticate user.
 
     Args:
-        request: OTPVerifyRequest containing phone number and OTP code
+        phone: Phone number (path parameter)
+        request: OTPCodeRequest containing OTP code
 
     Returns:
-        Success message with is_new_user flag for frontend routing
+        Success message with is_new_user flag and user data
 
     Raises:
         400: Invalid or expired OTP
         500: OTP valid but user creation failed
     """
     # Verify the OTP code against database record
-    is_valid = await otp_service.verify_otp(request.phone, request.otp_code)
+    is_valid = await otp_service.verify_otp(phone, request.otp_code)
     if not is_valid:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired OTP."
         )
     try:
-        user = await user_service.get_or_create_user(request.phone)
+        user = await user_service.get_or_create_user(phone)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="OTP verified but failed to create user session.",
         )
 
-    # Return success with user creation status for frontend routing
-    return {"message": "OTP verified successfully.", "is_new_user": user.id is not None}
+    # Convert user to response model
+    user_data = UserResponse(
+        phone=user.phone, allergies=user.allergies, dietary_needs=user.dietary_needs
+    )
+
+    # Return success with user creation status and user data
+    return {"message": "OTP verified successfully.", "user": user_data}

@@ -1,5 +1,8 @@
-from .item import Item
-from .otp import OTPSendRequest, OTPVerifyRequest
+from .product_item import (
+    ProductItemData,
+    NutritionalInfoData,
+)
+from .otp import OTPCodeRequest
 from .product import (
     ProductResponse,
     NutritionalInfoResponse,
@@ -8,36 +11,33 @@ from .product import (
     ProductIngredientsResponse,
     LocationResponse,
     ConflictCheckResponse,
-    AlternativeProductInfo,
     FindAlternativesResponse,
+    ProductScanRequest,
+    AIAlternativesRequest,
+    AIAlternativesResponse,
 )
 from .user import (
     UserResponse,
     UserStatusResponse,
-    AddAllergyRequest,
-    AddDietaryNeedRequest,
+    AllergiesRequest,
+    DietaryNeedsRequest,
 )
-from .purchase_history import (
-    PurchaseItem,
-    SavePurchaseRequest,
-    PurchaseHistoryResponse,
-    CheckForgottenItemsRequest,
-    ForgottenItemResponse,
-    ForgottenItemsResponse,
+from .purchase_tracking import (
+    CheckoutResponse,
+    ReplenishmentSuggestionsRequest,
+    ReplenishmentSuggestionsResponse,
+    SuggestionItem,
 )
 from .shopping_list import (
     ShoppingListRequest,
     ShoppingListResponse,
-    ShoppingListItemWithProduct,
-    ShoppingListWithProductsResponse,
 )
 from .cart_session import CartSyncRequest, CartSessionResponse
 
 __all__ = [
-    Item,
-    PurchaseItem,
-    OTPSendRequest,
-    OTPVerifyRequest,
+    ProductItemData,
+    NutritionalInfoData,
+    OTPCodeRequest,
     ProductResponse,
     NutritionalInfoResponse,
     ProductLocationResponse,
@@ -45,21 +45,20 @@ __all__ = [
     ProductIngredientsResponse,
     LocationResponse,
     ConflictCheckResponse,
-    AlternativeProductInfo,
     FindAlternativesResponse,
+    ProductScanRequest,
+    AIAlternativesRequest,
+    AIAlternativesResponse,
     UserResponse,
     UserStatusResponse,
-    AddAllergyRequest,
-    AddDietaryNeedRequest,
-    SavePurchaseRequest,
-    PurchaseHistoryResponse,
-    CheckForgottenItemsRequest,
-    ForgottenItemResponse,
-    ForgottenItemsResponse,
+    AllergiesRequest,
+    DietaryNeedsRequest,
+    CheckoutResponse,
+    ReplenishmentSuggestionsRequest,
+    ReplenishmentSuggestionsResponse,
+    SuggestionItem,
     ShoppingListRequest,
     ShoppingListResponse,
-    ShoppingListItemWithProduct,
-    ShoppingListWithProductsResponse,
     CartSyncRequest,
     CartSessionResponse,
 ]

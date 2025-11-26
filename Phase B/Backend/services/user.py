@@ -54,85 +54,16 @@ async def get_user_profile(phone: str) -> Optional[User]:
         raise
 
 
-async def add_user_allergy(phone: str, allergy: str) -> tuple[Optional[User], bool]:
+async def add_user_allergies(phone: str, allergies: List[str]) -> Optional[User]:
     """
-    Add a single allergy to user's allergies list.
+    Add multiple allergies to user's allergies list.
 
     Args:
         phone: User's phone number
-        allergy: Single allergy to add (will be converted to lowercase)
+        allergies: List of allergies to add (will be converted to lowercase)
 
     Returns:
-        tuple: (User object if found/None, True if added/False if already exists)
-    """
-    try:
-        user = await User.find_one(User.phone == phone)
-        if not user:
-            print(f"User not found for phone: {phone}")
-            return None, False
-
-        # Convert allergy to lowercase for consistency
-        allergy_lower = allergy.lower()
-
-        # Check if allergy already exists
-        if allergy_lower in user.allergies:
-            print(f"Allergy '{allergy_lower}' already exists for phone: {phone}")
-            return user, False
-
-        # Add the new allergy
-        user.allergies.append(allergy_lower)
-        await user.save()
-        print(f"Added allergy '{allergy_lower}' for phone: {phone}")
-        return user, True
-    except Exception as e:
-        print(f"Error in add_user_allergy: {e}")
-        raise
-
-
-async def remove_user_allergy(phone: str, allergy: str) -> tuple[Optional[User], bool]:
-    """
-    Remove a specific allergy from user's allergies list.
-
-    Args:
-        phone: User's phone number
-        allergy: Single allergy to remove (will be converted to lowercase)
-
-    Returns:
-        tuple: (User object if found/None, True if removed/False if not found)
-    """
-    try:
-        user = await User.find_one(User.phone == phone)
-        if not user:
-            print(f"User not found for phone: {phone}")
-            return None, False
-
-        # Convert allergy to lowercase for consistency
-        allergy_lower = allergy.lower()
-
-        # Check if allergy exists
-        if allergy_lower not in user.allergies:
-            print(f"Allergy '{allergy_lower}' not found for phone: {phone}")
-            return user, False
-
-        # Remove the allergy
-        user.allergies.remove(allergy_lower)
-        await user.save()
-        print(f"Removed allergy '{allergy_lower}' for phone: {phone}")
-        return user, True
-    except Exception as e:
-        print(f"Error in remove_user_allergy: {e}")
-        raise
-
-
-async def clear_user_allergies(phone: str) -> Optional[User]:
-    """
-    Clear all allergies from user's allergies list.
-
-    Args:
-        phone: User's phone number
-
-    Returns:
-        User: Updated user object if found, None otherwise
+        User object if found, None otherwise
     """
     try:
         user = await User.find_one(User.phone == phone)
@@ -140,100 +71,32 @@ async def clear_user_allergies(phone: str) -> Optional[User]:
             print(f"User not found for phone: {phone}")
             return None
 
-        user.allergies = []
+        # Convert all allergies to lowercase and add only new ones
+        allergies_lower = [a.lower() for a in allergies]
+        existing_set = set(user.allergies)
+
+        for allergy in allergies_lower:
+            if allergy not in existing_set:
+                user.allergies.append(allergy)
+
         await user.save()
-        print(f"Cleared all allergies for phone: {phone}")
+        print(f"Added allergies {allergies_lower} for phone: {phone}")
         return user
     except Exception as e:
-        print(f"Error in clear_user_allergies: {e}")
+        print(f"Error in add_user_allergies: {e}")
         raise
 
 
-async def add_user_dietary_need(
-    phone: str, dietary_need: str
-) -> tuple[Optional[User], bool]:
+async def remove_user_allergies(phone: str, allergies: List[str]) -> Optional[User]:
     """
-    Add a single dietary need to user's dietary needs list.
+    Remove multiple allergies from user's allergies list.
 
     Args:
         phone: User's phone number
-        dietary_need: Single dietary need to add (will be converted to lowercase)
+        allergies: List of allergies to remove (will be converted to lowercase)
 
     Returns:
-        tuple: (User object if found/None, True if added/False if already exists)
-    """
-    try:
-        user = await User.find_one(User.phone == phone)
-        if not user:
-            print(f"User not found for phone: {phone}")
-            return None, False
-
-        # Convert dietary need to lowercase for consistency
-        dietary_need_lower = dietary_need.lower()
-
-        # Check if dietary need already exists
-        if dietary_need_lower in user.dietary_needs:
-            print(
-                f"Dietary need '{dietary_need_lower}' already exists for phone: {phone}"
-            )
-            return user, False
-
-        # Add the new dietary need
-        user.dietary_needs.append(dietary_need_lower)
-        await user.save()
-        print(f"Added dietary need '{dietary_need_lower}' for phone: {phone}")
-        return user, True
-    except Exception as e:
-        print(f"Error in add_user_dietary_need: {e}")
-        raise
-
-
-async def remove_user_dietary_need(
-    phone: str, dietary_need: str
-) -> tuple[Optional[User], bool]:
-    """
-    Remove a specific dietary need from user's dietary needs list.
-
-    Args:
-        phone: User's phone number
-        dietary_need: Single dietary need to remove (will be converted to lowercase)
-
-    Returns:
-        tuple: (User object if found/None, True if removed/False if not found)
-    """
-    try:
-        user = await User.find_one(User.phone == phone)
-        if not user:
-            print(f"User not found for phone: {phone}")
-            return None, False
-
-        # Convert dietary need to lowercase for consistency
-        dietary_need_lower = dietary_need.lower()
-
-        # Check if dietary need exists
-        if dietary_need_lower not in user.dietary_needs:
-            print(f"Dietary need '{dietary_need_lower}' not found for phone: {phone}")
-            return user, False
-
-        # Remove the dietary need
-        user.dietary_needs.remove(dietary_need_lower)
-        await user.save()
-        print(f"Removed dietary need '{dietary_need_lower}' for phone: {phone}")
-        return user, True
-    except Exception as e:
-        print(f"Error in remove_user_dietary_need: {e}")
-        raise
-
-
-async def clear_user_dietary_needs(phone: str) -> Optional[User]:
-    """
-    Clear all dietary needs from user's dietary needs list.
-
-    Args:
-        phone: User's phone number
-
-    Returns:
-        User: Updated user object if found, None otherwise
+        User object if found, None otherwise
     """
     try:
         user = await User.find_one(User.phone == phone)
@@ -241,12 +104,87 @@ async def clear_user_dietary_needs(phone: str) -> Optional[User]:
             print(f"User not found for phone: {phone}")
             return None
 
-        user.dietary_needs = []
+        # If empty list, do nothing
+        if not allergies:
+            print(f"Empty list provided, no allergies removed for phone: {phone}")
+            return user
+
+        # Convert to lowercase and remove
+        allergies_lower = [a.lower() for a in allergies]
+        user.allergies = [a for a in user.allergies if a not in allergies_lower]
+
         await user.save()
-        print(f"Cleared all dietary needs for phone: {phone}")
+        print(f"Removed allergies {allergies_lower} for phone: {phone}")
         return user
     except Exception as e:
-        print(f"Error in clear_user_dietary_needs: {e}")
+        print(f"Error in remove_user_allergies: {e}")
+        raise
+
+
+async def add_user_dietary_needs(phone: str, dietary_needs: List[str]) -> Optional[User]:
+    """
+    Add multiple dietary needs to user's dietary needs list.
+
+    Args:
+        phone: User's phone number
+        dietary_needs: List of dietary needs to add (will be converted to lowercase)
+
+    Returns:
+        User object if found, None otherwise
+    """
+    try:
+        user = await User.find_one(User.phone == phone)
+        if not user:
+            print(f"User not found for phone: {phone}")
+            return None
+
+        # Convert all dietary needs to lowercase and add only new ones
+        dietary_needs_lower = [d.lower() for d in dietary_needs]
+        existing_set = set(user.dietary_needs)
+
+        for need in dietary_needs_lower:
+            if need not in existing_set:
+                user.dietary_needs.append(need)
+
+        await user.save()
+        print(f"Added dietary needs {dietary_needs_lower} for phone: {phone}")
+        return user
+    except Exception as e:
+        print(f"Error in add_user_dietary_needs: {e}")
+        raise
+
+
+async def remove_user_dietary_needs(phone: str, dietary_needs: List[str]) -> Optional[User]:
+    """
+    Remove multiple dietary needs from user's dietary needs list.
+
+    Args:
+        phone: User's phone number
+        dietary_needs: List of dietary needs to remove (will be converted to lowercase)
+
+    Returns:
+        User object if found, None otherwise
+    """
+    try:
+        user = await User.find_one(User.phone == phone)
+        if not user:
+            print(f"User not found for phone: {phone}")
+            return None
+
+        # If empty list, do nothing
+        if not dietary_needs:
+            print(f"Empty list provided, no dietary needs removed for phone: {phone}")
+            return user
+
+        # Convert to lowercase and remove
+        dietary_needs_lower = [d.lower() for d in dietary_needs]
+        user.dietary_needs = [d for d in user.dietary_needs if d not in dietary_needs_lower]
+
+        await user.save()
+        print(f"Removed dietary needs {dietary_needs_lower} for phone: {phone}")
+        return user
+    except Exception as e:
+        print(f"Error in remove_user_dietary_needs: {e}")
         raise
 
 
@@ -254,7 +192,7 @@ async def get_user_status(phone: str) -> UserStatusResponse:
     """
     Get user status including cart session and shopping list availability.
 
-    Used after login to determine what UI elements to show/enable or for the session maybe just auto load it.
+    Used after login to determine what UI elements to show/enable.
 
     Args:
         phone: User's phone number

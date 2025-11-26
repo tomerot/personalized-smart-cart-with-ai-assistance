@@ -1,19 +1,24 @@
 """
-Sync categories from store_layout.json to MongoDB.
-Run this whenever you update store_layout.json to keep MongoDB in sync.
+Sync categories from store_reference.json to MongoDB.
+Run this whenever you update category locations to keep MongoDB in sync.
 """
 
 import json
 import asyncio
+import sys
+import os
+
+# Add parent directory to path to import from models
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient
 from models import Category
 from dotenv import load_dotenv
-import os
 
 
 async def sync_categories():
-    """Sync categories from store_layout.json to MongoDB"""
+    """Sync categories from store_reference.json to MongoDB"""
 
     # Load environment and connect to MongoDB
     load_dotenv()
@@ -29,17 +34,18 @@ async def sync_categories():
 
     print("Connected to MongoDB\n")
 
-    # Load store layout
-    with open("store_layout.json", "r") as f:
+    # Load store reference file (contains category mapping)
+    store_reference_path = os.path.join(os.path.dirname(__file__), "store_reference.json")
+    with open(store_reference_path, "r") as f:
         layout = json.load(f)
 
     category_mapping = layout.get("category_mapping", {})
 
     if not category_mapping:
-        print("❌ No category_mapping found in store_layout.json!")
+        print("❌ No category_mapping found in store_reference.json!")
         return
 
-    print(f"Found {len(category_mapping)} categories in store_layout.json\n")
+    print(f"Found {len(category_mapping)} categories in store_reference.json\n")
 
     # Sync each category
     synced = 0

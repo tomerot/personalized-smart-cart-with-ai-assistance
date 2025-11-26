@@ -1,17 +1,17 @@
 from typing import Optional, List
 from datetime import datetime
 from models import CartSession
-from schemas import Item
+from schemas.product_item import ProductItemData
 
 
-async def sync_cart_session(phone: str, items: List[Item]) -> CartSession:
+async def sync_cart_session(phone: str, items: List[ProductItemData]) -> CartSession:
     """
     Sync/save cart session for user.
     Creates new session if doesn't exist, updates if exists.
 
     Args:
         phone: User's phone number
-        items: List of cart items (barcode + quantity)
+        items: List of cart items (full product data + quantity)
 
     Returns:
         CartSession: Updated cart session
@@ -21,14 +21,14 @@ async def sync_cart_session(phone: str, items: List[Item]) -> CartSession:
 
     if cart_session:
         # Update existing session
-        cart_session.items = [Item(**item.model_dump()) for item in items]
+        cart_session.items = [ProductItemData(**item.model_dump()) for item in items]
         cart_session.last_updated = datetime.utcnow()
         await cart_session.save()
     else:
         # Create new session
         cart_session = CartSession(
             phone=phone,
-            items=[Item(**item.model_dump()) for item in items],
+            items=[ProductItemData(**item.model_dump()) for item in items],
             last_updated=datetime.utcnow(),
         )
         await cart_session.insert()
