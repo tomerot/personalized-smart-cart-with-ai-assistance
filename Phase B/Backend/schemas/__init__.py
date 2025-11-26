@@ -1,6 +1,5 @@
 from .product_item import (
     ProductItemData,
-    ShoppingListItemData,
     PurchaseData,
     NutritionalInfoData,
 )
@@ -38,7 +37,6 @@ from .cart_session import CartSyncRequest, CartSessionResponse
 
 __all__ = [
     ProductItemData,
-    ShoppingListItemData,
     PurchaseData,
     NutritionalInfoData,
     OTPCodeRequest,

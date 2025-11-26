@@ -1,11 +1,11 @@
-from models import ShoppingList
-from schemas.product_item import ShoppingListItemData
+from models import ShoppingList, Category
+from schemas.product_item import ProductItemData
 from typing import List, Dict, Any, Optional
 from services.route_optimizer import calculate_shopping_route
 
 
 async def create_or_update_shopping_list(
-    phone: str, items: List[ShoppingListItemData]
+    phone: str, items: List[ProductItemData]
 ) -> ShoppingList:
     """
     Create or update user's shopping list.
@@ -17,7 +17,7 @@ async def create_or_update_shopping_list(
 
     Args:
         phone: User's phone number
-        items: List of items with full product data + quantity + location
+        items: List of items with full product data + quantity
 
     Returns:
         ShoppingList: Created or updated shopping list with optimized route
@@ -37,23 +37,40 @@ async def create_or_update_shopping_list(
             await shopping_list.insert()
             print(f"Created new shopping list for phone: {phone}")
 
-        # Calculate optimized route
+        # Calculate optimized route and coordinates
         if items:
             # Get unique categories from items (now directly from item data)
             categories = [item.category for item in items if item.category]
 
             if categories:
-                # Calculate route using JSON-based optimizer
+                # Calculate route using optimizer
                 optimized_route = calculate_shopping_route(categories)
-                shopping_list.optimized_route = optimized_route
+                shopping_list.category_order = optimized_route
+
+                # Fetch coordinates from database for each category in the route
+                route_coordinates = []
+                for category_name in optimized_route:
+                    category = await Category.find_one(Category.name == category_name)
+                    if category:
+                        route_coordinates.append({
+                            "x": category.location.x,
+                            "y": category.location.y
+                        })
+                    else:
+                        print(f"Warning: Category '{category_name}' not found in database")
+
+                shopping_list.route_coordinates = route_coordinates
                 await shopping_list.save()
                 print(f"Calculated optimized route: {optimized_route}")
+                print(f"Route coordinates: {route_coordinates}")
             else:
-                shopping_list.optimized_route = []
+                shopping_list.category_order = []
+                shopping_list.route_coordinates = []
                 await shopping_list.save()
                 print("No valid categories found in items")
         else:
-            shopping_list.optimized_route = []
+            shopping_list.category_order = []
+            shopping_list.route_coordinates = []
             await shopping_list.save()
 
         return shopping_list

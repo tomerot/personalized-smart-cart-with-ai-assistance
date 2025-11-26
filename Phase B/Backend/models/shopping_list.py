@@ -7,12 +7,12 @@ from schemas.product_item import ProductItemData
 class ShoppingList(Document):
     phone: str = Field(unique=True)
     items: List[ProductItemData]
-    optimized_route: Optional[List[str]] = Field(
-        default_factory=list, description="Optimized category visit order"
+    category_order: Optional[List[str]] = Field(
+        default_factory=list, description="Optimized order of categories to visit"
     )
-    optimal_path: Optional[List[dict]] = Field(
+    route_coordinates: Optional[List[dict]] = Field(
         default_factory=list,
-        description="Optimal path with coordinates for future implementation",
+        description="Grid coordinates (x, y) for the optimal shopping route",
     )
 
     class Settings:

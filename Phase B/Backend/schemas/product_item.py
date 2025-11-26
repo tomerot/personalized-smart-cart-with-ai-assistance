@@ -16,7 +16,7 @@ class NutritionalInfoData(BaseModel):
 class ProductItemData(BaseModel):
     """
     Base schema for storing complete product data with quantity.
-    Used in cart_session and purchase_history.
+    Used in cart_session, shopping_list, and purchase_history.
     """
     barcode: str
     name: str
@@ -31,16 +31,6 @@ class ProductItemData(BaseModel):
     nutritional_info: NutritionalInfoData
     available: bool = True
     quantity: int = Field(..., gt=0, description="Quantity of this product")
-
-
-class ShoppingListItemData(ProductItemData):
-    """
-    Extended schema for shopping list items with location data.
-    """
-    location: Optional[dict] = Field(
-        default=None,
-        description="Product location {x: int, y: int}"
-    )
 
 
 class PurchaseData(BaseModel):
