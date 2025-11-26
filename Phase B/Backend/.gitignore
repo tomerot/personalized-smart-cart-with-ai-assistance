@@ -173,5 +173,5 @@ static_root/
 
 #claude.md
 CLAUDE.md
-API_TESTING_GUIDE.md
-test_data.py
+populate_test_products.py
+TESTING_GUIDE.md
