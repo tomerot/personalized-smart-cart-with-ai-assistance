@@ -108,7 +108,7 @@ async def delete_shopping_list(phone: str) -> bool:
 
 async def get_shopping_list(phone: str) -> Optional[ShoppingList]:
     """
-    Get user's shopping list (items only).
+    Get user's shopping list with items and optimized route.
 
     Args:
         phone: User's phone number

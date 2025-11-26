@@ -69,13 +69,13 @@ async def delete_shopping_list(phone: str):
 @router.get("/{phone}", response_model=ShoppingListResponse)
 async def get_shopping_list(phone: str):
     """
-    Get user's shopping list (Items).
+    Get user's shopping list with items and optimized route.
 
     Args:
         phone: User's phone number
 
     Returns:
-        ShoppingListResponse: Shopping list with items
+        ShoppingListResponse: Shopping list with items, category order, and route coordinates
     """
     shopping_list = await shopping_list_service.get_shopping_list(phone)
 

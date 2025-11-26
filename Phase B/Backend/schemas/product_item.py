@@ -1,6 +1,5 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
-import datetime
 
 
 class NutritionalInfoData(BaseModel):
@@ -16,7 +15,7 @@ class NutritionalInfoData(BaseModel):
 class ProductItemData(BaseModel):
     """
     Base schema for storing complete product data with quantity.
-    Used in cart_session, shopping_list, and purchase_history.
+    Used in cart_session and shopping_list.
     """
     barcode: str
     name: str
@@ -31,14 +30,3 @@ class ProductItemData(BaseModel):
     nutritional_info: NutritionalInfoData
     available: bool = True
     quantity: int = Field(..., gt=0, description="Quantity of this product")
-
-
-class PurchaseData(BaseModel):
-    """
-    Schema for a single purchase (used in purchase history).
-    Contains list of purchased items and purchase metadata.
-    """
-    items: List[ProductItemData]
-    created_at: datetime.datetime = Field(default_factory=datetime.datetime.utcnow)
-    total_amount: float = Field(..., description="Total purchase amount")
-    total_items: int = Field(..., description="Total number of items")

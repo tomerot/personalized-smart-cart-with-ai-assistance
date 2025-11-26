@@ -38,7 +38,7 @@ async def get_user_status(phone: str):
     Get user status including cart session and shopping list availability.
 
     Called after login to determine what UI elements to show/enable:
-    - If has_active_cart is true: we can load cart session - maybe auto load, and pop msg
+    - If has_active_cart is true: Can load cart session (auto-load or prompt user)
     - If has_shopping_list is true: Enable "Load List" button
 
     Args:

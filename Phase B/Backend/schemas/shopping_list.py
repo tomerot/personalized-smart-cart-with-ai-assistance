@@ -10,8 +10,13 @@ class ShoppingListRequest(BaseModel):
 class ShoppingListResponse(BaseModel):
     phone: str
     items: List[ProductItemData]
-    category_order: List[str] = []
-    route_coordinates: List[dict] = []
+    category_order: List[str] = Field(
+        default_factory=list, description="Optimized order of categories to visit"
+    )
+    route_coordinates: List[dict] = Field(
+        default_factory=list,
+        description="Grid coordinates (x, y) for the optimal shopping route",
+    )
 
     class Config:
         from_attributes = True

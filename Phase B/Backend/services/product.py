@@ -1,4 +1,4 @@
-from models import Product, Category, User
+from models import Product, Category
 from typing import List, Optional, Dict, Any
 from clients import get_gemini_client
 import json
@@ -37,7 +37,6 @@ def check_product_conflicts(
     Returns:
         Dict with conflict information:
         {
-            "has_conflict": bool,
             "allergen_conflicts": List[str],
             "dietary_conflicts": List[str],
             "details": str
@@ -61,8 +60,6 @@ def check_product_conflicts(
         if need_lower not in product_tags_lower:
             dietary_conflicts.append(need)
 
-    has_conflict = len(allergen_conflicts) > 0 or len(dietary_conflicts) > 0
-
     details = ""
     if allergen_conflicts:
         details += f"Contains allergens: {', '.join(allergen_conflicts)}. "
@@ -70,7 +67,6 @@ def check_product_conflicts(
         details += f"Missing dietary tags: {', '.join(dietary_conflicts)}."
 
     return {
-        "has_conflict": has_conflict,
         "allergen_conflicts": allergen_conflicts,
         "dietary_conflicts": dietary_conflicts,
         "details": details.strip() if details else "No conflicts found",
@@ -118,21 +114,21 @@ async def get_product_location(barcode: str) -> Optional[Dict[str, Any]]:
 
 
 async def scan_with_conflict_check_and_alternatives(
-    barcode: str, phone: str
+    barcode: str, user_allergies: List[str], user_dietary_needs: List[str]
 ) -> Dict[str, Any]:
     """
     Find alternative products in the same category that don't conflict with user preferences.
 
     This is a composite function that:
     1. Gets the product by barcode
-    2. Gets user preferences
-    3. Checks conflicts with original product
-    4. If conflict exists, fetches all products from same category and filters safe alternatives
-    5. Returns original product info, conflict status, and alternatives (if conflict exists)
+    2. Checks conflicts with user preferences (allergies/dietary needs)
+    3. If conflict exists, fetches all products from same category and filters safe alternatives
+    4. Returns original product info, conflict status, and alternatives (if conflict exists)
 
     Args:
         barcode: Original product barcode
-        phone: User's phone number
+        user_allergies: List of user's allergies
+        user_dietary_needs: List of user's dietary needs
 
     Returns:
         Dict with:
@@ -152,21 +148,17 @@ async def scan_with_conflict_check_and_alternatives(
                 "error": f"Product with barcode '{barcode}' not found",
             }
 
-        # 2. Get user preferences
-        user = await User.find_one(User.phone == phone)
-        if not user:
-            return {
-                "error": f"User with phone '{phone}' not found",
-            }
-
-        # Check conflict with original product
+        # 2. Check conflict with original product
         original_conflict = check_product_conflicts(
-            product, user.allergies, user.dietary_needs
+            product, user_allergies, user_dietary_needs
         )
+
+        # Determine if there's a conflict
+        has_conflict = len(original_conflict["allergen_conflicts"]) > 0 or len(original_conflict["dietary_conflicts"]) > 0
 
         # Only fetch alternatives if there's a conflict
         safe_alternatives = []
-        if original_conflict["has_conflict"]:
+        if has_conflict:
             # 3. Fetch all products from same category
             all_products = await get_products_by_category(product.category)
 
@@ -182,23 +174,14 @@ async def scan_with_conflict_check_and_alternatives(
 
                 # Check for conflicts
                 conflict_check = check_product_conflicts(
-                    alt_product, user.allergies, user.dietary_needs
+                    alt_product, user_allergies, user_dietary_needs
                 )
 
-                if not conflict_check["has_conflict"]:
-                    safe_alternatives.append(
-                        {
-                            "barcode": alt_product.barcode,
-                            "name": alt_product.name,
-                            "image_url": alt_product.image_url,
-                            "company": alt_product.company,
-                            "price": alt_product.price,
-                            "category": alt_product.category,
-                            "size": alt_product.size,
-                            "dietary_tags": alt_product.dietary_tags,
-                            "allergens": alt_product.allergens,
-                        }
-                    )
+                # Check if alternative has conflict
+                has_alt_conflict = len(conflict_check["allergen_conflicts"]) > 0 or len(conflict_check["dietary_conflicts"]) > 0
+
+                if not has_alt_conflict:
+                    safe_alternatives.append(alt_product)
 
             print(
                 f"Found {len(safe_alternatives)} safe alternatives for product {barcode}"
@@ -208,16 +191,8 @@ async def scan_with_conflict_check_and_alternatives(
         limited_alternatives = safe_alternatives[:3]
 
         return {
-            "has_conflict": original_conflict["has_conflict"],
-            "original_product": {
-                "barcode": product.barcode,
-                "name": product.name,
-                "company": product.company,
-                "size": product.size,
-                "category": product.category,
-                "price": product.price,
-                "image_url": product.image_url,
-            },
+            "has_conflict": has_conflict,
+            "original_product": product,
             "conflict_with_original": original_conflict,
             "alternatives": limited_alternatives,
             "total_alternatives": len(safe_alternatives),
@@ -284,8 +259,9 @@ async def get_ai_recommended_alternatives(
 
             # Check for conflicts
             conflict_check = check_product_conflicts(product, allergies, dietary_needs)
+            has_conflict = len(conflict_check["allergen_conflicts"]) > 0 or len(conflict_check["dietary_conflicts"]) > 0
 
-            if not conflict_check["has_conflict"]:
+            if not has_conflict:
                 safe_alternatives.append(product)
 
         print(f"Found {len(safe_alternatives)} safe alternatives for AI processing")
@@ -338,7 +314,7 @@ Original Product:
 - Company: {original_product.company}
 - Price: ${original_product.price}
 - Size: {original_product.size}
-- Ingridiants: {original_product.ingredients}
+- Ingredients: {original_product.ingredients}
 - Nutritional info: {original_product.nutritional_info}
 
 Available Alternatives (all safe for user's dietary restrictions):

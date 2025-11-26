@@ -13,7 +13,7 @@ ACTIVE_SHOPPER_THRESHOLD_DAYS = 14
 # Used in 2 places:
 #   1. FREEZE: If inactive for 30+ days, don't update averages on next purchase (preserve pattern)
 #   2. SUGGESTIONS: Don't return suggestions if user inactive for 30+ days (don't spam)
-INACTIVITY_THRESHOLD_DAYS = 30  # User hasn't shopped in 30+ days = inactive/away (ex. vacation) - we dont track the last purcahse interval
+INACTIVITY_THRESHOLD_DAYS = 30  # User hasn't shopped in 30+ days = inactive/away (ex. vacation) - we dont track the last purchase interval
 
 # Used together to detect abandoned products:
 # Threshold = max(60 days, average_interval * 2.5)

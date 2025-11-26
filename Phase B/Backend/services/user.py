@@ -192,7 +192,7 @@ async def get_user_status(phone: str) -> UserStatusResponse:
     """
     Get user status including cart session and shopping list availability.
 
-    Used after login to determine what UI elements to show/enable or for the session maybe just auto load it.
+    Used after login to determine what UI elements to show/enable.
 
     Args:
         phone: User's phone number

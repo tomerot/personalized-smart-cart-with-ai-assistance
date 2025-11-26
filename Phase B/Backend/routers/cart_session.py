@@ -67,7 +67,7 @@ async def delete_cart(phone: str):
     Delete cart session.
 
     Should be called after successful checkout.
-    This removes the backup session(cart_session) from the database.
+    This removes the backup cart session from the database.
 
     Args:
         phone: User's phone number

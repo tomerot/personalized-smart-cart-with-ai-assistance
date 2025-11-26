@@ -1,6 +1,5 @@
 from .product_item import (
     ProductItemData,
-    PurchaseData,
     NutritionalInfoData,
 )
 from .otp import OTPCodeRequest
@@ -12,8 +11,8 @@ from .product import (
     ProductIngredientsResponse,
     LocationResponse,
     ConflictCheckResponse,
-    AlternativeProductInfo,
     FindAlternativesResponse,
+    ProductScanRequest,
     AIAlternativesRequest,
     AIAlternativesResponse,
 )
@@ -37,7 +36,6 @@ from .cart_session import CartSyncRequest, CartSessionResponse
 
 __all__ = [
     ProductItemData,
-    PurchaseData,
     NutritionalInfoData,
     OTPCodeRequest,
     ProductResponse,
@@ -47,8 +45,8 @@ __all__ = [
     ProductIngredientsResponse,
     LocationResponse,
     ConflictCheckResponse,
-    AlternativeProductInfo,
     FindAlternativesResponse,
+    ProductScanRequest,
     AIAlternativesRequest,
     AIAlternativesResponse,
     UserResponse,

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 
 
 class NutritionalInfoResponse(BaseModel):
@@ -45,40 +45,36 @@ class ProductLocationResponse(BaseModel):
 
 
 class ProductAvailabilityResponse(BaseModel):
-    barcode: str
     available: bool
 
 
 class ProductIngredientsResponse(BaseModel):
-    barcode: str
     ingredients: List[str]
 
 
 class ConflictCheckResponse(BaseModel):
-    has_conflict: bool
     allergen_conflicts: List[str] = []
     dietary_conflicts: List[str] = []
     details: str
 
 
-class AlternativeProductInfo(BaseModel):
-    barcode: str
-    name: str
-    image_url: str
-    company: str
-    price: float
-    category: str
-    size: Optional[str] = None
-    dietary_tags: List[str]
-    allergens: List[str]
-
-
 class FindAlternativesResponse(BaseModel):
     has_conflict: bool
-    original_product: Dict[str, Any]
+    original_product: ProductResponse
     conflict_with_original: ConflictCheckResponse
-    alternatives: List[AlternativeProductInfo]
+    alternatives: List[ProductResponse]
     total_alternatives: int
+
+
+class ProductScanRequest(BaseModel):
+    """Request body for scanning a product and checking conflicts"""
+
+    allergies: List[str] = Field(
+        default_factory=list, description="List of user's allergies"
+    )
+    dietary_needs: List[str] = Field(
+        default_factory=list, description="List of user's dietary needs"
+    )
 
 
 class AIAlternativesRequest(BaseModel):
@@ -89,14 +85,17 @@ class AIAlternativesRequest(BaseModel):
         default_factory=list, description="List of user's dietary needs"
     )
     requirement: str = Field(
-        ..., description="User's specific requirement for alternatives (e.g., 'less sugar', 'cheaper', 'organic')"
+        ...,
+        description="User's specific requirement for alternatives (e.g., 'less sugar', 'cheaper', 'organic')",
     )
 
 
 class AIAlternativesResponse(BaseModel):
     alternatives: List[ProductResponse] = Field(
-        default_factory=list, description="AI-recommended alternative products (up to 3)"
+        default_factory=list,
+        description="AI-recommended alternative products (up to 3)",
     )
     explanation: str = Field(
-        ..., description="AI-generated explanation for all alternatives, or error message if none found"
+        ...,
+        description="AI-generated explanation for all alternatives, or error message if none found",
     )
