@@ -127,7 +127,7 @@ async def get_product_location(barcode: str):
     return location
 
 
-@router.post("/scan/{barcode}", response_model=FindAlternativesResponse)
+@router.post("/{barcode}/scan", response_model=FindAlternativesResponse)
 async def scan_product_with_alternatives(barcode: str, request: ProductScanRequest):
     """
     Scan a product and find alternatives if there are conflicts with user preferences.

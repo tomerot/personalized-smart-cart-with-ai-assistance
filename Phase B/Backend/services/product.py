@@ -154,7 +154,10 @@ async def scan_with_conflict_check_and_alternatives(
         )
 
         # Determine if there's a conflict
-        has_conflict = len(original_conflict["allergen_conflicts"]) > 0 or len(original_conflict["dietary_conflicts"]) > 0
+        has_conflict = (
+            len(original_conflict["allergen_conflicts"]) > 0
+            or len(original_conflict["dietary_conflicts"]) > 0
+        )
 
         # Only fetch alternatives if there's a conflict
         safe_alternatives = []
@@ -178,7 +181,10 @@ async def scan_with_conflict_check_and_alternatives(
                 )
 
                 # Check if alternative has conflict
-                has_alt_conflict = len(conflict_check["allergen_conflicts"]) > 0 or len(conflict_check["dietary_conflicts"]) > 0
+                has_alt_conflict = (
+                    len(conflict_check["allergen_conflicts"]) > 0
+                    or len(conflict_check["dietary_conflicts"]) > 0
+                )
 
                 if not has_alt_conflict:
                     safe_alternatives.append(alt_product)
@@ -259,7 +265,10 @@ async def get_ai_recommended_alternatives(
 
             # Check for conflicts
             conflict_check = check_product_conflicts(product, allergies, dietary_needs)
-            has_conflict = len(conflict_check["allergen_conflicts"]) > 0 or len(conflict_check["dietary_conflicts"]) > 0
+            has_conflict = (
+                len(conflict_check["allergen_conflicts"]) > 0
+                or len(conflict_check["dietary_conflicts"]) > 0
+            )
 
             if not has_conflict:
                 safe_alternatives.append(product)
@@ -304,10 +313,10 @@ async def get_ai_recommended_alternatives(
 
         # 6. Create prompt for Gemini
         prompt = f"""
-You are a smart shopping assistant. Given the following list of alternative products and a user requirement,
-select the TOP {num_alternatives} BEST product(s) that match the requirement.
+You are a helpful shopping assistant talking directly to a customer. Given the following list of alternative products and their requirement,
+select the TOP {num_alternatives} BEST product(s) that match what they're looking for.
 
-User Requirement: "{requirement}"
+What they want: "{requirement}"
 
 Original Product:
 - Name: {original_product.name}
@@ -317,19 +326,24 @@ Original Product:
 - Ingredients: {original_product.ingredients}
 - Nutritional info: {original_product.nutritional_info}
 
-Available Alternatives (all safe for user's dietary restrictions):
+Available Alternatives (all safe for their dietary restrictions):
 {json.dumps(alternatives_data, indent=2)}
 
 Your task:
-1. Analyze each alternative product based on the user's requirement
-2. Select the TOP {num_alternatives} product(s) that best match the requirement
-3. Provide ONE overall explanation (max 20 words) why these alternatives were chosen
+1. Analyze each alternative product based on what they asked for
+2. Select the TOP {num_alternatives} product(s) that best match their needs
+3. Provide ONE overall explanation (max 20 words) speaking DIRECTLY to them (use "you" and "your")
 4. IMPORTANT: Each product must be UNIQUE - do NOT repeat the same barcode
+
+Example explanations:
+- "These have 50% less sugar than your original choice"
+- "Perfect for your vegan diet with high protein content"
+- "Lower in calories and sodium to match your health goals"
 
 IMPORTANT: Return your response ONLY as a valid JSON object with exactly {num_alternatives} product(s) in this format:
 {{
   "barcodes": ["barcode1", "barcode2", "barcode3"],
-  "explanation": "Brief overall explanation for all alternatives (max 20 words)"
+  "explanation": "Brief overall explanation for all alternatives speaking directly to the customer (max 20 words)"
 }}
 
 Do not include any other text, markdown formatting, or code blocks. Return ONLY the JSON object.
