@@ -170,3 +170,8 @@ media/
 # Generated files
 staticfiles/
 static_root/
+
+#claude.md
+CLAUDE.md
+populate_test_products.py
+TESTING_GUIDE.md
