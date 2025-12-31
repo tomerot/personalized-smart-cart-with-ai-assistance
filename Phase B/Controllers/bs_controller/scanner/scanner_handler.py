@@ -1,0 +1,2 @@
+class ScannerHandler:
+    pass
