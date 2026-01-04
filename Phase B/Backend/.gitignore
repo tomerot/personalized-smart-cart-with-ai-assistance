@@ -175,3 +175,5 @@ static_root/
 CLAUDE.md
 populate_test_products.py
 TESTING_GUIDE.md
+test_products
+import_test_products.py
