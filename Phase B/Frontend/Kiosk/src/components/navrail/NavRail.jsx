@@ -16,8 +16,8 @@ import React from "react";
 const NavRail = ({
   children,
   backgroundColor = "#004612",
-  width = 95,
-  borderRadius = "50px",
+  width = 100,
+  borderRadius = "30px",
   className = "",
   style = {},
   ...props
