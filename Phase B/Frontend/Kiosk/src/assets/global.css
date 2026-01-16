@@ -1,1 +1,46 @@
 @import "tailwindcss";
+
+/* Kiosk Mode: Disable text selection and interaction */
+* {
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE10+/Edge */
+  user-select: none; /* Standard */
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+}
+
+/* Disable text cursor */
+body {
+  cursor: default;
+}
+
+/* Disable text input cursor for any input/textarea that might exist */
+input,
+textarea {
+  cursor: default !important;
+  caret-color: transparent;
+}
+
+/* Prevent dragging */
+img,
+a {
+  -webkit-user-drag: none;
+}
+
+/* Custom pulse animation for call-to-action text */
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.pulse-animation {
+  animation: pulse infinite ease-in-out;
+}
