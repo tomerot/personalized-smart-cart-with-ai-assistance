@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Apply Montserrat font globally */
+* {
+  font-family: 'Montserrat', sans-serif;
+}
+
 /* Kiosk Mode: Disable text selection and interaction */
 * {
   -webkit-user-select: none; /* Safari */
@@ -13,6 +18,7 @@
 /* Disable text cursor */
 body {
   cursor: default;
+  font-family: 'Montserrat', sans-serif;
 }
 
 /* Disable text input cursor for any input/textarea that might exist */
@@ -43,4 +49,32 @@ a {
 
 .pulse-animation {
   animation: pulse infinite ease-in-out;
+}
+
+/* Fade-in animation for page transitions */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.8s ease-in-out;
+}
+
+/* Fade-out animation */
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.animate-fadeOut {
+  animation: fadeOut 0.8s ease-in-out forwards;
 }

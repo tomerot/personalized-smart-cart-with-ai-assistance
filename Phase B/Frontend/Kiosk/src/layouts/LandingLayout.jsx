@@ -1,24 +1,23 @@
-import ShaderGradientBackground from "@/components/shadergradient/ShaderGradient";
 import smartCartBg from "@/assets/smart-cart-bg.png";
 
-function LandingLayout({ children }) {
+function LandingLayout({ children, isFadingOut, onClick }) {
   return (
-    <div className="relative w-screen h-screen bg-[#1a1a1a]">
-      {/* Animated background */}
-      <ShaderGradientBackground />
-
+    <div 
+      onClick={onClick}
+      className={`relative w-full h-full bg-[#1a1a1a] transition-opacity duration-800 cursor-pointer ${isFadingOut ? 'opacity-0' : 'opacity-100'}`}
+    >
       {/* White rectangle behind the cart image, in front of gradient */}
-      <div className="absolute left-0 top-0 h-screen w-[35%] bg-white z-0" />
+      <div className="absolute left-0 top-0 h-full w-[35%] bg-white z-0" />
 
-      {/* Smart cart image at leftmost position - uncropped */}
+      {/* Smart cart image at leftmost position - uncropped, fixed aspect ratio */}
       <img
         src={smartCartBg}
         alt="Smart Cart"
-        className="absolute left-0 top-0 h-screen w-auto max-w-[60%] z-1"
+        className="absolute left-0 top-0 h-full w-auto z-1"
       />
 
-      {/* Page content layered on top */}
-      <div className="relative z-2 flex items-center justify-end h-full pr-[clamp(2rem,8vw,8rem)] pl-[clamp(40%,55vw,65%)]">
+      {/* Page content layered on top - centered in the whitespace after the image */}
+      <div className="absolute left-[65%] right-0 top-0 z-2 flex items-center justify-center h-full">
         {children}
       </div>
     </div>

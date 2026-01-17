@@ -5,4 +5,6 @@ export const ICONS = {
   HELP: "help",
   LOGOUT: "logout",
   SETTINGS: "settings",
+  START: "start",
+  BACKSPACE: "backspace"
 };
