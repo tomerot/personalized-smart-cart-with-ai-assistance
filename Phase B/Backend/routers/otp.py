@@ -6,7 +6,7 @@ from schemas import OTPCodeRequest, UserResponse
 router = APIRouter(prefix="/otp", tags=["OTP"])
 
 # Phone numbers that should receive real SMS with random OTP (all others get "000000")
-REAL_SMS_PHONES = ["+972548147277"]
+REAL_SMS_PHONES = ["+972543369711"]
 
 
 @router.post("/{phone}/send")

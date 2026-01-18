@@ -6,6 +6,8 @@ from schemas import (
     NutritionalInfoResponse,
     ProductAvailabilityResponse,
     ProductIngredientsResponse,
+    NutritionDetailsResponse,
+    ShelfInfoResponse,
     ProductLocationResponse,
     FindAlternativesResponse,
     ProductScanRequest,
@@ -125,6 +127,61 @@ async def get_product_location(barcode: str):
         )
 
     return location
+
+
+@router.get("/{barcode}/nutrition-details", response_model=NutritionDetailsResponse)
+async def get_product_nutrition_details(barcode: str):
+    """
+    Get product ingredients and nutritional info combined.
+    Used for AI function calling.
+
+    Args:
+        barcode: Product barcode
+
+    Returns:
+        NutritionDetailsResponse: Ingredients list and nutritional info
+    """
+    product = await Product.find_one(Product.barcode == barcode)
+
+    if not product:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Product with barcode '{barcode}' not found",
+        )
+
+    return {
+        "ingredients": product.ingredients,
+        "nutritional_info": product.nutritional_info,
+    }
+
+
+@router.get("/{barcode}/shelf-info", response_model=ShelfInfoResponse)
+async def get_product_shelf_info(barcode: str):
+    """
+    Get product availability and location combined.
+    Used for AI function calling.
+
+    Args:
+        barcode: Product barcode
+
+    Returns:
+        ShelfInfoResponse: Availability status and location coordinates
+    """
+    product = await Product.find_one(Product.barcode == barcode)
+
+    if not product:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Product with barcode '{barcode}' not found",
+        )
+
+    # Get location (may be None if category not found)
+    location = await product_service.get_product_location(barcode)
+
+    return {
+        "available": product.available,
+        "location": location["location"] if location else None,
+    }
 
 
 @router.post("/{barcode}/scan", response_model=FindAlternativesResponse)

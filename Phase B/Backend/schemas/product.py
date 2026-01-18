@@ -52,6 +52,20 @@ class ProductIngredientsResponse(BaseModel):
     ingredients: List[str]
 
 
+class NutritionDetailsResponse(BaseModel):
+    """Combined ingredients and nutritional info for AI function calling"""
+
+    ingredients: List[str]
+    nutritional_info: NutritionalInfoResponse
+
+
+class ShelfInfoResponse(BaseModel):
+    """Combined availability and location for AI function calling"""
+
+    available: bool
+    location: Optional["LocationResponse"] = None
+
+
 class ConflictCheckResponse(BaseModel):
     allergen_conflicts: List[str] = []
     dietary_conflicts: List[str] = []
