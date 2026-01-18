@@ -13,7 +13,9 @@ function AppContent() {
   return (
     <div className="relative w-screen h-screen">
       {/* Persistent shader gradient background - for landing and auth pages */}
-      {showGradient && <ShaderGradientBackground />}
+      <div className="absolute inset-0 z-0">
+        {showGradient && <ShaderGradientBackground />}
+      </div>
       
       {/* Routes layered on top */}
       <div className="relative z-10 w-full h-full">

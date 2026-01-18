@@ -9,11 +9,7 @@ function ShaderGradientBackground() {
         left: 0,
         width: "100%",
         height: "100%",
-        backgroundColor: "#2a5a3e", // Fallback color to prevent black holes
       }}
-      pixelDensity={Math.min(window.devicePixelRatio, 2)} // Better handling for different screens
-      fov={45}
-      frameLoop="always" // Ensures consistent rendering
     >
       <ShaderGradient
         control="props"
@@ -45,9 +41,6 @@ function ShaderGradientBackground() {
         uStrength={4}
         uTime={0}
         wireframe={false}
-        range="enabled" // Changed from "disabled" - this is key!
-        rangeStart={0}
-        rangeEnd={40}
       />
     </ShaderGradientCanvas>
   );

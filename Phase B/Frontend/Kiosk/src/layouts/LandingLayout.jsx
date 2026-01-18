@@ -4,7 +4,7 @@ function LandingLayout({ children, isFadingOut, onClick }) {
   return (
     <div 
       onClick={onClick}
-      className={`relative w-full h-full bg-[#1a1a1a] transition-opacity duration-800 cursor-pointer ${isFadingOut ? 'opacity-0' : 'opacity-100'}`}
+      className={`relative w-full h-full transition-opacity duration-800 cursor-pointer ${isFadingOut ? 'opacity-0' : 'opacity-100'}`}
     >
       {/* White rectangle behind the cart image, in front of gradient */}
       <div className="absolute left-0 top-0 h-full w-[35%] bg-white z-0" />
