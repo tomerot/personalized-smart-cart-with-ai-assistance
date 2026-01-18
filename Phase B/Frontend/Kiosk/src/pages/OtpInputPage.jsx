@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useUser } from "@/context/UserContext";
 import AuthLayout from "@/layouts/AuthLayout";
 import LoadingLayout from "@/layouts/LoadingLayout";
 import Numpad from "@/components/numpad/Numpad";
@@ -8,12 +9,14 @@ import MessageModal from "@/components/modal/MessageModal";
 import { ICONS } from "@/components/icons/icons.config";
 import { formatPhoneForDisplay, formatTime } from "@/utils/formatters";
 import { authService } from "@/services/authService";
+import { userStatusService } from "@/services/userStatusService";
 import { AUTH_CONFIG } from "@/data/authConfig";
 import { UI_CONFIG } from "@/data/uiConfig";
 
 function OtpInputPage() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { login, setUserHasShoppingList, setSavedCartData } = useUser();
   const phoneNumber = location.state?.phoneNumber;
 
   const [inputValue, setInputValue] = useState("");
@@ -22,6 +25,7 @@ function OtpInputPage() {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   // Redirect to phone input if no phone number is provided
   useEffect(() => {
@@ -57,29 +61,70 @@ function OtpInputPage() {
   };
 
   const handleSubmit = async () => {
-    if (inputValue.length === AUTH_CONFIG.OTP_LENGTH) {
+    if (inputValue.length === AUTH_CONFIG.OTP_LENGTH && !isVerifying) {
       console.log("Submitted OTP:", inputValue);
+      console.log("Phone number being verified:", phoneNumber);
+
+      setIsVerifying(true);
 
       // Call auth service to verify OTP
       const result = await authService.verifyOtp(phoneNumber, inputValue);
 
+      console.log("Verification result:", result);
+      setIsVerifying(false);
+
       if (result.success) {
-        // Correct OTP - start fade-out animation
+        // Correct OTP - store user data in context
         console.log("OTP verified successfully");
+        console.log("User data:", result.user);
+        
+        // Store user data in context (which also persists to sessionStorage)
+        if (result.user) {
+          login(result.user);
+        }
+        
         setIsFadingOut(true);
 
-        // After fade-out completes, show loading screen
-        setTimeout(() => {
+        // After fade-out completes, show loading screen and fetch user status
+        setTimeout(async () => {
           setIsLoading(true);
 
-          // TODO: Replace setTimeout with actual dashboard data fetch
+          // Fetch user status (shopping list and active cart flags)
+          console.log("Fetching user status...");
+          const statusResult = await userStatusService.getUserStatus(phoneNumber);
+          
+          if (statusResult.success && statusResult.status) {
+            console.log("User status:", statusResult.status);
+            
+            // Save shopping list flag to context
+            setUserHasShoppingList(statusResult.status.has_shopping_list);
+            
+            // If user has an active cart, fetch it
+            if (statusResult.status.has_active_cart) {
+              console.log("User has active cart, fetching cart data...");
+              const cartResult = await userStatusService.getCart(phoneNumber);
+              
+              if (cartResult.success && cartResult.cart) {
+                console.log("Cart fetched successfully:", cartResult.cart);
+                setSavedCartData(cartResult.cart);
+              } else {
+                console.error("Failed to fetch cart:", cartResult.message);
+              }
+            } else {
+              console.log("User has no active cart");
+            }
+          } else {
+            console.error("Failed to fetch user status:", statusResult.message);
+          }
+
+          // TODO: Navigate to dashboard after data is loaded
           setTimeout(() => {
-            // navigate to dashboard here when ready
             console.log("Dashboard loaded - ready to navigate");
-          }, 3000); // 3 seconds temporary loading time
+          }, 1000); // Short delay to ensure smooth transition
         }, UI_CONFIG.FADE_TRANSITION_DURATION);
       } else {
         // Wrong OTP - show error modal
+        console.error("OTP verification failed:", result.message);
         setShowErrorModal(true);
         setInputValue(""); // Clear input
       }
@@ -99,7 +144,7 @@ function OtpInputPage() {
     navigate("/auth/phone", { replace: true });
   };
 
-  const isSubmitEnabled = inputValue.length === AUTH_CONFIG.OTP_LENGTH;
+  const isSubmitEnabled = inputValue.length === AUTH_CONFIG.OTP_LENGTH && !isVerifying;
   const activeIndex = inputValue.length;
 
   if (!phoneNumber) {

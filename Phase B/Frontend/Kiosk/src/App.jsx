@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { UserProvider } from "./context/UserContext";
 import LandingPage from "./pages/LandingPage";
 import PhoneInputPage from "./pages/PhoneInputPage";
 import OtpInputPage from "./pages/OtpInputPage";
@@ -34,7 +35,9 @@ function AppContent() {
 function App() {
   return (
     <BrowserRouter>
-      <AppContent />
+      <UserProvider>
+        <AppContent />
+      </UserProvider>
     </BrowserRouter>
   );
 }
