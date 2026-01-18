@@ -74,7 +74,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "ADD THE FRONT DOMAIN",
+        "http://localhost:5173",
+        # add frontend url here"
         "https://api.vapi.ai",
     ],
     allow_credentials=True,
