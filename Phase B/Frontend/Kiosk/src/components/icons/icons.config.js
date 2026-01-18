@@ -6,5 +6,7 @@ export const ICONS = {
   LOGOUT: "logout",
   SETTINGS: "settings",
   START: "start",
-  BACKSPACE: "backspace"
+  BACKSPACE: "backspace",
+  CLOSE: "close",
+  BLOCK: "block"
 };

@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import AuthLayout from "@/layouts/AuthLayout";
+import LoadingLayout from "@/layouts/LoadingLayout";
 import Numpad from "@/components/numpad/Numpad";
 import DigitInputRow from "@/components/digitInput/DigitInputRow";
+import MessageModal from "@/components/modal/MessageModal";
+import { ICONS } from "@/components/icons/icons.config";
 
 function OtpInputPage() {
   const location = useLocation();
@@ -12,8 +15,13 @@ function OtpInputPage() {
   const [inputValue, setInputValue] = useState("");
   const [timeLeft, setTimeLeft] = useState(180); // 3 minutes in seconds
   const [timerActive, setTimerActive] = useState(true);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFadingOut, setIsFadingOut] = useState(false);
 
   const requiredLength = 6; // 6 digits for OTP
+  const pulseAnimationDuration = 2; // Animation duration in seconds
+  const fadeTransitionDuration = 800; // Fade animation duration in milliseconds
 
   // Redirect to phone input if no phone number is provided
   useEffect(() => {
@@ -51,8 +59,28 @@ function OtpInputPage() {
   const handleSubmit = () => {
     if (inputValue.length === requiredLength) {
       console.log("Submitted OTP:", inputValue);
-      // TODO: Verify OTP
-      // On success, navigate to next page
+      
+      // TODO: Replace with actual API call
+      if (inputValue === "111111") {
+        // Correct OTP - start fade-out animation
+        console.log("OTP verified successfully");
+        setIsFadingOut(true);
+        
+        // After fade-out completes, show loading screen
+        setTimeout(() => {
+          setIsLoading(true);
+          
+          // TODO: Replace setTimeout with actual dashboard data fetch
+          setTimeout(() => {
+            // navigate to dashboard here when ready
+            console.log("Dashboard loaded - ready to navigate");
+          }, 3000); // 3 seconds temporary loading time
+        }, fadeTransitionDuration);
+      } else {
+        // Wrong OTP - show error modal
+        setShowErrorModal(true);
+        setInputValue(""); // Clear input
+      }
     }
   };
 
@@ -90,9 +118,39 @@ function OtpInputPage() {
     return null; // Will redirect
   }
 
+  // Show loading screen when OTP is verified
+  if (isLoading) {
+    return (
+      <LoadingLayout>
+        <p
+          className="pulse-animation text-[clamp(1.5rem,3vw,2.5rem)] font-semibold text-green-600"
+          style={{
+            animationDuration: `${pulseAnimationDuration}s`,
+          }}
+        >
+          Preparing Dashboard...
+        </p>
+      </LoadingLayout>
+    );
+  }
+
   return (
     <AuthLayout>
-      <div className="flex flex-col items-center justify-between w-full h-full py-[5vh]">
+      {/* Error Modal */}
+      <MessageModal
+        isOpen={showErrorModal}
+        onClose={() => setShowErrorModal(false)}
+        icon={ICONS.BLOCK}
+        message={["Wrong verification code.", "Please try again."]}
+        iconColor="black"
+        textColor="black"
+      />
+
+      <div 
+        className={`flex flex-col items-center justify-between w-full h-full py-[5vh] transition-opacity duration-800 ${
+          isFadingOut ? 'opacity-0' : 'opacity-100'
+        }`}
+      >
         {/* Top section - Prompt and digit input - ANIMATED */}
         <div className="flex flex-col items-center justify-center flex-1 gap-[clamp(2rem,4vh,4rem)] animate-fadeIn">
           <div className="flex flex-col items-center gap-[clamp(1.5rem,3vh,3rem)]">

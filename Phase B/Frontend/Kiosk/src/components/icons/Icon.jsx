@@ -25,6 +25,7 @@ const Icon = ({
   ...props
 }) => {
   const symbolStyle = {
+    fontFamily: "'Material Symbols Outlined'",
     fontVariationSettings: `'FILL' ${fill}, 'wght' ${weight}, 'GRAD' ${grade}, 'opsz' ${opticalSize}`,
     fontSize: `${size}px`,
     ...style,
