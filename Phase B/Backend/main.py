@@ -75,7 +75,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:5173",
-        "https://list-creation-eight.vercel.app/",
+        "https://list-creation-eight.vercel.app",
         "https://api.vapi.ai",
     ],
     allow_credentials=True,
