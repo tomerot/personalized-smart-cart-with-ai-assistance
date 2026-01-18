@@ -28,7 +28,7 @@ class BarcodeScannerController:
         if isinstance(command, EndSessionCommand): 
             if self.scanner_handler.scanner_enabled:
                 # When session ended unexpectedly, while scanner was enabled
-                await self.scanner_handler.disable_scan()
+                self.scanner_handler.disable_scan()
             return
 
         command_actions = {
