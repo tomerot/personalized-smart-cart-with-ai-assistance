@@ -10,6 +10,7 @@ import { ICONS } from "@/components/icons/icons.config";
 import { formatPhoneForDisplay, formatTime } from "@/utils/formatters";
 import { authService } from "@/services/authService";
 import { userStatusService } from "@/services/userStatusService";
+import { controllerService } from "@/services/controllerService";
 import { AUTH_CONFIG } from "@/data/authConfig";
 import { UI_CONFIG } from "@/data/uiConfig";
 
@@ -26,6 +27,7 @@ function OtpInputPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [controllersConnected, setControllersConnected] = useState(false);
 
   // Redirect to phone input if no phone number is provided
   useEffect(() => {
@@ -33,6 +35,16 @@ function OtpInputPage() {
       navigate("/auth/phone", { replace: true });
     }
   }, [phoneNumber, navigate]);
+
+  // Cleanup: Disconnect from controllers when component unmounts
+  useEffect(() => {
+    return () => {
+      if (controllersConnected) {
+        console.log("Cleaning up controller connections...");
+        controllerService.disconnect();
+      }
+    };
+  }, [controllersConnected]);
 
   // Timer effect
   useEffect(() => {
@@ -117,9 +129,21 @@ function OtpInputPage() {
             console.error("Failed to fetch user status:", statusResult.message);
           }
 
-          // TODO: Navigate to dashboard after data is loaded
+          // Connect to Raspberry Pi controllers (Barcode Scanner & Voice Assistant)
+          console.log("Connecting to Raspberry Pi controllers...");
+          const connectionResult = await controllerService.connect();
+          
+          if (connectionResult.barcode || connectionResult.voice) {
+            console.log("Controller connections established:", connectionResult);
+            setControllersConnected(true);
+          } else {
+            console.error("Failed to connect to controllers - will retry on dashboard");
+          }
+
+          // Navigate to WebSocket test page after data is loaded
           setTimeout(() => {
-            console.log("Dashboard loaded - ready to navigate");
+            console.log("Dashboard loaded - navigating to WebSocket test page");
+            navigate("/test/websocket", { replace: true });
           }, 1000); // Short delay to ensure smooth transition
         }, UI_CONFIG.FADE_TRANSITION_DURATION);
       } else {

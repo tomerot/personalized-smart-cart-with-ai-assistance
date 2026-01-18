@@ -4,6 +4,7 @@ import LandingPage from "./pages/LandingPage";
 import PhoneInputPage from "./pages/PhoneInputPage";
 import OtpInputPage from "./pages/OtpInputPage";
 import Test from "./pages/Test";
+import WebSocketTest from "./pages/WebSocketTest";
 import ShaderGradientBackground from "./components/shadergradient/ShaderGradient";
 
 function AppContent() {
@@ -25,7 +26,8 @@ function AppContent() {
           <Route path="/auth/phone" element={<PhoneInputPage />} />
           <Route path="/auth/otp" element={<OtpInputPage />} />
           <Route path="/test" element={<Test />} />
-          {/* Test page should be removed before build */}
+          <Route path="/test/websocket" element={<WebSocketTest />} />
+          {/* Test pages should be removed before build */}
         </Routes>
       </div>
     </div>
