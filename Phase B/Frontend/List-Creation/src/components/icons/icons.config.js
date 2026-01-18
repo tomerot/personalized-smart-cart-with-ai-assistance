@@ -1,0 +1,23 @@
+// Icon name constants
+export const ICONS = {
+  CART: "shopping_cart",
+  GROCERY_LIST: "list_alt_check",
+  HELP: "help",
+  LOGOUT: "logout",
+  SETTINGS: "settings",
+  SEARCH: "search",
+  ADD: "add",
+  REMOVE: "remove",
+  DELETE: "delete",
+  CLOSE: "close",
+  CHECK: "check_circle",
+  ERROR: "error",
+  WARNING: "warning",
+  INFO: "info",
+  PHONE: "phone",
+  SMS: "sms",
+  SAVE: "save",
+  CLEAR: "delete_sweep",
+  BACK: "arrow_back",
+  LOADING: "progress_activity",
+};

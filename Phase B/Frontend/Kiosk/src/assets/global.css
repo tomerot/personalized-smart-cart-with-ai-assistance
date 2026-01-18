@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+/* Apply Montserrat font globally */
+* {
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* Kiosk Mode: Disable text selection and interaction */
+* {
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE10+/Edge */
+  user-select: none; /* Standard */
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+}
+
+/* Disable text cursor */
+body {
+  cursor: default;
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* Disable text input cursor for any input/textarea that might exist */
+input,
+textarea {
+  cursor: default !important;
+  caret-color: transparent;
+}
+
+/* Prevent dragging */
+img,
+a {
+  -webkit-user-drag: none;
+}
+
+/* Custom pulse animation for call-to-action text */
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.pulse-animation {
+  animation: pulse infinite ease-in-out;
+}
+
+/* Fade-in animation for page transitions */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.8s ease-in-out;
+}
+
+/* Fade-out animation */
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.animate-fadeOut {
+  animation: fadeOut 0.8s ease-in-out forwards;
+}
