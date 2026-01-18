@@ -1,21 +1,20 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import LandingLayout from "@/layouts/LandingLayout";
+import { UI_CONFIG } from "@/data/uiConfig";
 
 function LandingPage() {
-  // Animation duration in seconds (change this to adjust speed)
-  const pulseAnimationDuration = 2;
   const [isFadingOut, setIsFadingOut] = useState(false);
   const navigate = useNavigate();
 
   const handleScreenTouch = () => {
     // Start fade-out animation
     setIsFadingOut(true);
-    
+
     // Navigate to phone input page after animation completes
     setTimeout(() => {
       navigate("/auth/phone");
-    }, 800); // Animation duration: 800ms
+    }, UI_CONFIG.FADE_TRANSITION_DURATION);
   };
 
   return (
@@ -32,7 +31,7 @@ function LandingPage() {
         <p
           className="pulse-animation text-[clamp(0.7rem,1.5vw,1.3rem)] font-light whitespace-nowrap"
           style={{
-            animationDuration: `${pulseAnimationDuration}s`,
+            animationDuration: `${UI_CONFIG.PULSE_ANIMATION_DURATION}s`,
           }}
         >
           Touch the Screen to Start

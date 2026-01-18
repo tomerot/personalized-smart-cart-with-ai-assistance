@@ -3,16 +3,15 @@ import { useNavigate } from "react-router-dom";
 import AuthLayout from "@/layouts/AuthLayout";
 import Numpad from "@/components/numpad/Numpad";
 import DigitInputRow from "@/components/digitInput/DigitInputRow";
+import { authService } from "@/services/authService";
+import { AUTH_CONFIG } from "@/data/authConfig";
 
 function PhoneInputPage() {
   const navigate = useNavigate();
   const [inputValue, setInputValue] = useState("");
 
-  const prefillValue = "05"; // Israeli phone numbers start with 05
-  const requiredLength = 8; // 8 digits for phone (excluding 05 prefix)
-
   const handleNumberClick = (digit) => {
-    if (inputValue.length < requiredLength) {
+    if (inputValue.length < AUTH_CONFIG.PHONE_INPUT_DIGITS) {
       setInputValue(inputValue + digit);
     }
   };
@@ -21,18 +20,21 @@ function PhoneInputPage() {
     setInputValue(inputValue.slice(0, -1));
   };
 
-  const handleSubmit = () => {
-    if (inputValue.length === requiredLength) {
-      const fullPhoneNumber = prefillValue + inputValue;
+  const handleSubmit = async () => {
+    if (inputValue.length === AUTH_CONFIG.PHONE_INPUT_DIGITS) {
+      const fullPhoneNumber = AUTH_CONFIG.PHONE_PREFIX + inputValue;
       console.log("Submitted phone number:", fullPhoneNumber);
-      // TODO: Send OTP to phone number
+
+      // Send OTP to phone number
+      await authService.sendOtp(fullPhoneNumber);
+
       // Navigate to OTP page with phone number
       navigate("/auth/otp", { state: { phoneNumber: fullPhoneNumber } });
     }
   };
 
-  const isSubmitEnabled = inputValue.length === requiredLength;
-  const activeIndex = prefillValue.length + inputValue.length;
+  const isSubmitEnabled = inputValue.length === AUTH_CONFIG.PHONE_INPUT_DIGITS;
+  const activeIndex = AUTH_CONFIG.PHONE_PREFIX.length + inputValue.length;
 
   return (
     <AuthLayout>
@@ -45,7 +47,7 @@ function PhoneInputPage() {
               <h2 className="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-black">
                 Enter Your Phone Number
               </h2>
-              
+
               <p className="text-[clamp(1rem,1.5vw,1.25rem)] text-gray-600">
                 An SMS will be sent for verification
               </p>
@@ -54,10 +56,10 @@ function PhoneInputPage() {
             {/* Digit input boxes */}
             <DigitInputRow
               value={inputValue}
-              totalDigits={10}
+              totalDigits={AUTH_CONFIG.PHONE_TOTAL_DIGITS}
               activeIndex={activeIndex}
               dashPositions={[2]} // Dash after index 2 (after "05" and one more digit)
-              prefillValue={prefillValue}
+              prefillValue={AUTH_CONFIG.PHONE_PREFIX}
             />
           </div>
         </div>
@@ -77,4 +79,3 @@ function PhoneInputPage() {
 }
 
 export default PhoneInputPage;
-

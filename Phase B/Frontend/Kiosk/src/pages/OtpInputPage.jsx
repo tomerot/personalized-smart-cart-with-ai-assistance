@@ -6,6 +6,10 @@ import Numpad from "@/components/numpad/Numpad";
 import DigitInputRow from "@/components/digitInput/DigitInputRow";
 import MessageModal from "@/components/modal/MessageModal";
 import { ICONS } from "@/components/icons/icons.config";
+import { formatPhoneForDisplay, formatTime } from "@/utils/formatters";
+import { authService } from "@/services/authService";
+import { AUTH_CONFIG } from "@/data/authConfig";
+import { UI_CONFIG } from "@/data/uiConfig";
 
 function OtpInputPage() {
   const location = useLocation();
@@ -13,15 +17,11 @@ function OtpInputPage() {
   const phoneNumber = location.state?.phoneNumber;
 
   const [inputValue, setInputValue] = useState("");
-  const [timeLeft, setTimeLeft] = useState(180); // 3 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(AUTH_CONFIG.OTP_TIMER_SECONDS);
   const [timerActive, setTimerActive] = useState(true);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
-
-  const requiredLength = 6; // 6 digits for OTP
-  const pulseAnimationDuration = 2; // Animation duration in seconds
-  const fadeTransitionDuration = 800; // Fade animation duration in milliseconds
 
   // Redirect to phone input if no phone number is provided
   useEffect(() => {
@@ -47,7 +47,7 @@ function OtpInputPage() {
   }, [timerActive, timeLeft]);
 
   const handleNumberClick = (digit) => {
-    if (inputValue.length < requiredLength) {
+    if (inputValue.length < AUTH_CONFIG.OTP_LENGTH) {
       setInputValue(inputValue + digit);
     }
   };
@@ -56,26 +56,28 @@ function OtpInputPage() {
     setInputValue(inputValue.slice(0, -1));
   };
 
-  const handleSubmit = () => {
-    if (inputValue.length === requiredLength) {
+  const handleSubmit = async () => {
+    if (inputValue.length === AUTH_CONFIG.OTP_LENGTH) {
       console.log("Submitted OTP:", inputValue);
-      
-      // TODO: Replace with actual API call
-      if (inputValue === "111111") {
+
+      // Call auth service to verify OTP
+      const result = await authService.verifyOtp(phoneNumber, inputValue);
+
+      if (result.success) {
         // Correct OTP - start fade-out animation
         console.log("OTP verified successfully");
         setIsFadingOut(true);
-        
+
         // After fade-out completes, show loading screen
         setTimeout(() => {
           setIsLoading(true);
-          
+
           // TODO: Replace setTimeout with actual dashboard data fetch
           setTimeout(() => {
             // navigate to dashboard here when ready
             console.log("Dashboard loaded - ready to navigate");
           }, 3000); // 3 seconds temporary loading time
-        }, fadeTransitionDuration);
+        }, UI_CONFIG.FADE_TRANSITION_DURATION);
       } else {
         // Wrong OTP - show error modal
         setShowErrorModal(true);
@@ -84,12 +86,12 @@ function OtpInputPage() {
     }
   };
 
-  const handleResendCode = () => {
+  const handleResendCode = async () => {
     console.log("Resending code to:", phoneNumber);
-    setTimeLeft(180);
+    await authService.resendOtp(phoneNumber);
+    setTimeLeft(AUTH_CONFIG.OTP_TIMER_SECONDS);
     setTimerActive(true);
     setInputValue("");
-    // TODO: Resend OTP
   };
 
   const handleChangePhoneNumber = () => {
@@ -97,22 +99,8 @@ function OtpInputPage() {
     navigate("/auth/phone", { replace: true });
   };
 
-  const isSubmitEnabled = inputValue.length === requiredLength;
+  const isSubmitEnabled = inputValue.length === AUTH_CONFIG.OTP_LENGTH;
   const activeIndex = inputValue.length;
-
-  // Format phone number for display (054-12345678 format)
-  const formatPhoneForDisplay = (phone) => {
-    if (!phone || phone.length !== 10) return phone;
-    // Format as 05X-XXXXXXX (first 3 digits, dash, remaining 7 digits)
-    return `${phone.slice(0, 3)}-${phone.slice(3)}`;
-  };
-
-  // Format timer (mm:ss)
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-  };
 
   if (!phoneNumber) {
     return null; // Will redirect
@@ -125,7 +113,7 @@ function OtpInputPage() {
         <p
           className="pulse-animation text-[clamp(1.5rem,3vw,2.5rem)] font-semibold text-green-600"
           style={{
-            animationDuration: `${pulseAnimationDuration}s`,
+            animationDuration: `${UI_CONFIG.PULSE_ANIMATION_DURATION}s`,
           }}
         >
           Preparing Dashboard...
@@ -146,9 +134,9 @@ function OtpInputPage() {
         textColor="black"
       />
 
-      <div 
+      <div
         className={`flex flex-col items-center justify-between w-full h-full py-[5vh] transition-opacity duration-800 ${
-          isFadingOut ? 'opacity-0' : 'opacity-100'
+          isFadingOut ? "opacity-0" : "opacity-100"
         }`}
       >
         {/* Top section - Prompt and digit input - ANIMATED */}
@@ -159,12 +147,13 @@ function OtpInputPage() {
               <h2 className="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-black">
                 Enter the Verification Code
               </h2>
-              
+
               <div className="flex flex-col items-center gap-3">
                 {timerActive ? (
                   <>
                     <p className="text-[clamp(1rem,1.5vw,1.25rem)] text-gray-600">
-                      A code was sent to {formatPhoneForDisplay(phoneNumber)}. Code expires in {formatTime(timeLeft)} minutes.
+                      A code was sent to {formatPhoneForDisplay(phoneNumber)}.
+                      Code expires in {formatTime(timeLeft)} minutes.
                     </p>
                     <button
                       onClick={handleChangePhoneNumber}
@@ -195,7 +184,7 @@ function OtpInputPage() {
             {/* Digit input boxes */}
             <DigitInputRow
               value={inputValue}
-              totalDigits={6}
+              totalDigits={AUTH_CONFIG.OTP_LENGTH}
               activeIndex={activeIndex}
               dashPositions={[]} // No dashes for OTP
               prefillValue=""
@@ -218,4 +207,3 @@ function OtpInputPage() {
 }
 
 export default OtpInputPage;
-
