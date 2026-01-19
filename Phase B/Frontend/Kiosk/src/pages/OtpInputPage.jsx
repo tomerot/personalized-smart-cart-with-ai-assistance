@@ -2,32 +2,27 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
 import AuthLayout from "@/layouts/AuthLayout";
-import LoadingLayout from "@/layouts/LoadingLayout";
 import Numpad from "@/components/numpad/Numpad";
 import DigitInputRow from "@/components/digitInput/DigitInputRow";
 import MessageModal from "@/components/modal/MessageModal";
 import { ICONS } from "@/components/icons/icons.config";
 import { formatPhoneForDisplay, formatTime } from "@/utils/formatters";
 import { authService } from "@/services/authService";
-import { userStatusService } from "@/services/userStatusService";
-import { controllerService } from "@/services/controllerService";
 import { AUTH_CONFIG } from "@/data/authConfig";
 import { UI_CONFIG } from "@/data/uiConfig";
 
 function OtpInputPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { login, setUserHasShoppingList, setSavedCartData } = useUser();
+  const { login } = useUser();
   const phoneNumber = location.state?.phoneNumber;
 
   const [inputValue, setInputValue] = useState("");
   const [timeLeft, setTimeLeft] = useState(AUTH_CONFIG.OTP_TIMER_SECONDS);
   const [timerActive, setTimerActive] = useState(true);
   const [showErrorModal, setShowErrorModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [controllersConnected, setControllersConnected] = useState(false);
 
   // Redirect to phone input if no phone number is provided
   useEffect(() => {
@@ -35,16 +30,6 @@ function OtpInputPage() {
       navigate("/auth/phone", { replace: true });
     }
   }, [phoneNumber, navigate]);
-
-  // Cleanup: Disconnect from controllers when component unmounts
-  useEffect(() => {
-    return () => {
-      if (controllersConnected) {
-        console.log("Cleaning up controller connections...");
-        controllerService.disconnect();
-      }
-    };
-  }, [controllersConnected]);
 
   // Timer effect
   useEffect(() => {
@@ -97,54 +82,13 @@ function OtpInputPage() {
         
         setIsFadingOut(true);
 
-        // After fade-out completes, show loading screen and fetch user status
-        setTimeout(async () => {
-          setIsLoading(true);
-
-          // Fetch user status (shopping list and active cart flags)
-          console.log("Fetching user status...");
-          const statusResult = await userStatusService.getUserStatus(phoneNumber);
-          
-          if (statusResult.success && statusResult.status) {
-            console.log("User status:", statusResult.status);
-            
-            // Save shopping list flag to context
-            setUserHasShoppingList(statusResult.status.has_shopping_list);
-            
-            // If user has an active cart, fetch it
-            if (statusResult.status.has_active_cart) {
-              console.log("User has active cart, fetching cart data...");
-              const cartResult = await userStatusService.getCart(phoneNumber);
-              
-              if (cartResult.success && cartResult.cart) {
-                console.log("Cart fetched successfully:", cartResult.cart);
-                setSavedCartData(cartResult.cart);
-              } else {
-                console.error("Failed to fetch cart:", cartResult.message);
-              }
-            } else {
-              console.log("User has no active cart");
-            }
-          } else {
-            console.error("Failed to fetch user status:", statusResult.message);
-          }
-
-          // Connect to Raspberry Pi controllers (Barcode Scanner & Voice Assistant)
-          console.log("Connecting to Raspberry Pi controllers...");
-          const connectionResult = await controllerService.connect();
-          
-          if (connectionResult.barcode || connectionResult.voice) {
-            console.log("Controller connections established:", connectionResult);
-            setControllersConnected(true);
-          } else {
-            console.error("Failed to connect to controllers - will retry on dashboard");
-          }
-
-          // Navigate to WebSocket test page after data is loaded
-          setTimeout(() => {
-            console.log("Dashboard loaded - navigating to WebSocket test page");
-            navigate("/test/websocket", { replace: true });
-          }, 1000); // Short delay to ensure smooth transition
+        // After fade-out completes, navigate to dashboard loading page
+        setTimeout(() => {
+          console.log("Navigating to dashboard loading page");
+          navigate("/dashboard/loading", { 
+            state: { phoneNumber }, 
+            replace: true 
+          });
         }, UI_CONFIG.FADE_TRANSITION_DURATION);
       } else {
         // Wrong OTP - show error modal
@@ -173,22 +117,6 @@ function OtpInputPage() {
 
   if (!phoneNumber) {
     return null; // Will redirect
-  }
-
-  // Show loading screen when OTP is verified
-  if (isLoading) {
-    return (
-      <LoadingLayout>
-        <p
-          className="pulse-animation text-[clamp(1.5rem,3vw,2.5rem)] font-semibold text-green-600"
-          style={{
-            animationDuration: `${UI_CONFIG.PULSE_ANIMATION_DURATION}s`,
-          }}
-        >
-          Preparing Dashboard...
-        </p>
-      </LoadingLayout>
-    );
   }
 
   return (
