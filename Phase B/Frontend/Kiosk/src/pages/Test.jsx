@@ -3,6 +3,7 @@ import NavRail from "@/components/navrail/NavRail";
 import NavRailButton from "@/components/navrail/NavRailButton";
 import { ICONS } from "@/components/icons/icons.config";
 import ProductCard from "@/components/cart/ProductCard";
+import CheckoutBar from "@/components/cart/CheckoutBar";
 
 // Navigation views that change the content area (not modals)
 const NAV_VIEWS = {
@@ -127,21 +128,30 @@ function Test() {
       </NavRail>
 
       {/* My Cart section - Always visible, integrated with background */}
-      <div className="shrink-0 w-[580px] h-full ml-4 p-4">
+      <div className="shrink-0 w-[580px] h-full ml-4 p-4 flex flex-col">
         <h2 className="font-[Montserrat] text-2xl font-bold text-gray-800 mb-4">
           My Cart
         </h2>
         
-        {/* Product Card */}
-        <ProductCard
-          productName="Product Name"
-          imageUrl="https://www.rami-levy.co.il/_ipx/w_366,f_webp/https://img.rami-levy.co.il/product/7290004131074/small.jpg"
-          quantity={1}
-          currentPrice={12.90}
-          pricePerUnit={12.90}
-          onIncrease={() => console.log("Increase")}
-          onDecrease={() => console.log("Decrease")}
-          onDelete={() => console.log("Delete")}
+        {/* Products Container - Scrollable */}
+        <div className="flex-1 overflow-y-auto mb-4 space-y-3">
+          {/* Product Card */}
+          <ProductCard
+            productName="Product Name"
+            imageUrl="https://www.rami-levy.co.il/_ipx/w_366,f_webp/https://img.rami-levy.co.il/product/7290004131074/small.jpg"
+            quantity={1}
+            currentPrice={12.90}
+            pricePerUnit={12.90}
+            onIncrease={() => console.log("Increase")}
+            onDecrease={() => console.log("Decrease")}
+            onDelete={() => console.log("Delete")}
+          />
+        </div>
+
+        {/* Checkout Bar - Fixed at bottom */}
+        <CheckoutBar
+          totalPrice={12.90}
+          onCheckout={() => console.log("Checkout clicked")}
         />
       </div>
 
