@@ -28,6 +28,15 @@ export const API_ENDPOINTS = {
     SYNC: (phone) => `/cart-session/${phone}/sync`,
     DELETE: (phone) => `/cart-session/${phone}`,
   },
+  PRODUCTS: {
+    SCAN: (barcode) => `/products/${barcode}/scan`,
+    SEARCH: '/products/search',
+    NUTRITIONAL_INFO: (barcode) => `/products/${barcode}/nutritional-info`,
+    AVAILABILITY: (barcode) => `/products/${barcode}/availability`,
+    INGREDIENTS: (barcode) => `/products/${barcode}/ingredients`,
+    LOCATION: (barcode) => `/products/${barcode}/location`,
+    AI_ALTERNATIVES: (barcode) => `/products/${barcode}/ai-alternatives`,
+  },
   // Add other endpoints here as needed
 };
 

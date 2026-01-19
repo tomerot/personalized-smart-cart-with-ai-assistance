@@ -5,6 +5,10 @@ import { userStatusService } from "@/services/userStatusService";
 import { controllerService } from "@/services/controllerService";
 import { UI_CONFIG } from "@/data/uiConfig";
 
+// ⚙️ TESTING FLAG: Set to true to navigate to Test page instead of Dashboard
+// Change this to false before production build
+const USE_TEST_PAGE = true;
+
 function DashboardLoadingPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -63,14 +67,16 @@ function DashboardLoadingPage() {
           console.error("Failed to connect to controllers - will retry on dashboard");
         }
 
-        // Navigate to dashboard after data is loaded
+        // Navigate to dashboard or test page after data is loaded
         // No artificial delay - navigate immediately after data is ready
-        console.log("Dashboard data loaded - navigating to dashboard");
-        navigate("/dashboard", { replace: true });
+        const destination = USE_TEST_PAGE ? "/test" : "/dashboard";
+        console.log(`Dashboard data loaded - navigating to ${destination}`);
+        navigate(destination, { replace: true });
       } catch (error) {
         console.error("Error loading dashboard data:", error);
-        // Even on error, navigate to dashboard (it can handle retries)
-        navigate("/dashboard", { replace: true });
+        // Even on error, navigate to destination (it can handle retries)
+        const destination = USE_TEST_PAGE ? "/test" : "/dashboard";
+        navigate(destination, { replace: true });
       }
     };
 
