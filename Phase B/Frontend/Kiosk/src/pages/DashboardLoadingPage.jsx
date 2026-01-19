@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
-import LoadingLayout from "@/layouts/LoadingLayout";
 import { userStatusService } from "@/services/userStatusService";
 import { controllerService } from "@/services/controllerService";
 import { UI_CONFIG } from "@/data/uiConfig";
@@ -64,14 +63,14 @@ function DashboardLoadingPage() {
           console.error("Failed to connect to controllers - will retry on dashboard");
         }
 
-        // Navigate to WebSocket test page after data is loaded
+        // Navigate to dashboard after data is loaded
         // No artificial delay - navigate immediately after data is ready
-        console.log("Dashboard data loaded - navigating to WebSocket test page");
-        navigate("/test/websocket", { replace: true });
+        console.log("Dashboard data loaded - navigating to dashboard");
+        navigate("/dashboard", { replace: true });
       } catch (error) {
         console.error("Error loading dashboard data:", error);
         // Even on error, navigate to dashboard (it can handle retries)
-        navigate("/test/websocket", { replace: true });
+        navigate("/dashboard", { replace: true });
       }
     };
 
@@ -89,16 +88,25 @@ function DashboardLoadingPage() {
   }, [controllersConnected]);
 
   return (
-    <LoadingLayout>
+    <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+      {/* Gradient background with fade-in */}
+      <div 
+        className="absolute inset-0 animate-fadeIn"
+        style={{
+          background: 'linear-gradient(to top, #e4fcec 0%, #effdf3 100%)',
+        }}
+      />
+      
+      {/* Loading message */}
       <p
-        className="pulse-animation text-[clamp(1.5rem,3vw,2.5rem)] font-semibold text-green-600"
+        className="relative z-10 pulse-animation text-[clamp(1.5rem,3vw,2.5rem)] font-semibold text-green-600"
         style={{
           animationDuration: `${UI_CONFIG.PULSE_ANIMATION_DURATION}s`,
         }}
       >
         Preparing Dashboard...
       </p>
-    </LoadingLayout>
+    </div>
   );
 }
 
