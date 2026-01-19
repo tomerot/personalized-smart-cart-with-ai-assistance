@@ -24,17 +24,17 @@ const CheckoutBar = ({
         ${className}
       `}
     >
-      {/* Left Section: Total Price */}
-      <div className="flex flex-col items-center">
+      {/* Left Section: Total Price - Fixed width to prevent shifting */}
+      <div className="flex flex-col items-center w-40 flex-shrink-0">
         <span className="text-sm font-medium text-gray-600 mb-1">
           Total Price
         </span>
-        <span className="text-2xl font-bold text-gray-800">
+        <span className="text-2xl font-bold text-gray-800 tabular-nums">
           <span className="text-lg">₪</span>{totalPrice.toFixed(2)}
         </span>
       </div>
 
-      {/* Right Section: Checkout Button */}
+      {/* Right Section: Checkout Button - Fixed width */}
       <button
         onClick={handleCheckout}
         className="
@@ -48,6 +48,7 @@ const CheckoutBar = ({
           rounded-xl
           transition-colors duration-150
           cursor-pointer
+          flex-shrink-0
         "
       >
         Checkout

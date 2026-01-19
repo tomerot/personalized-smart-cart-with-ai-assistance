@@ -2,6 +2,7 @@ import { useState } from "react";
 import NavRail from "@/components/navrail/NavRail";
 import NavRailButton from "@/components/navrail/NavRailButton";
 import { ICONS } from "@/components/icons/icons.config";
+import Cart from "@/components/cart/Cart";
 
 // Navigation views that change the content area (not modals)
 const NAV_VIEWS = {
@@ -37,6 +38,11 @@ function DashboardLayout({ children }) {
   const handleHelpClick = () => {
     // TODO: Open help modal
     console.log("Help clicked - will open modal");
+  };
+
+  const handleCheckout = () => {
+    // TODO: Implement checkout flow
+    console.log("Checkout clicked");
   };
 
   return (
@@ -138,13 +144,7 @@ function DashboardLayout({ children }) {
 
       {/* My Cart section - Always visible, integrated with background */}
       <div className="shrink-0 w-[580px] h-full ml-4 p-4">
-        <h2 className="font-[Montserrat] text-2xl font-bold text-gray-800 mb-4">
-          My Cart
-        </h2>
-        {/* Cart content will be added here */}
-        <div className="text-gray-600 text-sm">
-          Cart items will appear here
-        </div>
+        <Cart onCheckout={handleCheckout} />
       </div>
 
       {/* Dynamic content area - Changes based on NavRail selection */}

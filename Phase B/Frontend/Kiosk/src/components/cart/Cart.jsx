@@ -1,6 +1,7 @@
 import { useRef, useState, useCallback } from "react";
 import ProductCard from "./ProductCard";
 import CheckoutBar from "./CheckoutBar";
+import { useCart } from "@/context/CartContext";
 
 /**
  * Cart Component
@@ -9,23 +10,14 @@ import CheckoutBar from "./CheckoutBar";
  * Products are stacked with the most recently scanned item on top.
  * Supports inverted touch scrolling: drag up to scroll down, drag down to scroll up.
  *
- * @param {Array} products - Array of product objects to display
- * @param {number} totalPrice - Total price of all items in cart
  * @param {function} onCheckout - Callback when checkout button is clicked
- * @param {function} onIncreaseQuantity - Callback when product quantity is increased
- * @param {function} onDecreaseQuantity - Callback when product quantity is decreased
- * @param {function} onDeleteProduct - Callback when product is deleted
  * @param {string} className - Additional CSS classes
  */
 const Cart = ({
-  products = [],
-  totalPrice = 0,
   onCheckout,
-  onIncreaseQuantity,
-  onDecreaseQuantity,
-  onDeleteProduct,
   className = "",
 }) => {
+  const { cartItems, totalPrice, increaseQuantity, decreaseQuantity, deleteProduct } = useCart();
   const scrollContainerRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startY, setStartY] = useState(0);
@@ -72,8 +64,8 @@ const Cart = ({
     setIsDragging(false);
   }, []);
 
-  // Products displayed in reverse order (last scanned on top)
-  const displayProducts = [...products].reverse();
+  // Products are already in correct order (last scanned on top)
+  const displayProducts = cartItems;
 
   return (
     <div className={`flex flex-col h-full ${className}`}>
@@ -131,9 +123,9 @@ const Cart = ({
               quantity={product.quantity}
               currentPrice={product.currentPrice}
               pricePerUnit={product.pricePerUnit}
-              onIncrease={() => onIncreaseQuantity && onIncreaseQuantity(product.id)}
-              onDecrease={() => onDecreaseQuantity && onDecreaseQuantity(product.id)}
-              onDelete={() => onDeleteProduct && onDeleteProduct(product.id)}
+              onIncrease={() => increaseQuantity(product.id)}
+              onDecrease={() => decreaseQuantity(product.id)}
+              onDelete={() => deleteProduct(product.id)}
             />
           ))
         )}

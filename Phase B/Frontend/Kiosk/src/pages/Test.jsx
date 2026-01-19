@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import NavRail from "@/components/navrail/NavRail";
 import NavRailButton from "@/components/navrail/NavRailButton";
 import { ICONS } from "@/components/icons/icons.config";
 import Cart from "@/components/cart/Cart";
+import { useCart } from "@/context/CartContext";
 
 // Navigation views that change the content area (not modals)
 const NAV_VIEWS = {
@@ -81,26 +82,27 @@ const SAMPLE_PRODUCTS = [
 
 function Test() {
   const [activeView, setActiveView] = useState(NAV_VIEWS.GROCERY_LIST);
-  const [products, setProducts] = useState(SAMPLE_PRODUCTS);
+  const { addProduct, loadCart } = useCart();
 
-  // Calculate total price
-  const totalPrice = products.reduce((sum, product) => sum + product.currentPrice, 0);
-
-  // Cart handlers
-  const handleIncreaseQuantity = (productId) => {
-    console.log("Increase quantity for product:", productId);
-  };
-
-  const handleDecreaseQuantity = (productId) => {
-    console.log("Decrease quantity for product:", productId);
-  };
-
-  const handleDeleteProduct = (productId) => {
-    console.log("Delete product:", productId);
-  };
+  // Load sample products on mount for testing
+  useEffect(() => {
+    loadCart(SAMPLE_PRODUCTS);
+  }, [loadCart]);
 
   const handleCheckout = () => {
     console.log("Checkout clicked");
+  };
+
+  // Test function to add a new product
+  const handleAddTestProduct = () => {
+    const newProduct = {
+      id: Date.now(), // Use timestamp as unique ID
+      name: "Test Product " + Date.now(),
+      imageUrl: "https://www.rami-levy.co.il/_ipx/w_366,f_webp/https://img.rami-levy.co.il/product/7290004131074/small.jpg",
+      quantity: 1,
+      pricePerUnit: 10.50,
+    };
+    addProduct(newProduct);
   };
 
   // Handlers for modal buttons (Leave, Settings, Help)
@@ -217,14 +219,7 @@ function Test() {
 
       {/* My Cart section - Always visible, integrated with background */}
       <div className="shrink-0 w-[580px] h-full ml-4 p-4">
-        <Cart
-          products={products}
-          totalPrice={totalPrice}
-          onCheckout={handleCheckout}
-          onIncreaseQuantity={handleIncreaseQuantity}
-          onDecreaseQuantity={handleDecreaseQuantity}
-          onDeleteProduct={handleDeleteProduct}
-        />
+        <Cart onCheckout={handleCheckout} />
       </div>
 
       {/* Dynamic content area - Changes based on NavRail selection */}
@@ -237,6 +232,14 @@ function Test() {
             <div className="text-gray-600">
               Your grocery list will appear here
             </div>
+            
+            {/* Test button to add products */}
+            <button
+              onClick={handleAddTestProduct}
+              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            >
+              Add Test Product
+            </button>
           </div>
         )}
         {activeView === NAV_VIEWS.COMPANION && (
