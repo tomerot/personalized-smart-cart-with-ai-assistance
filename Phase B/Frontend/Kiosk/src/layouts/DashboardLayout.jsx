@@ -137,7 +137,7 @@ function DashboardLayout({ children }) {
       </NavRail>
 
       {/* My Cart section - Always visible, integrated with background */}
-      <div className="shrink-0 w-[500px] h-full ml-4 p-4">
+      <div className="shrink-0 w-[580px] h-full ml-4 p-4">
         <h2 className="font-[Montserrat] text-2xl font-bold text-gray-800 mb-4">
           My Cart
         </h2>
