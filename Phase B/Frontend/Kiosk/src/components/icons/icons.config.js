@@ -10,5 +10,8 @@ export const ICONS = {
   START: "start",
   BACKSPACE: "backspace",
   CLOSE: "close",
-  BLOCK: "block"
+  BLOCK: "block",
+  DELETE: "delete",
+  ADD: "keyboard_arrow_up",
+  REDUCE: "keyboard_arrow_down"
 };
