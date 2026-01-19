@@ -49,18 +49,42 @@ function DashboardLayout({ children }) {
           label="Grocery List"
           isActive={activeView === NAV_VIEWS.GROCERY_LIST}
           onClick={() => setActiveView(NAV_VIEWS.GROCERY_LIST)}
+          showPill={false}
+          fillIconWhenActive={false}
+          activeColor="#e4fcec"
+          inactiveColor="#e4fcec"
+          activeIconWeight={400}
+          inactiveIconWeight={200}
+          activeLabelFontWeight={500}
+          inactiveLabelFontWeight={300}
         />
         <NavRailButton
           icon={ICONS.CHAT}
           label="Smart Companion"
           isActive={activeView === NAV_VIEWS.COMPANION}
           onClick={() => setActiveView(NAV_VIEWS.COMPANION)}
+          showPill={false}
+          fillIconWhenActive={false}
+          activeColor="#e4fcec"
+          inactiveColor="#e4fcec"
+          activeIconWeight={400}
+          inactiveIconWeight={200}
+          activeLabelFontWeight={500}
+          inactiveLabelFontWeight={300}
         />
         <NavRailButton
           icon={ICONS.DISCOUNT}
           label="Discounts"
           isActive={activeView === NAV_VIEWS.DISCOUNTS}
           disabled={true}
+          showPill={false}
+          fillIconWhenActive={false}
+          activeColor="#e4fcec"
+          inactiveColor="#e4fcec"
+          activeIconWeight={400}
+          inactiveIconWeight={200}
+          activeLabelFontWeight={500}
+          inactiveLabelFontWeight={300}
         />
 
         {/* Bottom buttons - Modals */}
@@ -69,6 +93,14 @@ function DashboardLayout({ children }) {
           label="Leave"
           isBottom={true}
           onClick={handleLeaveClick}
+          showPill={false}
+          fillIconWhenActive={false}
+          activeColor="#e4fcec"
+          inactiveColor="#e4fcec"
+          activeIconWeight={400}
+          inactiveIconWeight={200}
+          activeLabelFontWeight={500}
+          inactiveLabelFontWeight={300}
         />
         {/* Divider line */}
         <div isBottom={true} className="w-full px-2 py-2">
@@ -79,12 +111,28 @@ function DashboardLayout({ children }) {
           label="Settings"
           isBottom={true}
           onClick={handleSettingsClick}
+          showPill={false}
+          fillIconWhenActive={false}
+          activeColor="#e4fcec"
+          inactiveColor="#e4fcec"
+          activeIconWeight={400}
+          inactiveIconWeight={200}
+          activeLabelFontWeight={500}
+          inactiveLabelFontWeight={300}
         />
         <NavRailButton
           icon={ICONS.HELP}
           label="Help"
           isBottom={true}
           onClick={handleHelpClick}
+          showPill={false}
+          fillIconWhenActive={false}
+          activeColor="#e4fcec"
+          inactiveColor="#e4fcec"
+          activeIconWeight={400}
+          inactiveIconWeight={200}
+          activeLabelFontWeight={500}
+          inactiveLabelFontWeight={300}
         />
       </NavRail>
 
