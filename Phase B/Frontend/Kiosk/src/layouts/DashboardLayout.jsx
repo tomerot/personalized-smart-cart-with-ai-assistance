@@ -5,8 +5,8 @@ import { ICONS } from "@/components/icons/icons.config";
 
 // Navigation views that change the content area (not modals)
 const NAV_VIEWS = {
-  COMPANION: "companion",
   GROCERY_LIST: "groceryList",
+  COMPANION: "companion",
   DISCOUNTS: "discounts",
 };
 
@@ -21,7 +21,7 @@ const NAV_VIEWS = {
  * @param {ReactNode} children - Optional children to render (currently unused)
  */
 function DashboardLayout({ children }) {
-  const [activeView, setActiveView] = useState(NAV_VIEWS.COMPANION);
+  const [activeView, setActiveView] = useState(NAV_VIEWS.GROCERY_LIST);
 
   // Handlers for modal buttons (Leave, Settings, Help)
   const handleLeaveClick = () => {
@@ -45,16 +45,16 @@ function DashboardLayout({ children }) {
       <NavRail>
         {/* Top buttons - Navigation views */}
         <NavRailButton
-          icon={ICONS.CHAT}
-          label="Smart Companion"
-          isActive={activeView === NAV_VIEWS.COMPANION}
-          onClick={() => setActiveView(NAV_VIEWS.COMPANION)}
-        />
-        <NavRailButton
           icon={ICONS.GROCERY_LIST}
           label="Grocery List"
           isActive={activeView === NAV_VIEWS.GROCERY_LIST}
           onClick={() => setActiveView(NAV_VIEWS.GROCERY_LIST)}
+        />
+        <NavRailButton
+          icon={ICONS.CHAT}
+          label="Smart Companion"
+          isActive={activeView === NAV_VIEWS.COMPANION}
+          onClick={() => setActiveView(NAV_VIEWS.COMPANION)}
         />
         <NavRailButton
           icon={ICONS.DISCOUNT}
@@ -62,13 +62,18 @@ function DashboardLayout({ children }) {
           isActive={activeView === NAV_VIEWS.DISCOUNTS}
           disabled={true}
         />
+
+        {/* Bottom buttons - Modals */}
         <NavRailButton
           icon={ICONS.LEAVE}
           label="Leave"
+          isBottom={true}
           onClick={handleLeaveClick}
         />
-
-        {/* Bottom buttons - Modals */}
+        {/* Divider line */}
+        <div isBottom={true} className="w-full px-2 py-2">
+          <div className="w-full h-px bg-white/30"></div>
+        </div>
         <NavRailButton
           icon={ICONS.SETTINGS}
           label="Settings"
@@ -96,16 +101,6 @@ function DashboardLayout({ children }) {
 
       {/* Dynamic content area - Changes based on NavRail selection */}
       <div className="flex-1 h-full ml-4 bg-white rounded-2xl border border-gray-200 overflow-hidden">
-        {activeView === NAV_VIEWS.COMPANION && (
-          <div className="w-full h-full p-6">
-            <h1 className="font-[Montserrat] text-2xl font-bold text-gray-800 mb-4">
-              Smart Companion
-            </h1>
-            <div className="text-gray-600">
-              AI assistant content will appear here
-            </div>
-          </div>
-        )}
         {activeView === NAV_VIEWS.GROCERY_LIST && (
           <div className="w-full h-full p-6">
             <h1 className="font-[Montserrat] text-2xl font-bold text-gray-800 mb-4">
@@ -113,6 +108,16 @@ function DashboardLayout({ children }) {
             </h1>
             <div className="text-gray-600">
               Your grocery list will appear here
+            </div>
+          </div>
+        )}
+        {activeView === NAV_VIEWS.COMPANION && (
+          <div className="w-full h-full p-6">
+            <h1 className="font-[Montserrat] text-2xl font-bold text-gray-800 mb-4">
+              Smart Companion
+            </h1>
+            <div className="text-gray-600">
+              AI assistant content will appear here
             </div>
           </div>
         )}
