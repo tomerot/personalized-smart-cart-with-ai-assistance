@@ -10,6 +10,7 @@ import Icon from "@/components/icons/ICON";
  * @param {string} label - Text label displayed below the icon
  * @param {boolean} isActive - Whether the button is in active state (shows filled icon + pill)
  * @param {boolean} isBottom - Whether to position this button at the bottom of the NavRail
+ * @param {boolean} disabled - Whether the button is disabled (default: false)
  * @param {string} to - Route path for navigation (used when onClick is not provided)
  * @param {function} onClick - Custom click handler (overrides navigation if provided)
  * @param {number} iconSize - Icon size in pixels (default: 32)
@@ -21,6 +22,7 @@ import Icon from "@/components/icons/ICON";
  * @param {string} pillColor - Background color of the pill/circle (default: "#056619")
  * @param {string} activeColor - Icon and label color when active (default: "#5ae541")
  * @param {string} inactiveColor - Icon and label color when inactive (default: "#ffffff")
+ * @param {string} disabledColor - Icon and label color when disabled (default: "#666666")
  * @param {number} activeLabelFontWeight - Font weight of the label when active (default: 700)
  * @param {number} inactiveLabelFontWeight - Font weight of the label when inactive (default: 500)
  * @param {number} labelGap - Gap between icon/pill and label in pixels (default: 8)
@@ -32,6 +34,7 @@ const NavRailButton = ({
   label,
   isActive = false,
   isBottom = false,
+  disabled = false,
   to,
   onClick,
   iconSize = 32,
@@ -43,6 +46,7 @@ const NavRailButton = ({
   pillColor = "#056619",
   activeColor = "#5ae541",
   inactiveColor = "#ffffff",
+  disabledColor = "#666666",
   activeLabelFontWeight = 700,
   inactiveLabelFontWeight = 500,
   labelGap = 8,
@@ -53,6 +57,7 @@ const NavRailButton = ({
   const navigate = useNavigate();
 
   const handleClick = () => {
+    if (disabled) return;
     if (onClick) {
       onClick();
     } else if (to) {
@@ -60,7 +65,7 @@ const NavRailButton = ({
     }
   };
 
-  const currentColor = isActive ? activeColor : inactiveColor;
+  const currentColor = disabled ? disabledColor : (isActive ? activeColor : inactiveColor);
 
   // Calculate background dimensions based on shape
   const isCircle = pillShape === "circle";
@@ -71,12 +76,13 @@ const NavRailButton = ({
   return (
     <button
       onClick={handleClick}
+      disabled={disabled}
       className={`
         flex flex-col items-center justify-center
-        cursor-pointer
         bg-transparent border-none
         py-2
         transition-all duration-200 ease-in-out
+        ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
         ${className}
       `}
       style={style}

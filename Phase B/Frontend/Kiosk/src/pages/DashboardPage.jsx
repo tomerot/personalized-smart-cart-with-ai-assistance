@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
 import { UI_CONFIG } from "@/data/uiConfig";
+import DashboardLayout from "@/layouts/DashboardLayout";
 
 function DashboardPage() {
   const navigate = useNavigate();
@@ -45,9 +46,9 @@ function DashboardPage() {
         </div>
       )}
       
-      {/* Dashboard content will go here */}
+      {/* Dashboard content */}
       <div className="relative z-10 w-full h-full">
-        {/* Empty for now - dashboard content will be added later */}
+        <DashboardLayout />
       </div>
     </div>
   );
