@@ -25,7 +25,7 @@ const CheckoutBar = ({
       `}
     >
       {/* Left Section: Total Price */}
-      <div className="flex flex-col">
+      <div className="flex flex-col items-center">
         <span className="text-sm font-medium text-gray-600 mb-1">
           Total Price
         </span>

@@ -55,6 +55,7 @@ const ProductCard = ({
           src={imageUrl}
           alt={productName}
           className="w-full h-full object-contain"
+          draggable={false}
         />
       </div>
 

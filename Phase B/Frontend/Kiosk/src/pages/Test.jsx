@@ -2,8 +2,7 @@ import { useState } from "react";
 import NavRail from "@/components/navrail/NavRail";
 import NavRailButton from "@/components/navrail/NavRailButton";
 import { ICONS } from "@/components/icons/icons.config";
-import ProductCard from "@/components/cart/ProductCard";
-import CheckoutBar from "@/components/cart/CheckoutBar";
+import Cart from "@/components/cart/Cart";
 
 // Navigation views that change the content area (not modals)
 const NAV_VIEWS = {
@@ -12,8 +11,97 @@ const NAV_VIEWS = {
   DISCOUNTS: "discounts",
 };
 
+// Sample products for testing scroll functionality
+const SAMPLE_PRODUCTS = [
+  {
+    id: 1,
+    name: "Organic Milk 1L",
+    imageUrl: "https://www.rami-levy.co.il/_ipx/w_366,f_webp/https://img.rami-levy.co.il/product/7290004131074/small.jpg",
+    quantity: 2,
+    currentPrice: 12.90,
+    pricePerUnit: 6.45,
+  },
+  {
+    id: 2,
+    name: "Fresh Bread Loaf",
+    imageUrl: "https://www.rami-levy.co.il/_ipx/w_366,f_webp/https://img.rami-levy.co.il/product/7290004131074/small.jpg",
+    quantity: 1,
+    currentPrice: 8.50,
+    pricePerUnit: 8.50,
+  },
+  {
+    id: 3,
+    name: "Free Range Eggs 12 Pack",
+    imageUrl: "https://www.rami-levy.co.il/_ipx/w_366,f_webp/https://img.rami-levy.co.il/product/7290004131074/small.jpg",
+    quantity: 1,
+    currentPrice: 22.90,
+    pricePerUnit: 22.90,
+  },
+  {
+    id: 4,
+    name: "Natural Butter 200g",
+    imageUrl: "https://www.rami-levy.co.il/_ipx/w_366,f_webp/https://img.rami-levy.co.il/product/7290004131074/small.jpg",
+    quantity: 1,
+    currentPrice: 15.90,
+    pricePerUnit: 15.90,
+  },
+  {
+    id: 5,
+    name: "Greek Yogurt 500g",
+    imageUrl: "https://www.rami-levy.co.il/_ipx/w_366,f_webp/https://img.rami-levy.co.il/product/7290004131074/small.jpg",
+    quantity: 3,
+    currentPrice: 29.70,
+    pricePerUnit: 9.90,
+  },
+  {
+    id: 6,
+    name: "Olive Oil Extra Virgin 750ml",
+    imageUrl: "https://www.rami-levy.co.il/_ipx/w_366,f_webp/https://img.rami-levy.co.il/product/7290004131074/small.jpg",
+    quantity: 1,
+    currentPrice: 45.90,
+    pricePerUnit: 45.90,
+  },
+  {
+    id: 7,
+    name: "Orange Juice Fresh 1L",
+    imageUrl: "https://www.rami-levy.co.il/_ipx/w_366,f_webp/https://img.rami-levy.co.il/product/7290004131074/small.jpg",
+    quantity: 2,
+    currentPrice: 19.80,
+    pricePerUnit: 9.90,
+  },
+  {
+    id: 8,
+    name: "Pasta Spaghetti 500g",
+    imageUrl: "https://www.rami-levy.co.il/_ipx/w_366,f_webp/https://img.rami-levy.co.il/product/7290004131074/small.jpg",
+    quantity: 2,
+    currentPrice: 11.80,
+    pricePerUnit: 5.90,
+  },
+];
+
 function Test() {
   const [activeView, setActiveView] = useState(NAV_VIEWS.GROCERY_LIST);
+  const [products, setProducts] = useState(SAMPLE_PRODUCTS);
+
+  // Calculate total price
+  const totalPrice = products.reduce((sum, product) => sum + product.currentPrice, 0);
+
+  // Cart handlers
+  const handleIncreaseQuantity = (productId) => {
+    console.log("Increase quantity for product:", productId);
+  };
+
+  const handleDecreaseQuantity = (productId) => {
+    console.log("Decrease quantity for product:", productId);
+  };
+
+  const handleDeleteProduct = (productId) => {
+    console.log("Delete product:", productId);
+  };
+
+  const handleCheckout = () => {
+    console.log("Checkout clicked");
+  };
 
   // Handlers for modal buttons (Leave, Settings, Help)
   const handleLeaveClick = () => {
@@ -128,30 +216,14 @@ function Test() {
       </NavRail>
 
       {/* My Cart section - Always visible, integrated with background */}
-      <div className="shrink-0 w-[580px] h-full ml-4 p-4 flex flex-col">
-        <h2 className="font-[Montserrat] text-2xl font-bold text-gray-800 mb-4">
-          My Cart
-        </h2>
-        
-        {/* Products Container - Scrollable */}
-        <div className="flex-1 overflow-y-auto mb-4 space-y-3">
-          {/* Product Card */}
-          <ProductCard
-            productName="Product Name"
-            imageUrl="https://www.rami-levy.co.il/_ipx/w_366,f_webp/https://img.rami-levy.co.il/product/7290004131074/small.jpg"
-            quantity={1}
-            currentPrice={12.90}
-            pricePerUnit={12.90}
-            onIncrease={() => console.log("Increase")}
-            onDecrease={() => console.log("Decrease")}
-            onDelete={() => console.log("Delete")}
-          />
-        </div>
-
-        {/* Checkout Bar - Fixed at bottom */}
-        <CheckoutBar
-          totalPrice={12.90}
-          onCheckout={() => console.log("Checkout clicked")}
+      <div className="shrink-0 w-[580px] h-full ml-4 p-4">
+        <Cart
+          products={products}
+          totalPrice={totalPrice}
+          onCheckout={handleCheckout}
+          onIncreaseQuantity={handleIncreaseQuantity}
+          onDecreaseQuantity={handleDecreaseQuantity}
+          onDeleteProduct={handleDeleteProduct}
         />
       </div>
 
