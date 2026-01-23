@@ -167,11 +167,6 @@ function DashboardLayout({ children }) {
         />
       </NavRail>
 
-      {/* My Cart section - Always visible, integrated with background */}
-      <div className="shrink-0 w-[580px] h-full ml-4 p-4">
-        <Cart onCheckout={handleCheckout} />
-      </div>
-
       {/* Dynamic content area - Changes based on NavRail selection */}
       <div className="flex-1 h-full ml-4 bg-white rounded-2xl border border-gray-200 overflow-hidden">
         {activeView === NAV_VIEWS.GROCERY_LIST && (
@@ -204,6 +199,11 @@ function DashboardLayout({ children }) {
             </div>
           </div>
         )}
+      </div>
+
+      {/* My Cart section - Always visible, integrated with background */}
+      <div className="shrink-0 w-[580px] h-full ml-4 p-4">
+        <Cart onCheckout={handleCheckout} />
       </div>
     </div>
   );
