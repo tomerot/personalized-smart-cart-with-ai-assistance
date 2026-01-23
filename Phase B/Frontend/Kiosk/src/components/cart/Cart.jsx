@@ -71,7 +71,7 @@ const Cart = ({
 
   return (
     <div className={`flex flex-col h-full ${className}`}>
-      {/* Cart Title */}
+      {/* Cart Title - Outside the white box */}
       <div className="flex items-center justify-between mb-4 shrink-0">
         <div className="flex items-center gap-2">
           <Icon 
@@ -102,80 +102,83 @@ const Cart = ({
         </button>
       </div>
 
-      {/* Hide webkit scrollbar */}
-      <style>
-        {`
-          .cart-scroll-container::-webkit-scrollbar {
-            display: none;
-          }
-        `}
-      </style>
+      {/* White box container */}
+      <div className="flex-1 flex flex-col rounded-2xl border border-gray-200 overflow-hidden p-4" style={{ backgroundColor: '#f7fef9' }}>
+        {/* Hide webkit scrollbar */}
+        <style>
+          {`
+            .cart-scroll-container::-webkit-scrollbar {
+              display: none;
+            }
+          `}
+        </style>
 
-      {/* Scrollable Products Container */}
-      <div
-        ref={scrollContainerRef}
-        className={`
-          cart-scroll-container
-          flex-1 
-          overflow-y-auto 
-          overflow-x-hidden
-          mb-4 
-          space-y-3
-          select-none
-          ${isDragging ? "cursor-grabbing" : "cursor-grab"}
-        `}
-        style={{
-          // Hide scrollbar but keep functionality
-          scrollbarWidth: "none",
-          msOverflowStyle: "none",
-        }}
-        onMouseDown={handleDragStart}
-        onMouseMove={handleDragMove}
-        onMouseUp={handleDragEnd}
-        onMouseLeave={handleDragEnd}
-        onTouchStart={handleDragStart}
-        onTouchMove={handleDragMove}
-        onTouchEnd={handleDragEnd}
-      >
+        {/* Scrollable Products Container */}
+        <div
+          ref={scrollContainerRef}
+          className={`
+            cart-scroll-container
+            flex-1 
+            overflow-y-auto 
+            overflow-x-hidden
+            mb-4 
+            space-y-3
+            select-none
+            ${isDragging ? "cursor-grabbing" : "cursor-grab"}
+          `}
+          style={{
+            // Hide scrollbar but keep functionality
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+          }}
+          onMouseDown={handleDragStart}
+          onMouseMove={handleDragMove}
+          onMouseUp={handleDragEnd}
+          onMouseLeave={handleDragEnd}
+          onTouchStart={handleDragStart}
+          onTouchMove={handleDragMove}
+          onTouchEnd={handleDragEnd}
+        >
 
-        {displayProducts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400 px-4">
-            <Icon 
-              name={ICONS.CART_EMPTY} 
-              size={64} 
-              weight={350}
-              style={{ color: "#9ca3af", marginBottom: "16px" }}
-            />
-            <p className="font-bold text-lg mb-3">Your cart is currently empty</p>
-            <p className="text-center text-sm">
-              <span className="font-semibold">Scan</span> a barcode to add a product,
-              <br />
-              or tap <span className="font-semibold">"Type Barcode"</span> to enter it manually
-            </p>
-          </div>
-        ) : (
-          displayProducts.map((product, index) => (
-            <ProductCard
-              key={product.id || index}
-              productName={product.name}
-              imageUrl={product.imageUrl}
-              quantity={product.quantity}
-              currentPrice={product.currentPrice}
-              pricePerUnit={product.pricePerUnit}
-              onIncrease={() => increaseQuantity(product.id)}
-              onDecrease={() => decreaseQuantity(product.id)}
-              onDelete={() => deleteProduct(product.id)}
-            />
-          ))
-        )}
-      </div>
+          {displayProducts.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-gray-400 px-4">
+              <Icon 
+                name={ICONS.CART_EMPTY} 
+                size={64} 
+                weight={350}
+                style={{ color: "#9ca3af", marginBottom: "16px" }}
+              />
+              <p className="font-bold text-lg mb-3">Your cart is currently empty</p>
+              <p className="text-center text-sm">
+                <span className="font-semibold">Scan</span> a barcode to add a product,
+                <br />
+                or tap <span className="font-semibold">"Type Barcode"</span> to enter it manually
+              </p>
+            </div>
+          ) : (
+            displayProducts.map((product, index) => (
+              <ProductCard
+                key={product.id || index}
+                productName={product.name}
+                imageUrl={product.imageUrl}
+                quantity={product.quantity}
+                currentPrice={product.currentPrice}
+                pricePerUnit={product.pricePerUnit}
+                onIncrease={() => increaseQuantity(product.id)}
+                onDecrease={() => decreaseQuantity(product.id)}
+                onDelete={() => deleteProduct(product.id)}
+              />
+            ))
+          )}
+        </div>
 
-      {/* Checkout Bar - Fixed at bottom */}
-      <div className="shrink-0">
-        <CheckoutBar
-          totalPrice={totalPrice}
-          onCheckout={onCheckout}
-        />
+        {/* Checkout Bar - Fixed at bottom */}
+        <div className="shrink-0">
+          <CheckoutBar
+            totalPrice={totalPrice}
+            onCheckout={onCheckout}
+          />
+        </div>
       </div>
     </div>
   );

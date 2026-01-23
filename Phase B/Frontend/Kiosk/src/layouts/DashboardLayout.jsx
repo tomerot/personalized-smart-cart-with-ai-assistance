@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import NavRail from "@/components/navrail/NavRail";
 import NavRailButton from "@/components/navrail/NavRailButton";
 import { ICONS } from "@/components/icons/icons.config";
+import Icon from "@/components/icons/ICON";
 import Cart from "@/components/cart/Cart";
 import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 
@@ -24,6 +25,24 @@ const NAV_VIEWS = {
  */
 function DashboardLayout({ children }) {
   const [activeView, setActiveView] = useState(NAV_VIEWS.GROCERY_LIST);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [displayView, setDisplayView] = useState(NAV_VIEWS.GROCERY_LIST);
+
+  // Handle view transitions with fade effect
+  useEffect(() => {
+    if (activeView !== displayView) {
+      // Start fade out
+      setIsTransitioning(true);
+      
+      // After fade out completes, change content and fade in
+      const timer = setTimeout(() => {
+        setDisplayView(activeView);
+        setIsTransitioning(false);
+      }, 400); // Half of 0.8s animation duration
+      
+      return () => clearTimeout(timer);
+    }
+  }, [activeView, displayView]);
 
   // Barcode scanner integration
   const {
@@ -69,6 +88,22 @@ function DashboardLayout({ children }) {
     // TODO: Implement checkout flow
     console.log("Checkout clicked");
   };
+
+  // Get current view info for title/icon (use displayView for smooth transitions)
+  const getViewInfo = (view) => {
+    switch (view) {
+      case NAV_VIEWS.GROCERY_LIST:
+        return { icon: ICONS.GROCERY_LIST, label: "Grocery List" };
+      case NAV_VIEWS.COMPANION:
+        return { icon: ICONS.CHAT, label: "Smart Companion" };
+      case NAV_VIEWS.DISCOUNTS:
+        return { icon: ICONS.DISCOUNT, label: "Discounts" };
+      default:
+        return { icon: ICONS.GROCERY_LIST, label: "Grocery List" };
+    }
+  };
+
+  const viewInfo = getViewInfo(displayView);
 
   return (
     <div className="flex h-full w-full p-4">
@@ -167,42 +202,45 @@ function DashboardLayout({ children }) {
         />
       </NavRail>
 
-      {/* Dynamic content area - Changes based on NavRail selection */}
-      <div className="flex-1 h-full ml-4 bg-white rounded-2xl border border-gray-200 overflow-hidden">
-        {activeView === NAV_VIEWS.GROCERY_LIST && (
-          <div className="w-full h-full p-6">
-            <h1 className="font-[Montserrat] text-2xl font-bold text-gray-800 mb-4">
-              Grocery List
-            </h1>
-            <div className="text-gray-600">
-              Your grocery list will appear here
-            </div>
+      {/* Main content area wrapper */}
+      <div className="flex-1 h-full ml-4 flex flex-col">
+        {/* Title row - aligned with Cart title */}
+        <div className="flex items-center gap-2 mb-4 shrink-0">
+          <Icon 
+            name={viewInfo.icon} 
+            size={22} 
+            weight={600}
+            style={{ color: "#1f2937" }}
+          />
+          <h2 className="font-[Montserrat] text-2xl font-bold text-gray-800">
+            {viewInfo.label}
+          </h2>
+        </div>
+
+        {/* Dynamic content area - Changes based on NavRail selection */}
+        <div className="flex-1 rounded-2xl border border-gray-200 overflow-hidden" style={{ backgroundColor: '#f7fef9' }}>
+          <div className={`w-full h-full p-6 ${isTransitioning ? 'animate-fadeOut' : 'animate-fadeIn'}`}>
+            {displayView === NAV_VIEWS.GROCERY_LIST && (
+              <div className="text-gray-600">
+                Your grocery list will appear here
+              </div>
+            )}
+            {displayView === NAV_VIEWS.COMPANION && (
+              <div className="text-gray-600">
+                AI assistant content will appear here
+              </div>
+            )}
+            {displayView === NAV_VIEWS.DISCOUNTS && (
+              <div className="text-gray-600">
+                Discounts and offers will appear here
+              </div>
+            )}
           </div>
-        )}
-        {activeView === NAV_VIEWS.COMPANION && (
-          <div className="w-full h-full p-6">
-            <h1 className="font-[Montserrat] text-2xl font-bold text-gray-800 mb-4">
-              Smart Companion
-            </h1>
-            <div className="text-gray-600">
-              AI assistant content will appear here
-            </div>
-          </div>
-        )}
-        {activeView === NAV_VIEWS.DISCOUNTS && (
-          <div className="w-full h-full p-6">
-            <h1 className="font-[Montserrat] text-2xl font-bold text-gray-800 mb-4">
-              Discounts
-            </h1>
-            <div className="text-gray-600">
-              Discounts and offers will appear here
-            </div>
-          </div>
-        )}
+        </div>
       </div>
 
       {/* My Cart section - Always visible, integrated with background */}
-      <div className="shrink-0 w-[580px] h-full ml-4 p-4">
+      <div className="shrink-0 w-[580px] h-full ml-4">
         <Cart onCheckout={handleCheckout} />
       </div>
     </div>
