@@ -29,6 +29,8 @@ function DashboardLayout({ children }) {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [displayView, setDisplayView] = useState(NAV_VIEWS.GROCERY_LIST);
   const { hasShoppingList } = useUser();
+  
+  console.log('🔍 DashboardLayout - hasShoppingList:', hasShoppingList, '| Type:', typeof hasShoppingList);
 
   // Handle view transitions with fade effect
   useEffect(() => {

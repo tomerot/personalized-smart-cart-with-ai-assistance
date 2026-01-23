@@ -28,7 +28,8 @@ function DashboardLoadingPage() {
         const statusResult = await userStatusService.getUserStatus(phoneNumber);
         
         if (statusResult.success && statusResult.status) {
-          console.log("User status:", statusResult.status);
+          console.log("✅ User status from backend:", statusResult.status);
+          console.log("📋 has_shopping_list:", statusResult.status.has_shopping_list, "| Type:", typeof statusResult.status.has_shopping_list);
           
           // Save shopping list flag to context
           setUserHasShoppingList(statusResult.status.has_shopping_list);
