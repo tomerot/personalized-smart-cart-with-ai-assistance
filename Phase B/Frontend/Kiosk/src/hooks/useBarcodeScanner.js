@@ -45,7 +45,7 @@ export function useBarcodeScanner({
   const isProcessing = useRef(false);
   
   // Context
-  const { addProduct } = useCart();
+  const { addProduct, cartItems } = useCart();
   const { user } = useUser();
 
   /**
@@ -65,6 +65,27 @@ export function useBarcodeScanner({
 
     try {
       console.log(`Processing scanned barcode: ${barcode}`);
+
+      // OPTIMIZATION: Check if product already exists in cart first
+      // If it does, just increase quantity without fetching from backend
+      const existingProduct = cartItems.find(item => item.id === barcode);
+      
+      if (existingProduct) {
+        console.log(`Product ${barcode} already in cart, increasing quantity`);
+        addProduct({ ...existingProduct, quantity: 1 }); // addProduct will handle incrementing
+        setLastScannedProduct(existingProduct);
+        
+        if (onScanSuccess) {
+          onScanSuccess(existingProduct, false);
+        }
+        
+        isProcessing.current = false;
+        setIsLoading(false);
+        return;
+      }
+
+      // Product not in cart - fetch from backend
+      console.log(`Product ${barcode} not in cart, fetching from backend...`);
 
       // Get user's allergies and dietary needs
       const allergies = user?.allergies || [];
@@ -136,7 +157,7 @@ export function useBarcodeScanner({
       isProcessing.current = false;
       setIsLoading(false);
     }
-  }, [user, addProduct, onScanSuccess, onScanError, onConflict]);
+  }, [user, addProduct, cartItems, onScanSuccess, onScanError, onConflict]);
 
   /**
    * Handle scanner event
@@ -208,20 +229,22 @@ export function useBarcodeScanner({
     // Subscribe to connection status changes
     const unsubscribeConnection = barcodeControllerService.onConnectionChange(setIsConnected);
 
-    // Auto-connect if enabled
-    if (autoConnect) {
+    // Auto-connect if enabled and not already connected
+    if (autoConnect && !barcodeControllerService.isConnected()) {
+      console.log('Auto-connecting to barcode scanner...');
       connect();
+    } else if (barcodeControllerService.isConnected()) {
+      console.log('Already connected to barcode scanner');
+      setIsConnected(true);
     }
 
-    // Check initial connection status
-    setIsConnected(barcodeControllerService.isConnected());
-
-    // Cleanup on unmount
+    // Cleanup on unmount - DO NOT disconnect as other components might be using it
     return () => {
+      console.log('useBarcodeScanner hook unmounting, removing event listeners');
       unsubscribeEvents();
       unsubscribeConnection();
     };
-  }, [autoConnect, connect, handleScannerEvent]);
+  }, []); // Empty deps array - only run once on mount
 
   return {
     // State

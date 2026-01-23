@@ -38,6 +38,8 @@ class BarcodeControllerService {
 
     // Reconnection tracking
     this.reconnectAttempts = 0;
+    this.isConnecting = false; // Prevent multiple simultaneous connection attempts
+    this.reconnectTimer = null;
 
     // Event listeners
     this.eventListeners = [];
@@ -49,8 +51,21 @@ class BarcodeControllerService {
    * @returns {Promise<boolean>} Success status
    */
   connect() {
+    // Prevent multiple simultaneous connection attempts
+    if (this.isConnecting) {
+      console.log('Already connecting, skipping duplicate connection attempt');
+      return Promise.resolve(this.connected);
+    }
+
+    // If already connected, return success
+    if (this.connected && this.ws) {
+      console.log('Already connected to Barcode Scanner');
+      return Promise.resolve(true);
+    }
+
     return new Promise((resolve) => {
       try {
+        this.isConnecting = true;
         console.log(`Connecting to Barcode Scanner Controller at ${WS_CONFIG.URL}...`);
         
         this.ws = new WebSocket(WS_CONFIG.URL);
@@ -58,6 +73,7 @@ class BarcodeControllerService {
         this.ws.onopen = () => {
           console.log('✓ Connected to Barcode Scanner Controller');
           this.connected = true;
+          this.isConnecting = false;
           this.reconnectAttempts = 0;
           this._notifyConnectionListeners(true);
           
@@ -78,13 +94,25 @@ class BarcodeControllerService {
         this.ws.onclose = () => {
           console.warn('Barcode Scanner connection closed');
           this.connected = false;
+          this.isConnecting = false;
           this._notifyConnectionListeners(false);
           
-          // Attempt to reconnect
+          // Clear any existing reconnect timer
+          if (this.reconnectTimer) {
+            clearTimeout(this.reconnectTimer);
+            this.reconnectTimer = null;
+          }
+          
+          // Attempt to reconnect only if not manually disconnected
           if (this.reconnectAttempts < WS_CONFIG.MAX_RECONNECT_ATTEMPTS) {
             this.reconnectAttempts++;
             console.log(`Attempting to reconnect to Barcode Scanner (${this.reconnectAttempts}/${WS_CONFIG.MAX_RECONNECT_ATTEMPTS})...`);
-            setTimeout(() => this.connect(), WS_CONFIG.RECONNECT_DELAY);
+            this.reconnectTimer = setTimeout(() => {
+              this.reconnectTimer = null;
+              this.connect();
+            }, WS_CONFIG.RECONNECT_DELAY);
+          } else {
+            console.error('Max reconnection attempts reached');
           }
           
           resolve(false);
@@ -94,6 +122,7 @@ class BarcodeControllerService {
         setTimeout(() => {
           if (!this.connected) {
             console.error('Barcode Scanner connection timeout');
+            this.isConnecting = false;
             this.ws?.close();
             resolve(false);
           }
@@ -101,6 +130,7 @@ class BarcodeControllerService {
 
       } catch (error) {
         console.error('Failed to connect to Barcode Scanner:', error);
+        this.isConnecting = false;
         resolve(false);
       }
     });
@@ -226,6 +256,15 @@ class BarcodeControllerService {
   disconnect() {
     console.log('Disconnecting from Barcode Scanner controller...');
 
+    // Clear any pending reconnection attempts
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+
+    // Stop reconnection attempts
+    this.reconnectAttempts = WS_CONFIG.MAX_RECONNECT_ATTEMPTS;
+
     // Send end session command before closing
     if (this.connected) {
       this._sendCommand(BARCODE_COMMANDS.END_SESSION);
@@ -235,6 +274,7 @@ class BarcodeControllerService {
     this.ws?.close();
 
     this.connected = false;
+    this.isConnecting = false;
     this.ws = null;
 
     console.log('Disconnected from Barcode Scanner controller');

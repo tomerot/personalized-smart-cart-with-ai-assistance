@@ -5,15 +5,10 @@ import { userStatusService } from "@/services/userStatusService";
 import { controllerService } from "@/services/controllerService";
 import { UI_CONFIG } from "@/data/uiConfig";
 
-// ⚙️ TESTING FLAG: Set to true to navigate to Test page instead of Dashboard
-// Change this to false before production build
-const USE_TEST_PAGE = true;
-
 function DashboardLoadingPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, setUserHasShoppingList, setSavedCartData } = useUser();
-  const [controllersConnected, setControllersConnected] = useState(false);
   
   // Get phone number from navigation state or user context
   const phoneNumber = location.state?.phoneNumber || user?.phone;
@@ -62,36 +57,27 @@ function DashboardLoadingPage() {
         
         if (connectionResult.barcode || connectionResult.voice) {
           console.log("Controller connections established:", connectionResult);
-          setControllersConnected(true);
         } else {
           console.error("Failed to connect to controllers - will retry on dashboard");
         }
 
-        // Navigate to dashboard or test page after data is loaded
+        // Navigate to dashboard after data is loaded
         // No artificial delay - navigate immediately after data is ready
-        const destination = USE_TEST_PAGE ? "/test" : "/dashboard";
-        console.log(`Dashboard data loaded - navigating to ${destination}`);
-        navigate(destination, { replace: true });
+        console.log("Dashboard data loaded - navigating to dashboard");
+        navigate("/dashboard", { replace: true });
       } catch (error) {
         console.error("Error loading dashboard data:", error);
-        // Even on error, navigate to destination (it can handle retries)
-        const destination = USE_TEST_PAGE ? "/test" : "/dashboard";
-        navigate(destination, { replace: true });
+        // Even on error, navigate to dashboard (it can handle retries)
+        navigate("/dashboard", { replace: true });
       }
     };
 
     loadDashboardData();
   }, [phoneNumber, navigate, setUserHasShoppingList, setSavedCartData]);
 
-  // Cleanup: Disconnect from controllers when component unmounts
-  useEffect(() => {
-    return () => {
-      if (controllersConnected) {
-        console.log("Cleaning up controller connections...");
-        controllerService.disconnect();
-      }
-    };
-  }, [controllersConnected]);
+  // Note: We intentionally do NOT disconnect on unmount
+  // The connection should persist from loading page to dashboard
+  // Controllers will be disconnected when user leaves the session (logout/exit)
 
   return (
     <div className="relative w-full h-full flex items-center justify-center overflow-hidden">

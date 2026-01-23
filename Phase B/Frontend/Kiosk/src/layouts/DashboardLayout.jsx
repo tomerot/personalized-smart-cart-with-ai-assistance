@@ -3,6 +3,7 @@ import NavRail from "@/components/navrail/NavRail";
 import NavRailButton from "@/components/navrail/NavRailButton";
 import { ICONS } from "@/components/icons/icons.config";
 import Cart from "@/components/cart/Cart";
+import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 
 // Navigation views that change the content area (not modals)
 const NAV_VIEWS = {
@@ -23,6 +24,30 @@ const NAV_VIEWS = {
  */
 function DashboardLayout({ children }) {
   const [activeView, setActiveView] = useState(NAV_VIEWS.GROCERY_LIST);
+
+  // Barcode scanner integration
+  const {
+    isConnected,
+    pendingAlternatives,
+  } = useBarcodeScanner({
+    autoConnect: true,
+    onScanSuccess: (product, hasConflict) => {
+      console.log("Product scanned:", product.name);
+      if (hasConflict) {
+        // TODO: Show conflict modal/notification to user
+        console.log("⚠️ Product has conflict with user preferences");
+      }
+    },
+    onScanError: (barcode, error) => {
+      console.error(`Scan error for ${barcode}:`, error);
+      // TODO: Show error notification to user
+    },
+    onConflict: ({ product, conflict, alternatives }) => {
+      // TODO: Show alternatives modal with conflict details
+      console.log("Conflict details:", conflict);
+      console.log(`${alternatives.length} alternatives available`);
+    },
+  });
 
   // Handlers for modal buttons (Leave, Settings, Help)
   const handleLeaveClick = () => {
