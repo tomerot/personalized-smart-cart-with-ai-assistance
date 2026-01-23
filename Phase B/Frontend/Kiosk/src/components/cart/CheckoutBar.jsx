@@ -25,7 +25,7 @@ const CheckoutBar = ({
       `}
     >
       {/* Left Section: Total Price - Fixed width to prevent shifting */}
-      <div className="flex flex-col items-center w-40 flex-shrink-0">
+      <div className="flex flex-col items-center w-40 shrink-0">
         <span className="text-sm font-medium text-gray-600 mb-1">
           Total Price
         </span>
@@ -48,7 +48,7 @@ const CheckoutBar = ({
           rounded-xl
           transition-colors duration-150
           cursor-pointer
-          flex-shrink-0
+          shrink-0
         "
       >
         Checkout

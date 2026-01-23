@@ -1,6 +1,7 @@
 // Icon name constants
 export const ICONS = {
   CART: "shopping_cart",
+  CART_EMPTY: "shopping_cart_off",
   CHAT: "voice_chat",
   GROCERY_LIST: "list_alt_check",
   DISCOUNT: "percent_discount",

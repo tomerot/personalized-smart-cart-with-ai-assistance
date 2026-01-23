@@ -2,6 +2,8 @@ import { useRef, useState, useCallback } from "react";
 import ProductCard from "./ProductCard";
 import CheckoutBar from "./CheckoutBar";
 import { useCart } from "@/context/CartContext";
+import Icon from "@/components/icons/ICON";
+import { ICONS } from "@/components/icons/icons.config";
 
 /**
  * Cart Component
@@ -70,9 +72,17 @@ const Cart = ({
   return (
     <div className={`flex flex-col h-full ${className}`}>
       {/* Cart Title */}
-      <h2 className="font-[Montserrat] text-2xl font-bold text-gray-800 mb-4 shrink-0">
-        My Cart
-      </h2>
+      <div className="flex items-center gap-2 mb-4 shrink-0">
+        <Icon 
+          name={ICONS.CART} 
+          size={22} 
+          weight={600}
+          style={{ color: "#1f2937" }}
+        />
+        <h2 className="font-[Montserrat] text-2xl font-bold text-gray-800">
+          Your Cart
+        </h2>
+      </div>
 
       {/* Hide webkit scrollbar */}
       <style>
@@ -111,8 +121,19 @@ const Cart = ({
       >
 
         {displayProducts.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-gray-400">
-            <p>Your cart is empty</p>
+          <div className="flex flex-col items-center justify-center h-full text-gray-400 px-4">
+            <Icon 
+              name={ICONS.CART_EMPTY} 
+              size={64} 
+              weight={350}
+              style={{ color: "#9ca3af", marginBottom: "16px" }}
+            />
+            <p className="font-bold text-lg mb-3">Your cart is currently empty</p>
+            <p className="text-center text-sm">
+              <span className="font-semibold">Scan</span> a barcode to add a product,
+              <br />
+              or tap <span className="font-semibold">"Type Barcode"</span> to enter it manually
+            </p>
           </div>
         ) : (
           displayProducts.map((product, index) => (
