@@ -14,5 +14,6 @@ export const ICONS = {
   BLOCK: "block",
   DELETE: "delete",
   ADD: "keyboard_arrow_up",
-  REDUCE: "keyboard_arrow_down"
+  REDUCE: "keyboard_arrow_down",
+  BARCODE: "barcode"
 };

@@ -72,16 +72,34 @@ const Cart = ({
   return (
     <div className={`flex flex-col h-full ${className}`}>
       {/* Cart Title */}
-      <div className="flex items-center gap-2 mb-4 shrink-0">
-        <Icon 
-          name={ICONS.CART} 
-          size={22} 
-          weight={600}
-          style={{ color: "#1f2937" }}
-        />
-        <h2 className="font-[Montserrat] text-2xl font-bold text-gray-800">
-          Your Cart
-        </h2>
+      <div className="flex items-center justify-between mb-4 shrink-0">
+        <div className="flex items-center gap-2">
+          <Icon 
+            name={ICONS.CART} 
+            size={22} 
+            weight={600}
+            style={{ color: "#1f2937" }}
+          />
+          <h2 className="font-[Montserrat] text-2xl font-bold text-gray-800">
+            Your Cart
+          </h2>
+        </div>
+        
+        <button 
+          className="flex items-center gap-3 px-4 py-1 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-semibold rounded-xl transition-colors duration-150"
+          onClick={() => {
+            // TODO: Add barcode input functionality
+            console.log("Type Barcode clicked");
+          }}
+        >
+          <Icon 
+            name={ICONS.BARCODE} 
+            size={20} 
+            weight={500}
+            style={{ color: "white" }}
+          />
+          <span className="font-[Montserrat]">Type Barcode</span>
+        </button>
       </div>
 
       {/* Hide webkit scrollbar */}
