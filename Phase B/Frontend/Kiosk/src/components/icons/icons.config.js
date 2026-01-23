@@ -15,5 +15,7 @@ export const ICONS = {
   DELETE: "delete",
   ADD: "keyboard_arrow_up",
   REDUCE: "keyboard_arrow_down",
-  BARCODE: "barcode"
+  BARCODE: "barcode",
+  LOAD_LIST: "file_save",
+  AUDIO: "volume_up"
 };

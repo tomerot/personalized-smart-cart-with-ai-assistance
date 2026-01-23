@@ -148,7 +148,7 @@ const Cart = ({
                 weight={350}
                 style={{ color: "#9ca3af", marginBottom: "16px" }}
               />
-              <p className="font-bold text-lg mb-3">Your cart is currently empty</p>
+              <p className="font-bold text-lg mb-3">Your Cart is Currently Empty</p>
               <p className="text-center text-sm">
                 <span className="font-semibold">Scan</span> a barcode to add a product,
                 <br />

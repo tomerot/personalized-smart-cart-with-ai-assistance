@@ -5,6 +5,7 @@ import { ICONS } from "@/components/icons/icons.config";
 import Icon from "@/components/icons/ICON";
 import Cart from "@/components/cart/Cart";
 import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
+import { useUser } from "@/context/UserContext";
 
 // Navigation views that change the content area (not modals)
 const NAV_VIEWS = {
@@ -27,6 +28,7 @@ function DashboardLayout({ children }) {
   const [activeView, setActiveView] = useState(NAV_VIEWS.GROCERY_LIST);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [displayView, setDisplayView] = useState(NAV_VIEWS.GROCERY_LIST);
+  const { hasShoppingList } = useUser();
 
   // Handle view transitions with fade effect
   useEffect(() => {
@@ -205,16 +207,59 @@ function DashboardLayout({ children }) {
       {/* Main content area wrapper */}
       <div className="flex-1 h-full ml-4 flex flex-col">
         {/* Title row - aligned with Cart title */}
-        <div className="flex items-center gap-2 mb-4 shrink-0">
-          <Icon 
-            name={viewInfo.icon} 
-            size={22} 
-            weight={600}
-            style={{ color: "#1f2937" }}
-          />
-          <h2 className="font-[Montserrat] text-2xl font-bold text-gray-800">
-            {viewInfo.label}
-          </h2>
+        <div className="flex items-center justify-between mb-4 shrink-0">
+          <div className={`flex items-center gap-2 ${isTransitioning ? 'animate-fadeOut' : 'animate-fadeIn'}`}>
+            <Icon 
+              name={viewInfo.icon} 
+              size={22} 
+              weight={600}
+              style={{ color: "#1f2937" }}
+            />
+            <h2 className="font-[Montserrat] text-2xl font-bold text-gray-800">
+              {viewInfo.label}
+            </h2>
+          </div>
+          
+          {displayView === NAV_VIEWS.GROCERY_LIST && (
+            <button 
+              disabled={!hasShoppingList}
+              className={`flex items-center gap-3 px-3 py-1 font-semibold rounded-xl transition-colors duration-150 ${
+                !hasShoppingList 
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                  : 'bg-green-600 hover:bg-green-700 active:bg-green-800 text-white'
+              } ${isTransitioning ? 'animate-fadeOut' : 'animate-fadeIn'}`}
+              onClick={() => {
+                // TODO: Add load grocery list functionality
+                console.log("Load Grocery List clicked");
+              }}
+            >
+              <Icon 
+                name={ICONS.LOAD_LIST} 
+                size={20} 
+                weight={500}
+                style={{ color: !hasShoppingList ? "#6b7280" : "white" }}
+              />
+              <span className="font-[Montserrat] pr-1">Load Grocery List</span>
+            </button>
+          )}
+          
+          {displayView === NAV_VIEWS.COMPANION && (
+            <button 
+              className={`flex items-center gap-3 px-3 py-1 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-semibold rounded-xl transition-colors duration-150 ${isTransitioning ? 'animate-fadeOut' : 'animate-fadeIn'}`}
+              onClick={() => {
+                // TODO: Add audio settings functionality
+                console.log("Audio Settings clicked");
+              }}
+            >
+              <Icon 
+                name={ICONS.AUDIO} 
+                size={20} 
+                weight={500}
+                style={{ color: "white" }}
+              />
+              <span className="font-[Montserrat] pr-1">Audio Settings</span>
+            </button>
+          )}
         </div>
 
         {/* Dynamic content area - Changes based on NavRail selection */}
@@ -240,7 +285,7 @@ function DashboardLayout({ children }) {
       </div>
 
       {/* My Cart section - Always visible, integrated with background */}
-      <div className="shrink-0 w-[580px] h-full ml-4">
+      <div className="shrink-0 w-[580px] h-full ml-6">
         <Cart onCheckout={handleCheckout} />
       </div>
     </div>
