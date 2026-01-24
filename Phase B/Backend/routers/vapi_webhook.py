@@ -39,7 +39,6 @@ async def vapi_webhook(request: Request):
         allergies = arguments.get("allergies", [])
         dietary_needs = arguments.get("dietary_needs", [])
         requirement = arguments.get("requirement", "")
-        phone = arguments.get("phone", "")
         result = await handle_ai_alternatives(
             barcode, allergies, dietary_needs, requirement, phone
         )
