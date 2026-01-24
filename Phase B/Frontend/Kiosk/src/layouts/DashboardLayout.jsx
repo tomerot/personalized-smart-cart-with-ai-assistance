@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useRef } from "react";
 import NavRail from "@/components/navrail/NavRail";
 import NavRailButton from "@/components/navrail/NavRailButton";
 import { ICONS } from "@/components/icons/icons.config";
@@ -6,54 +6,30 @@ import Icon from "@/components/icons/ICON";
 import Cart from "@/components/cart/Cart";
 import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 import { useUser } from "@/context/UserContext";
-import Chat from "@/components/chat/Chat";
-
-// Navigation views that change the content area (not modals)
-const NAV_VIEWS = {
-  GROCERY_LIST: "groceryList",
-  COMPANION: "companion",
-  DISCOUNTS: "discounts",
-};
+import { NAV_VIEWS, VIEW_CONFIG, useViewTransition } from "@/features/navigation";
+import { CompanionView } from "@/features/smart-companion";
+import { GroceryListView } from "@/features/grocery-list";
 
 /**
  * DashboardLayout Component
  * 
  * Main layout for the dashboard with:
  * - NavRail on the left
- * - My Cart section (always visible)
  * - Dynamic content area based on NavRail selection
+ * - My Cart section (always visible on the right)
  * 
  * @param {ReactNode} children - Optional children to render (currently unused)
  */
 function DashboardLayout({ children }) {
-  const [activeView, setActiveView] = useState(NAV_VIEWS.GROCERY_LIST);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [displayView, setDisplayView] = useState(NAV_VIEWS.GROCERY_LIST);
   const { hasShoppingList } = useUser();
+  const { activeView, setActiveView, isTransitioning, displayView } = useViewTransition(NAV_VIEWS.GROCERY_LIST);
   
-  // Chat state - will be replaced with real logic later
-  const [isConversationActive, setIsConversationActive] = useState(false);
-  const [chatStatus, setChatStatus] = useState('idle');
-  const [timerProgress, setTimerProgress] = useState(0);
-  const [messages, setMessages] = useState([]);
-  
-  console.log('🔍 DashboardLayout - hasShoppingList:', hasShoppingList, '| Type:', typeof hasShoppingList);
-
-  // Handle view transitions with fade effect
-  useEffect(() => {
-    if (activeView !== displayView) {
-      // Start fade out
-      setIsTransitioning(true);
-      
-      // After fade out completes, change content and fade in
-      const timer = setTimeout(() => {
-        setDisplayView(activeView);
-        setIsTransitioning(false);
-      }, 400); // Half of 0.8s animation duration
-      
-      return () => clearTimeout(timer);
-    }
-  }, [activeView, displayView]);
+  // Log hasShoppingList only once per session
+  const hasLoggedShoppingList = useRef(false);
+  if (!hasLoggedShoppingList.current) {
+    console.log('🔍 DashboardLayout - hasShoppingList:', hasShoppingList, '| Type:', typeof hasShoppingList);
+    hasLoggedShoppingList.current = true;
+  }
 
   // Barcode scanner integration
   const {
@@ -100,21 +76,18 @@ function DashboardLayout({ children }) {
     console.log("Checkout clicked");
   };
 
-  // Get current view info for title/icon (use displayView for smooth transitions)
-  const getViewInfo = (view) => {
-    switch (view) {
-      case NAV_VIEWS.GROCERY_LIST:
-        return { icon: ICONS.GROCERY_LIST, label: "Grocery List" };
-      case NAV_VIEWS.COMPANION:
-        return { icon: ICONS.CHAT, label: "Smart Companion" };
-      case NAV_VIEWS.DISCOUNTS:
-        return { icon: ICONS.DISCOUNT, label: "Discounts" };
-      default:
-        return { icon: ICONS.GROCERY_LIST, label: "Grocery List" };
-    }
+  const handleLoadGroceryList = () => {
+    // TODO: Implement load grocery list functionality
+    console.log("Load Grocery List clicked");
   };
 
-  const viewInfo = getViewInfo(displayView);
+  const handleAudioSettings = () => {
+    // TODO: Implement audio settings modal/functionality
+    console.log("Audio Settings clicked");
+  };
+
+  // Get current view info for title/icon (use displayView for smooth transitions)
+  const viewInfo = VIEW_CONFIG[displayView];
 
   return (
     <div className="flex h-full w-full p-4">
@@ -229,7 +202,7 @@ function DashboardLayout({ children }) {
             </h2>
           </div>
           
-          {displayView === NAV_VIEWS.GROCERY_LIST && (
+          {displayView === NAV_VIEWS.GROCERY_LIST && viewInfo.actionButton && (
             <button 
               disabled={!hasShoppingList}
               className={`flex items-center gap-3 px-3 py-1 font-semibold rounded-xl transition-colors duration-150 ${
@@ -237,36 +210,30 @@ function DashboardLayout({ children }) {
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                   : 'bg-green-600 hover:bg-green-700 active:bg-green-800 text-white'
               } ${isTransitioning ? 'animate-fadeOut' : 'animate-fadeIn'}`}
-              onClick={() => {
-                // TODO: Add load grocery list functionality
-                console.log("Load Grocery List clicked");
-              }}
+              onClick={handleLoadGroceryList}
             >
               <Icon 
-                name={ICONS.LOAD_LIST} 
+                name={viewInfo.actionButton.icon} 
                 size={20} 
                 weight={500}
                 style={{ color: !hasShoppingList ? "#6b7280" : "white" }}
               />
-              <span className="font-[Montserrat] pr-1">Load Grocery List</span>
+              <span className="font-[Montserrat] pr-1">{viewInfo.actionButton.label}</span>
             </button>
           )}
           
-          {displayView === NAV_VIEWS.COMPANION && (
+          {displayView === NAV_VIEWS.COMPANION && viewInfo.actionButton && (
             <button 
               className={`flex items-center gap-3 px-3 py-1 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-semibold rounded-xl transition-colors duration-150 ${isTransitioning ? 'animate-fadeOut' : 'animate-fadeIn'}`}
-              onClick={() => {
-                // TODO: Add audio settings functionality
-                console.log("Audio Settings clicked");
-              }}
+              onClick={handleAudioSettings}
             >
               <Icon 
-                name={ICONS.AUDIO} 
+                name={viewInfo.actionButton.icon} 
                 size={20} 
                 weight={500}
                 style={{ color: "white" }}
               />
-              <span className="font-[Montserrat] pr-1">Audio Settings</span>
+              <span className="font-[Montserrat] pr-1">{viewInfo.actionButton.label}</span>
             </button>
           )}
         </div>
@@ -274,30 +241,8 @@ function DashboardLayout({ children }) {
         {/* Dynamic content area - Changes based on NavRail selection */}
         <div className="flex-1 rounded-2xl border border-gray-200 overflow-hidden" style={{ backgroundColor: '#f7fef9' }}>
           <div className={`w-full h-full p-6 flex flex-col ${isTransitioning ? 'animate-fadeOut' : 'animate-fadeIn'}`}>
-            {displayView === NAV_VIEWS.GROCERY_LIST && (
-              <div className="text-gray-600">
-                Your grocery list will appear here
-              </div>
-            )}
-            {displayView === NAV_VIEWS.COMPANION && (
-              <Chat
-                isConversationActive={isConversationActive}
-                onStartStop={() => {
-                  setIsConversationActive(!isConversationActive);
-                  if (!isConversationActive) {
-                    setChatStatus('idle');
-                    // TODO: Connect to voice assistant
-                  } else {
-                    setChatStatus('idle');
-                    setTimerProgress(0);
-                    // TODO: Disconnect from voice assistant
-                  }
-                }}
-                status={chatStatus}
-                timerProgress={timerProgress}
-                messages={messages}
-              />
-            )}
+            {displayView === NAV_VIEWS.GROCERY_LIST && <GroceryListView />}
+            {displayView === NAV_VIEWS.COMPANION && <CompanionView />}
             {displayView === NAV_VIEWS.DISCOUNTS && (
               <div className="text-gray-600">
                 Discounts and offers will appear here
