@@ -284,19 +284,16 @@ async def get_ai_recommended_alternatives(
         # Determine how many alternatives to request (max 3)
         num_alternatives = min(len(safe_alternatives), 3)
 
-        # 4. Prepare data for Gemini
+        # 4. Prepare minimal data for Gemini (only fields needed for decision)
         alternatives_data = []
         for product in safe_alternatives:
             alternatives_data.append(
                 {
                     "barcode": product.barcode,
                     "name": product.name,
-                    "company": product.company,
                     "price": product.price,
                     "size": product.size,
                     "ingredients": product.ingredients,
-                    "allergens": product.allergens,
-                    "dietary_tags": product.dietary_tags,
                     "nutritional_info": {
                         "calories_per_100g": product.nutritional_info.calories_per_100g,
                         "fat_per_100g": product.nutritional_info.fat_per_100g,
@@ -349,9 +346,9 @@ IMPORTANT: Return your response ONLY as a valid JSON object with exactly {num_al
 Do not include any other text, markdown formatting, or code blocks. Return ONLY the JSON object.
 """
 
-        # 7. Get Gemini response
+        # 7. Get Gemini response (async)
         print(f"Sending request to Gemini with requirement: {requirement}")
-        response_text = gemini_client.generate_content(prompt)
+        response_text = await gemini_client.generate_content_async(prompt)
 
         # Remove markdown code blocks if present
         if response_text.startswith("```json"):

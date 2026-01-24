@@ -8,12 +8,17 @@ class GeminiClient:
     def __init__(self, api_key: str):
         """Initialize Gemini client with API key"""
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel("gemini-2.5-flash")
+        self.model = genai.GenerativeModel("gemini-2.5-flash-lite")
         print("✓ Gemini client initialized")
 
     def generate_content(self, prompt: str) -> str:
         """Generate content using Gemini"""
         response = self.model.generate_content(prompt)
+        return response.text.strip()
+
+    async def generate_content_async(self, prompt: str) -> str:
+        """Generate content using Gemini (async)"""
+        response = await self.model.generate_content_async(prompt)
         return response.text.strip()
 
 
