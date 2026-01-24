@@ -113,3 +113,25 @@ class AIAlternativesResponse(BaseModel):
         ...,
         description="AI-generated explanation for all alternatives, or error message if none found",
     )
+
+
+class ProductInfoRequest(BaseModel):
+    """Request body for product/category info lookup (used by VAPI)"""
+
+    query: str = Field(
+        ...,
+        description="Product name or category the user is asking about",
+    )
+
+
+class ProductInfoMatchedProduct(BaseModel):
+    name: str
+    available: bool
+
+
+class ProductInfoResponse(BaseModel):
+    """Response for product/category info lookup"""
+
+    category: str
+    location: Optional[LocationResponse] = None
+    products: List[ProductInfoMatchedProduct] = Field(default_factory=list)

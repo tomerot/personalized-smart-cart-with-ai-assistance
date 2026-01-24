@@ -13,6 +13,7 @@ from schemas import (
     ProductScanRequest,
     AIAlternativesRequest,
     AIAlternativesResponse,
+    ProductInfoRequest,
 )
 from typing import List
 
@@ -39,6 +40,32 @@ async def search_products(q: str, limit: int = 5):
     )
 
     return products
+
+
+@router.post("/info")
+async def get_product_info(request: ProductInfoRequest):
+    """
+    Get product or category info by name query.
+    Used by VAPI for voice assistant function calling.
+    """
+    result = await product_service.get_product_info(request.query)
+
+    if not result:
+        return {"result": f"No products or categories found matching '{request.query}'"}
+
+    # Build a simple string response
+    if not result["products"]:
+        # Category match only
+        return {
+            "result": f"{result['category']} is located at coordinates x={result['location']['x']}, y={result['location']['y']}"
+        }
+    else:
+        # Product match
+        product = result["products"][0]
+        availability = "available" if product["available"] else "out of stock"
+        return {
+            "result": f"{product['name']} is {availability}. It is in the {result['category']} section at coordinates x={result['location']['x']}, y={result['location']['y']}"
+        }
 
 
 @router.get("/{barcode}/nutritional-info", response_model=NutritionalInfoResponse)

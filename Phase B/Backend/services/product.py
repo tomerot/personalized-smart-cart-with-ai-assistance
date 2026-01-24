@@ -407,3 +407,59 @@ Do not include any other text, markdown formatting, or code blocks. Return ONLY 
     except Exception as e:
         print(f"Error in get_ai_recommended_alternatives: {e}")
         raise
+
+
+async def get_product_info(query: str) -> Optional[Dict[str, Any]]:
+    """
+    Get product/category info by name query.
+    If query matches a category, returns location only.
+    If query matches products, returns location + availability grouped by best category.
+
+    Args:
+        query: Product name or category name
+
+    Returns:
+        Dict with category, location, and matched products (if any)
+    """
+    # Step 1: Check if query matches a category name
+    category = await Category.find_one(
+        {"name": {"$regex": f"^{query}s?$", "$options": "i"}}
+    )
+
+    if category:
+        return {
+            "category": category.name,
+            "location": {"x": category.location.x, "y": category.location.y},
+            "products": [],
+        }
+
+    # Step 2: Search products by name
+    # Handle common substitutions
+    search_query = query.replace("percent", "%")
+
+    # Split into words and require all to be present (in any order)
+    words = search_query.split()
+    if len(words) > 1:
+        # Build regex that matches all words in any order using lookaheads
+        pattern = "".join(f"(?=.*{word})" for word in words)
+    else:
+        pattern = search_query
+
+    products = await Product.find(
+        {"name": {"$regex": pattern, "$options": "i"}}
+    ).to_list()
+
+    if not products:
+        return None
+
+    # Step 3: Pick the best matching product (shortest name = closest to query)
+    best_product = min(products, key=lambda p: len(p.name))
+
+    # Step 4: Get category location
+    cat = await Category.find_one({"name": best_product.category})
+
+    return {
+        "category": best_product.category,
+        "location": {"x": cat.location.x, "y": cat.location.y} if cat else None,
+        "products": [{"name": best_product.name, "available": best_product.available}],
+    }
