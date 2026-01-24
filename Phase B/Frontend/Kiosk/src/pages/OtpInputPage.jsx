@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useUser } from "@/context/UserContext";
 import AuthLayout from "@/layouts/AuthLayout";
-import LoadingLayout from "@/layouts/LoadingLayout";
 import Numpad from "@/components/numpad/Numpad";
 import DigitInputRow from "@/components/digitInput/DigitInputRow";
 import MessageModal from "@/components/modal/MessageModal";
@@ -14,14 +14,15 @@ import { UI_CONFIG } from "@/data/uiConfig";
 function OtpInputPage() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { login } = useUser();
   const phoneNumber = location.state?.phoneNumber;
 
   const [inputValue, setInputValue] = useState("");
   const [timeLeft, setTimeLeft] = useState(AUTH_CONFIG.OTP_TIMER_SECONDS);
   const [timerActive, setTimerActive] = useState(true);
   const [showErrorModal, setShowErrorModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   // Redirect to phone input if no phone number is provided
   useEffect(() => {
@@ -57,29 +58,41 @@ function OtpInputPage() {
   };
 
   const handleSubmit = async () => {
-    if (inputValue.length === AUTH_CONFIG.OTP_LENGTH) {
+    if (inputValue.length === AUTH_CONFIG.OTP_LENGTH && !isVerifying) {
       console.log("Submitted OTP:", inputValue);
+      console.log("Phone number being verified:", phoneNumber);
+
+      setIsVerifying(true);
 
       // Call auth service to verify OTP
       const result = await authService.verifyOtp(phoneNumber, inputValue);
 
+      console.log("Verification result:", result);
+      setIsVerifying(false);
+
       if (result.success) {
-        // Correct OTP - start fade-out animation
+        // Correct OTP - store user data in context
         console.log("OTP verified successfully");
+        console.log("User data:", result.user);
+        
+        // Store user data in context (which also persists to sessionStorage)
+        if (result.user) {
+          login(result.user);
+        }
+        
         setIsFadingOut(true);
 
-        // After fade-out completes, show loading screen
+        // After fade-out completes, navigate to dashboard loading page
         setTimeout(() => {
-          setIsLoading(true);
-
-          // TODO: Replace setTimeout with actual dashboard data fetch
-          setTimeout(() => {
-            // navigate to dashboard here when ready
-            console.log("Dashboard loaded - ready to navigate");
-          }, 3000); // 3 seconds temporary loading time
+          console.log("Navigating to dashboard loading page");
+          navigate("/dashboard/loading", { 
+            state: { phoneNumber }, 
+            replace: true 
+          });
         }, UI_CONFIG.FADE_TRANSITION_DURATION);
       } else {
         // Wrong OTP - show error modal
+        console.error("OTP verification failed:", result.message);
         setShowErrorModal(true);
         setInputValue(""); // Clear input
       }
@@ -99,27 +112,11 @@ function OtpInputPage() {
     navigate("/auth/phone", { replace: true });
   };
 
-  const isSubmitEnabled = inputValue.length === AUTH_CONFIG.OTP_LENGTH;
+  const isSubmitEnabled = inputValue.length === AUTH_CONFIG.OTP_LENGTH && !isVerifying;
   const activeIndex = inputValue.length;
 
   if (!phoneNumber) {
     return null; // Will redirect
-  }
-
-  // Show loading screen when OTP is verified
-  if (isLoading) {
-    return (
-      <LoadingLayout>
-        <p
-          className="pulse-animation text-[clamp(1.5rem,3vw,2.5rem)] font-semibold text-green-600"
-          style={{
-            animationDuration: `${UI_CONFIG.PULSE_ANIMATION_DURATION}s`,
-          }}
-        >
-          Preparing Dashboard...
-        </p>
-      </LoadingLayout>
-    );
   }
 
   return (

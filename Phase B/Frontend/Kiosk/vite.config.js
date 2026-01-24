@@ -16,5 +16,13 @@ export default defineConfig({
   },
   server: {
     open: true, // Automatically open browser when server starts
+    proxy: {
+      // Proxy API requests to backend to avoid CORS issues during development
+      '/api': {
+        target: 'https://smart-cart-backend-nh7z.onrender.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
   },
 })

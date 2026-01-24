@@ -10,6 +10,7 @@ import Icon from "@/components/icons/ICON";
  * @param {string} label - Text label displayed below the icon
  * @param {boolean} isActive - Whether the button is in active state (shows filled icon + pill)
  * @param {boolean} isBottom - Whether to position this button at the bottom of the NavRail
+ * @param {boolean} disabled - Whether the button is disabled (default: false)
  * @param {string} to - Route path for navigation (used when onClick is not provided)
  * @param {function} onClick - Custom click handler (overrides navigation if provided)
  * @param {number} iconSize - Icon size in pixels (default: 32)
@@ -19,8 +20,13 @@ import Icon from "@/components/icons/ICON";
  * @param {number} circleSize - Size of the circle in pixels when pillShape is "circle" (default: iconSize * 1.6)
  * @param {string} pillBorderRadius - Border radius of the pill, ignored if pillShape is "circle" (default: "20px")
  * @param {string} pillColor - Background color of the pill/circle (default: "#056619")
+ * @param {boolean} showPill - Whether to show the pill background (default: true)
+ * @param {boolean} fillIconWhenActive - Whether to fill the icon when active (default: true)
  * @param {string} activeColor - Icon and label color when active (default: "#5ae541")
  * @param {string} inactiveColor - Icon and label color when inactive (default: "#ffffff")
+ * @param {string} disabledColor - Icon and label color when disabled (default: "#666666")
+ * @param {number} activeIconWeight - Icon stroke weight when active (default: 400)
+ * @param {number} inactiveIconWeight - Icon stroke weight when inactive (default: 400)
  * @param {number} activeLabelFontWeight - Font weight of the label when active (default: 700)
  * @param {number} inactiveLabelFontWeight - Font weight of the label when inactive (default: 500)
  * @param {number} labelGap - Gap between icon/pill and label in pixels (default: 8)
@@ -32,6 +38,7 @@ const NavRailButton = ({
   label,
   isActive = false,
   isBottom = false,
+  disabled = false,
   to,
   onClick,
   iconSize = 32,
@@ -41,8 +48,13 @@ const NavRailButton = ({
   circleSize,
   pillBorderRadius = "20px",
   pillColor = "#056619",
+  showPill = true,
+  fillIconWhenActive = true,
   activeColor = "#5ae541",
   inactiveColor = "#ffffff",
+  disabledColor = "#c0c7c2",
+  activeIconWeight = 400,
+  inactiveIconWeight = 400,
   activeLabelFontWeight = 700,
   inactiveLabelFontWeight = 500,
   labelGap = 8,
@@ -53,6 +65,7 @@ const NavRailButton = ({
   const navigate = useNavigate();
 
   const handleClick = () => {
+    if (disabled) return;
     if (onClick) {
       onClick();
     } else if (to) {
@@ -60,7 +73,8 @@ const NavRailButton = ({
     }
   };
 
-  const currentColor = isActive ? activeColor : inactiveColor;
+  const currentColor = disabled ? disabledColor : (isActive ? activeColor : inactiveColor);
+  const currentIconWeight = disabled ? inactiveIconWeight : (isActive ? activeIconWeight : inactiveIconWeight);
 
   // Calculate background dimensions based on shape
   const isCircle = pillShape === "circle";
@@ -71,12 +85,13 @@ const NavRailButton = ({
   return (
     <button
       onClick={handleClick}
+      disabled={disabled}
       className={`
         flex flex-col items-center justify-center
-        cursor-pointer
         bg-transparent border-none
         py-2
         transition-all duration-200 ease-in-out
+        ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
         ${className}
       `}
       style={style}
@@ -86,23 +101,26 @@ const NavRailButton = ({
       {/* Icon container with pill background */}
       <div className="relative flex items-center justify-center">
         {/* Pill background - visible when active */}
-        <div
-          className={`
-            absolute
-            transition-all duration-200 ease-in-out
-            ${isActive ? "opacity-100 scale-100" : "opacity-0 scale-75"}
-          `}
-          style={{
-            backgroundColor: pillColor,
-            width: bgWidth,
-            height: bgHeight,
-            borderRadius: bgBorderRadius,
-          }}
-        />
+        {showPill && (
+          <div
+            className={`
+              absolute
+              transition-all duration-200 ease-in-out
+              ${isActive ? "opacity-100 scale-100" : "opacity-0 scale-75"}
+            `}
+            style={{
+              backgroundColor: pillColor,
+              width: bgWidth,
+              height: bgHeight,
+              borderRadius: bgBorderRadius,
+            }}
+          />
+        )}
         {/* Icon */}
         <Icon
           name={icon}
-          fill={isActive ? 1 : 0}
+          fill={fillIconWhenActive && isActive ? 1 : 0}
+          weight={currentIconWeight}
           size={iconSize}
           style={{
             color: currentColor,

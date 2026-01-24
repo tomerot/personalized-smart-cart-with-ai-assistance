@@ -1,12 +1,28 @@
 // Icon name constants
 export const ICONS = {
   CART: "shopping_cart",
+  CART_EMPTY: "shopping_cart_off",
+  CHAT: "voice_chat",
   GROCERY_LIST: "list_alt_check",
+  DISCOUNT: "percent_discount",
   HELP: "help",
-  LOGOUT: "logout",
+  LEAVE: "logout",
   SETTINGS: "settings",
   START: "start",
   BACKSPACE: "backspace",
   CLOSE: "close",
-  BLOCK: "block"
+  BLOCK: "block",
+  DELETE: "delete",
+  ADD: "keyboard_arrow_up",
+  REDUCE: "keyboard_arrow_down",
+  BARCODE: "barcode",
+  LOAD_LIST: "file_save",
+  AUDIO: "volume_up",
+  CONFLICT: "health_and_safety",
+  PERSON: "person",
+  COMPANION: "network_intelligence",
+  START_CONVERSATION: "voice_selection",
+  STOP_CONVERSATION: "voice_selection_off",
+  MUTE: "mic_off",
+  UNMUTE: "mic"
 };
