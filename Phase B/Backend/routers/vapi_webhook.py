@@ -95,8 +95,8 @@ async def handle_product_info(query: str):
         }
 
 
-async def handle_nutrition_details(barcode: str) -> str:
-    """Handle nutrition details lookup and return a string response."""
+async def handle_nutrition_details(barcode: str):
+    """Handle nutrition details lookup and return structured data."""
     if not barcode:
         return "Missing product barcode"
 
@@ -105,17 +105,19 @@ async def handle_nutrition_details(barcode: str) -> str:
         return f"Product with barcode '{barcode}' not found"
 
     info = product.nutritional_info
-    return (
-        f"Product: {product.name}. "
-        f"Ingredients: {', '.join(product.ingredients)}. "
-        f"Nutritional info per 100g: "
-        f"Calories: {info.calories_per_100g}, "
-        f"Fat: {info.fat_per_100g}g, "
-        f"Carbs: {info.carbs_per_100g}g, "
-        f"Sugar: {info.sugar_per_100g}g, "
-        f"Protein: {info.protein_per_100g}g, "
-        f"Sodium: {info.sodium_per_100mg}mg."
-    )
+    return {
+        "name": product.name,
+        "size": product.size,
+        "ingredients": product.ingredients,
+        "nutritional_info": {
+            "calories_per_100g": info.calories_per_100g,
+            "fat_per_100g": info.fat_per_100g,
+            "carbs_per_100g": info.carbs_per_100g,
+            "sugar_per_100g": info.sugar_per_100g,
+            "protein_per_100g": info.protein_per_100g,
+            "sodium_per_100mg": info.sodium_per_100mg,
+        },
+    }
 
 
 async def handle_ai_alternatives(
