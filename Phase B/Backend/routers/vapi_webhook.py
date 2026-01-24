@@ -45,8 +45,8 @@ async def vapi_webhook(request: Request):
     elif function_name == "add_allergies":
         phone = arguments.get("phone", "")
         allergies = arguments.get("allergies", [])
-
         result = await handle_add_allergies(phone, allergies)
+
     elif function_name == "remove_allergies":
         phone = arguments.get("phone", "")
         allergies = arguments.get("allergies", [])
