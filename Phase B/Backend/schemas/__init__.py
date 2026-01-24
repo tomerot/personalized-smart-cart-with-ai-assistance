@@ -17,6 +17,9 @@ from .product import (
     ProductScanRequest,
     AIAlternativesRequest,
     AIAlternativesResponse,
+    ProductInfoRequest,
+    ProductInfoResponse,
+    ProductInfoMatchedProduct,
 )
 from .user import (
     UserResponse,
@@ -53,6 +56,9 @@ __all__ = [
     ProductScanRequest,
     AIAlternativesRequest,
     AIAlternativesResponse,
+    ProductInfoRequest,
+    ProductInfoResponse,
+    ProductInfoMatchedProduct,
     UserResponse,
     UserStatusResponse,
     AllergiesRequest,
