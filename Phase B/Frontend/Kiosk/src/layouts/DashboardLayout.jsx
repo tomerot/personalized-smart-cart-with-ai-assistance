@@ -6,6 +6,8 @@ import Icon from "@/components/icons/ICON";
 import Cart from "@/components/cart/Cart";
 import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 import { useUser } from "@/context/UserContext";
+import ChatBubble from "@/components/chat/ChatBubble"; // TODO: Remove after testing
+import ChatBar from "@/components/chat/ChatBar"; // TODO: Remove after testing
 
 // Navigation views that change the content area (not modals)
 const NAV_VIEWS = {
@@ -29,6 +31,32 @@ function DashboardLayout({ children }) {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [displayView, setDisplayView] = useState(NAV_VIEWS.GROCERY_LIST);
   const { hasShoppingList } = useUser();
+  
+  // TODO: Remove demo states after testing
+  const [demoConversationActive, setDemoConversationActive] = useState(false);
+  const [demoStatus, setDemoStatus] = useState('idle');
+  const [demoTimerProgress, setDemoTimerProgress] = useState(0);
+  
+  // Demo timer effect
+  useEffect(() => {
+    if (demoConversationActive && demoStatus === 'user') {
+      const interval = setInterval(() => {
+        setDemoTimerProgress((prev) => {
+          if (prev >= 100) {
+            // Auto-stop conversation when timer completes
+            setDemoConversationActive(false);
+            setDemoStatus('idle');
+            return 0;
+          }
+          return prev + 1;
+        });
+      }, 100); // Update every 100ms (10 seconds total for full circle)
+      
+      return () => clearInterval(interval);
+    } else {
+      setDemoTimerProgress(0);
+    }
+  }, [demoConversationActive, demoStatus]);
   
   console.log('🔍 DashboardLayout - hasShoppingList:', hasShoppingList, '| Type:', typeof hasShoppingList);
 
@@ -266,16 +294,137 @@ function DashboardLayout({ children }) {
 
         {/* Dynamic content area - Changes based on NavRail selection */}
         <div className="flex-1 rounded-2xl border border-gray-200 overflow-hidden" style={{ backgroundColor: '#f7fef9' }}>
-          <div className={`w-full h-full p-6 ${isTransitioning ? 'animate-fadeOut' : 'animate-fadeIn'}`}>
+          <div className={`w-full h-full p-6 flex flex-col ${isTransitioning ? 'animate-fadeOut' : 'animate-fadeIn'}`}>
             {displayView === NAV_VIEWS.GROCERY_LIST && (
               <div className="text-gray-600">
                 Your grocery list will appear here
               </div>
             )}
             {displayView === NAV_VIEWS.COMPANION && (
-              <div className="text-gray-600">
-                AI assistant content will appear here
-              </div>
+              // TODO: Remove these example chat bubbles and chat bar after testing
+              <>
+                {/* Chat Bar - Will be at the bottom in final implementation */}
+                <div className="mb-6">
+                  <ChatBar
+                    isConversationActive={demoConversationActive}
+                    onStartStop={() => {
+                      setDemoConversationActive(!demoConversationActive);
+                      // Cycle through demo statuses for testing
+                      if (!demoConversationActive) {
+                        setDemoStatus('connecting');
+                        setTimeout(() => setDemoStatus('assistant'), 2000);
+                        setTimeout(() => setDemoStatus('user'), 4000);
+                        setDemoTimerProgress(0);
+                      } else {
+                        setDemoStatus('idle');
+                        setDemoTimerProgress(0);
+                      }
+                    }}
+                    status={demoStatus}
+                    timerProgress={demoTimerProgress}
+                  />
+                </div>
+
+                <div className="flex-1 flex flex-col gap-4 overflow-y-auto">
+                  {/* Example 1: User message */}
+                  <ChatBubble
+                    speakerIcon={ICONS.PERSON}
+                    speakerLabel="You"
+                    backgroundColor="#e0e7ff"
+                    iconColor="#4f46e5"
+                    textColor="#1f2937"
+                  >
+                    <p>Can you help me find low-fat mayonnaise?</p>
+                  </ChatBubble>
+
+                  {/* Example 2: Assistant response with text */}
+                  <ChatBubble
+                    speakerIcon={ICONS.COMPANION}
+                    speakerLabel="Smart Companion"
+                    backgroundColor="#e4fcec"
+                    iconColor="#059669"
+                    textColor="#1f2937"
+                  >
+                    <p className="mb-3">Light mayonnaise contains less fat and fewer calories.</p>
+                    {/* Placeholder for product alternatives - to be implemented later */}
+                    <div className="space-y-2 mt-2">
+                      <div className="bg-white rounded-lg p-3 shadow-sm">
+                        <p className="font-semibold">Hellman's Light Mayonnaise (400g)</p>
+                        <p className="text-sm">$3.00</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-3 shadow-sm">
+                        <p className="font-semibold">Heinz Mayonnaise Light (420g)</p>
+                        <p className="text-sm">$3.10</p>
+                      </div>
+                    </div>
+                  </ChatBubble>
+
+                  {/* Example 3: Assistant with conflict warning */}
+                  <ChatBubble
+                    speakerIcon={ICONS.COMPANION}
+                    speakerLabel="Smart Companion"
+                    backgroundColor="#fee2e2"
+                    iconColor="#dc2626"
+                    textColor="#1f2937"
+                    showConflict={true}
+                    conflictIconColor="#dc2626"
+                  >
+                    <p className="mb-3">This item contains nuts, which conflicts with your dietary restrictions.</p>
+                    {/* Placeholder for product alternatives */}
+                    <div className="space-y-2 mt-2">
+                      <div className="bg-white rounded-lg p-3 shadow-sm">
+                        <p className="font-semibold">Bissli (70g)</p>
+                        <p className="text-sm">$1.30</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-3 shadow-sm">
+                        <p className="font-semibold">Doritos (70g)</p>
+                        <p className="text-sm">$1.50</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-3 shadow-sm">
+                        <p className="font-semibold">Apropo (100g)</p>
+                        <p className="text-sm">$3.00</p>
+                      </div>
+                    </div>
+                  </ChatBubble>
+
+                  {/* Example 4: User response */}
+                  <ChatBubble
+                    speakerIcon={ICONS.PERSON}
+                    speakerLabel="You"
+                    backgroundColor="#e0e7ff"
+                    iconColor="#4f46e5"
+                    textColor="#1f2937"
+                  >
+                    <p>Where can I find the bread section?</p>
+                  </ChatBubble>
+
+                  {/* Example 5: Assistant with loading/shimmer effect */}
+                  <ChatBubble
+                    speakerIcon={ICONS.COMPANION}
+                    speakerLabel="Smart Companion"
+                    backgroundColor="#e4fcec"
+                    iconColor="#059669"
+                    textColor="#1f2937"
+                  >
+                    <p className="animate-shimmer rounded px-2 py-1">Finding the best route to bread section...</p>
+                  </ChatBubble>
+
+                  {/* Example 6: Assistant with map placeholder */}
+                  <ChatBubble
+                    speakerIcon={ICONS.COMPANION}
+                    speakerLabel="Smart Companion"
+                    backgroundColor="#e4fcec"
+                    iconColor="#059669"
+                    textColor="#1f2937"
+                  >
+                    <p className="mb-3">Let me show you the way to the bread section...</p>
+                    {/* Placeholder for map component - to be implemented later */}
+                    <div className="bg-gray-100 rounded-lg p-8 text-center text-gray-500">
+                      [Map component will be displayed here]
+                    </div>
+                  </ChatBubble>
+                </div>
+              </>
             )}
             {displayView === NAV_VIEWS.DISCOUNTS && (
               <div className="text-gray-600">

@@ -17,5 +17,12 @@ export const ICONS = {
   REDUCE: "keyboard_arrow_down",
   BARCODE: "barcode",
   LOAD_LIST: "file_save",
-  AUDIO: "volume_up"
+  AUDIO: "volume_up",
+  CONFLICT: "health_and_safety",
+  PERSON: "person",
+  COMPANION: "network_intelligence",
+  START_CONVERSATION: "voice_selection",
+  STOP_CONVERSATION: "voice_selection_off",
+  MUTE: "mic_off",
+  UNMUTE: "mic"
 };
