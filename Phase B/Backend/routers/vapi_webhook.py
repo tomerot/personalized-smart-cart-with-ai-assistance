@@ -40,13 +40,13 @@ async def vapi_webhook(request: Request):
         dietary_needs = arguments.get("dietary_needs", [])
         requirement = arguments.get("requirement", "")
         result = await handle_ai_alternatives(
-            barcode, allergies, dietary_needs, requirement, phone
+            barcode, allergies, dietary_needs, requirement
         )
     elif function_name == "add_allergies":
         phone = arguments.get("phone", "")
         allergies = arguments.get("allergies", [])
-
         result = await handle_add_allergies(phone, allergies)
+
     elif function_name == "remove_allergies":
         phone = arguments.get("phone", "")
         allergies = arguments.get("allergies", [])
@@ -119,7 +119,7 @@ async def handle_nutrition_details(barcode: str) -> str:
 
 
 async def handle_ai_alternatives(
-    barcode: str, allergies: list, dietary_needs: list, requirement: str, phone: str
+    barcode: str, allergies: list, dietary_needs: list, requirement: str
 ):
     """Handle AI alternatives and return structured data."""
     if not barcode:
