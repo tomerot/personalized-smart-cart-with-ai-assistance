@@ -24,7 +24,7 @@ import { GroceryListView } from "@/features/grocery-list";
 function DashboardLayout({ children }) {
   const { hasShoppingList } = useUser();
   const { activeView, setActiveView, isTransitioning, displayView } = useViewTransition(NAV_VIEWS.GROCERY_LIST);
-  const { highlightedProductId, addConflictMessage, hasUnreadConflict } = useVoiceAssistant();
+  const { highlightedProductId, addConflictMessage } = useVoiceAssistant();
   
   // Log hasShoppingList only once per session
   const hasLoggedShoppingList = useRef(false);
@@ -109,7 +109,6 @@ function DashboardLayout({ children }) {
           label="Grocery List"
           isActive={activeView === NAV_VIEWS.GROCERY_LIST}
           onClick={() => setActiveView(NAV_VIEWS.GROCERY_LIST)}
-          showPill={false}
           fillIconWhenActive={false}
           activeColor="#e4fcec"
           inactiveColor="#e4fcec"
@@ -123,7 +122,6 @@ function DashboardLayout({ children }) {
           label="Smart Companion"
           isActive={activeView === NAV_VIEWS.COMPANION}
           onClick={() => setActiveView(NAV_VIEWS.COMPANION)}
-          showPill={false}
           fillIconWhenActive={false}
           activeColor="#e4fcec"
           inactiveColor="#e4fcec"
@@ -131,14 +129,12 @@ function DashboardLayout({ children }) {
           inactiveIconWeight={200}
           activeLabelFontWeight={500}
           inactiveLabelFontWeight={300}
-          showNotificationDot={hasUnreadConflict && activeView !== NAV_VIEWS.COMPANION}
         />
         <NavRailButton
           icon={ICONS.DISCOUNT}
           label="Discounts"
           isActive={activeView === NAV_VIEWS.DISCOUNTS}
           disabled={true}
-          showPill={false}
           fillIconWhenActive={false}
           activeColor="#e4fcec"
           inactiveColor="#e4fcec"
@@ -154,7 +150,6 @@ function DashboardLayout({ children }) {
           label="Leave"
           isBottom={true}
           onClick={handleLeaveClick}
-          showPill={false}
           fillIconWhenActive={false}
           activeColor="#e4fcec"
           inactiveColor="#e4fcec"
@@ -172,7 +167,6 @@ function DashboardLayout({ children }) {
           label="Settings"
           isBottom={true}
           onClick={handleSettingsClick}
-          showPill={false}
           fillIconWhenActive={false}
           activeColor="#e4fcec"
           inactiveColor="#e4fcec"
@@ -186,7 +180,6 @@ function DashboardLayout({ children }) {
           label="Help"
           isBottom={true}
           onClick={handleHelpClick}
-          showPill={false}
           fillIconWhenActive={false}
           activeColor="#e4fcec"
           inactiveColor="#e4fcec"

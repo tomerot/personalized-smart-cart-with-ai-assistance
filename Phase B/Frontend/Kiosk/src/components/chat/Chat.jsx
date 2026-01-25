@@ -22,7 +22,6 @@ import { ICONS } from "@/components/icons/icons.config";
  * @param {Array} messages - Array of message objects: { type: 'user' | 'assistant', content: ReactNode, showConflict: boolean }
  * @param {function} onReplaceProduct - Callback when "Replace" button is clicked on an alternative
  * @param {Array} cartItems - Current cart items (for checking if product is still in cart)
- * @param {string} highlightedProductId - Currently highlighted product ID (for checking if alternatives are still relevant)
  * @param {string} className - Additional CSS classes
  */
 const Chat = ({
@@ -33,7 +32,6 @@ const Chat = ({
   messages = [],
   onReplaceProduct,
   cartItems = [],
-  highlightedProductId = null,
   className = "",
 }) => {
   const scrollContainerRef = useRef(null);
@@ -151,9 +149,11 @@ const Chat = ({
                 </>
               );
             } else if (message.conflictData) {
-              // Check if alternatives are still valid (product still in cart and is the highlighted one)
+              // Check if product is still in cart AND is the current (top) product
+              // Disabled when: removed, replaced, or a new product was scanned
+              const currentProductId = cartItems.length > 0 ? cartItems[0].id : null;
               const isProductInCart = cartItems.some(item => item.id === message.forProductId);
-              const isStillRelevant = isProductInCart && message.forProductId === highlightedProductId;
+              const isCurrentProduct = message.forProductId === currentProductId;
               
               // Render ConflictAlternativesContent for product conflict with alternatives (from barcode scan)
               content = (
@@ -163,13 +163,14 @@ const Chat = ({
                   dietaryConflicts={message.conflictData.dietaryConflicts}
                   alternatives={message.conflictData.alternatives}
                   onReplace={onReplaceProduct}
-                  disabled={!isStillRelevant}
+                  disabled={!isProductInCart || !isCurrentProduct}
                 />
               );
             } else if (message.toolCallData?.name === 'get_ai_alternatives') {
-              // Check if alternatives are still valid (product still in cart and is the highlighted one)
+              // Check if product is still in cart AND is the current (top) product
+              const currentProductId = cartItems.length > 0 ? cartItems[0].id : null;
               const isProductInCart = cartItems.some(item => item.id === message.forProductId);
-              const isStillRelevant = isProductInCart && message.forProductId === highlightedProductId;
+              const isCurrentProduct = message.forProductId === currentProductId;
               
               // Render ProductAlternatives for voice assistant alternatives request
               // Transform alternatives to the format expected by ProductAlternatives
@@ -190,7 +191,7 @@ const Chat = ({
                     <ProductAlternatives
                       alternatives={transformedAlternatives}
                       onReplace={onReplaceProduct}
-                      disabled={!isStillRelevant}
+                      disabled={!isProductInCart || !isCurrentProduct}
                     />
                   )}
                 </div>

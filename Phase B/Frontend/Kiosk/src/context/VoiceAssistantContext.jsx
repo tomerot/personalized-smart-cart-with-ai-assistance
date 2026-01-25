@@ -52,9 +52,6 @@ export function VoiceAssistantProvider({ children }) {
   // Used to highlight the product in the cart during the conversation
   const [highlightedProductId, setHighlightedProductId] = useState(null);
 
-  // Track unread conflict notifications (show red dot on Smart Companion nav)
-  const [hasUnreadConflict, setHasUnreadConflict] = useState(false);
-
   // Tracks if user activity was detected in the current turn
   // Once detected, timer stops for the rest of this turn
   const [activityDetectedInTurn, setActivityDetectedInTurn] = useState(false);
@@ -539,18 +536,7 @@ export function VoiceAssistantProvider({ children }) {
     setMessages(prev => [...prev, messageData]);
     lastSpeakerRef.current = 'assistant';
     
-    // Set unread conflict notification (shows red dot on Smart Companion nav)
-    setHasUnreadConflict(true);
-    
     // TODO: Later - trigger pre-made voice for conflict notification
-  }, []);
-
-  /**
-   * Mark conflict notifications as read (clears the red dot)
-   * Called when user navigates to Smart Companion view
-   */
-  const markConflictsAsRead = useCallback(() => {
-    setHasUnreadConflict(false);
   }, []);
 
   const value = {
@@ -560,7 +546,6 @@ export function VoiceAssistantProvider({ children }) {
     timerProgress,
     messages,
     highlightedProductId,
-    hasUnreadConflict,
     
     // Actions
     toggleConversation,
@@ -569,7 +554,6 @@ export function VoiceAssistantProvider({ children }) {
     clearMessages,
     addMessage,
     addConflictMessage,
-    markConflictsAsRead,
     
     // Setters for external control
     setChatStatus,

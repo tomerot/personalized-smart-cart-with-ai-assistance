@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import Chat from "@/components/chat/Chat";
 import { useVoiceAssistant } from "@/context/VoiceAssistantContext";
 import { useCart } from "@/context/CartContext";
@@ -16,15 +16,9 @@ export default function CompanionView() {
     messages,
     toggleConversation,
     highlightedProductId,
-    markConflictsAsRead,
   } = useVoiceAssistant();
 
   const { cartItems, deleteProduct, addProduct } = useCart();
-
-  // Mark conflicts as read when this view is shown
-  useEffect(() => {
-    markConflictsAsRead();
-  }, [markConflictsAsRead]);
 
   /**
    * Handle replacing a product with an alternative
@@ -57,7 +51,6 @@ export default function CompanionView() {
       messages={messages}
       onReplaceProduct={handleReplaceProduct}
       cartItems={cartItems}
-      highlightedProductId={highlightedProductId}
     />
   );
 }
