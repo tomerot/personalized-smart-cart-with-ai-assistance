@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { UserProvider } from "./context/UserContext";
 import { CartProvider } from "./context/CartContext";
-import { VoiceAssistantProvider } from "./features/smart-companion";
+import { VoiceAssistantProvider } from "./context/VoiceAssistantContext";
 import LandingPage from "./pages/LandingPage";
 import PhoneInputPage from "./pages/PhoneInputPage";
 import OtpInputPage from "./pages/OtpInputPage";

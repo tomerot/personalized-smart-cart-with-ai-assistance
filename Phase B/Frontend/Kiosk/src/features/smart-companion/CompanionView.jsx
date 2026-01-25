@@ -1,5 +1,5 @@
 import Chat from "@/components/chat/Chat";
-import { useVoiceAssistant } from "../context/VoiceAssistantContext";
+import { useVoiceAssistant } from "@/context/VoiceAssistantContext";
 
 /**
  * CompanionView Component
