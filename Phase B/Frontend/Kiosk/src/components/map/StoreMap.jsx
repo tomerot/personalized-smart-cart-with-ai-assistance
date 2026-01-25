@@ -32,60 +32,6 @@ const StoreMap = ({ className = '', markers = [] }) => {
     }
   };
 
-  // Render a marker at a specific position
-  const renderMarker = (marker, index) => {
-    const { x, y, type = 'location', label } = marker;
-    const centerX = x + 0.5;
-    const centerY = y + 0.5;
-
-    if (type === 'location') {
-      // Location pin marker using Material Symbols path
-      return (
-        <g key={`marker-${index}`} className="map-marker location-marker">
-          {/* Location pin icon - scaled and centered on cell */}
-          <g transform={`translate(${centerX}, ${centerY}) scale(0.035) translate(-12, -20)`}>
-            <path
-              d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"
-              fill="#16a34a"
-              stroke="#ffffff"
-              strokeWidth="1"
-            />
-          </g>
-        </g>
-      );
-    }
-
-    if (type === 'route' && label) {
-      // Route marker with number in circle
-      return (
-        <g key={`marker-${index}`} className="map-marker route-marker">
-          <circle
-            cx={centerX}
-            cy={centerY}
-            r={0.4}
-            fill="#16a34a"
-            stroke="#ffffff"
-            strokeWidth={0.05}
-          />
-          <text
-            x={centerX}
-            y={centerY}
-            textAnchor="middle"
-            dominantBaseline="central"
-            fill="#ffffff"
-            fontSize={0.5}
-            fontFamily="Montserrat, sans-serif"
-            fontWeight="600"
-          >
-            {label}
-          </text>
-        </g>
-      );
-    }
-
-    return null;
-  };
-
   return (
     <div className={`store-map-container ${className}`}>
       <div className="store-map">
@@ -109,7 +55,56 @@ const StoreMap = ({ className = '', markers = [] }) => {
           )}
           
           {/* Markers overlay */}
-          {markers.map((marker, index) => renderMarker(marker, index))}
+          {markers.map((marker, index) => {
+            const { x, y, type = 'location', label } = marker;
+            const centerX = x + 0.5;
+            const centerY = y + 0.5;
+            
+            if (type === 'location') {
+              // Simple filled circle marker
+              return (
+                <g key={`marker-${index}`} className="map-marker location-marker">
+                  <circle
+                    cx={centerX}
+                    cy={centerY}
+                    r={0.35}
+                    fill="#16a34a"
+                    stroke="#ffffff"
+                    strokeWidth={0.08}
+                  />
+                </g>
+              );
+            }
+            
+            if (type === 'route' && label) {
+              return (
+                <g key={`marker-${index}`} className="map-marker route-marker">
+                  <circle
+                    cx={centerX}
+                    cy={centerY}
+                    r={0.4}
+                    fill="#16a34a"
+                    stroke="#ffffff"
+                    strokeWidth={0.05}
+                  />
+                  <text
+                    x={centerX}
+                    y={centerY}
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    fill="#ffffff"
+                    fontSize={0.5}
+                    fontFamily="Montserrat, sans-serif"
+                    fontWeight="600"
+                  >
+                    {label}
+                  </text>
+                </g>
+              );
+            }
+            
+            return null;
+          })}
         </svg>
       </div>
     </div>
