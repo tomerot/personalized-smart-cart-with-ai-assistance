@@ -26,7 +26,7 @@ const ProductLocationContent = ({
 
       {/* Map with location marker */}
       {productLocation?.location && (
-        <div className="product-location-map" style={{ height: '310px' }}>
+        <div className="product-location-map">
           <StoreMap markers={markers} />
         </div>
       )}
