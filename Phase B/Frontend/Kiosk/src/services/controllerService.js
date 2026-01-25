@@ -83,10 +83,12 @@ class ControllerService {
 
   /**
    * Start voice assistant call
+   * @param {object} variables - User variables { phone, allergies, dietary_needs }
+   * @param {Array} messages - Previous messages for context
    * @returns {boolean} Success status
    */
-  startVoiceCall() {
-    return voiceControllerService.startCall();
+  startVoiceCall(variables = {}, messages = []) {
+    return voiceControllerService.startCall(variables, messages);
   }
 
   /**

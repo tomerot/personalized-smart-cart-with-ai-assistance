@@ -14,18 +14,23 @@ const WS_CONFIG = {
   MAX_RECONNECT_ATTEMPTS: 5,
 };
 
-// Command Types
+// Command Types - matches va_controller/client/commands.py
 export const VOICE_COMMANDS = {
-  START_CALL: { cmd_type: 'start-call' },
-  STOP_CALL: { cmd_type: 'stop-call' },
-  END_SESSION: { cmd_type: 'end-session' },
+  START_CALL: 'start-call',
+  STOP_CALL: 'stop-call',
+  END_SESSION: 'end-session',
 };
 
-// Event Types
+// Event Types - matches va_controller/vapi/events.py
 export const VOICE_EVENT_TYPES = {
-  SPEECH_UPDATE: 'speech-update',
-  TRANSCRIPT: 'transcript',
+  ASSISTANT_SPEAKING: 'assistant-speaking',
+  USER_TRANSCRIPT: 'user-transcript',
   MODEL_OUTPUT: 'model-output',
+  TOOL_CALL: 'tool-call',
+  TOOL_CALL_RESULT: 'tool-call-result',
+  START_CALL: 'start-call',
+  END_CALL: 'end-call',
+  USER_ACTIVITY_DETECTED: 'user-activity-detected',
 };
 
 class VoiceControllerService {
@@ -38,6 +43,8 @@ class VoiceControllerService {
 
     // Reconnection tracking
     this.reconnectAttempts = 0;
+    this.isConnecting = false; // Prevent multiple simultaneous connection attempts
+    this.reconnectTimer = null;
 
     // Event listeners
     this.eventListeners = [];
@@ -49,8 +56,21 @@ class VoiceControllerService {
    * @returns {Promise<boolean>} Success status
    */
   connect() {
+    // Prevent multiple simultaneous connection attempts
+    if (this.isConnecting) {
+      console.log('Already connecting, skipping duplicate connection attempt');
+      return Promise.resolve(this.connected);
+    }
+
+    // If already connected, return success
+    if (this.connected && this.ws) {
+      console.log('Already connected to Voice Assistant');
+      return Promise.resolve(true);
+    }
+
     return new Promise((resolve) => {
       try {
+        this.isConnecting = true;
         console.log(`Connecting to Voice Assistant Controller at ${WS_CONFIG.URL}...`);
         
         this.ws = new WebSocket(WS_CONFIG.URL);
@@ -58,6 +78,7 @@ class VoiceControllerService {
         this.ws.onopen = () => {
           console.log('✓ Connected to Voice Assistant Controller');
           this.connected = true;
+          this.isConnecting = false;
           this.reconnectAttempts = 0;
           this._notifyConnectionListeners(true);
           resolve(true);
@@ -74,13 +95,25 @@ class VoiceControllerService {
         this.ws.onclose = () => {
           console.warn('Voice Assistant connection closed');
           this.connected = false;
+          this.isConnecting = false;
           this._notifyConnectionListeners(false);
           
-          // Attempt to reconnect
+          // Clear any existing reconnect timer
+          if (this.reconnectTimer) {
+            clearTimeout(this.reconnectTimer);
+            this.reconnectTimer = null;
+          }
+          
+          // Attempt to reconnect only if not manually disconnected
           if (this.reconnectAttempts < WS_CONFIG.MAX_RECONNECT_ATTEMPTS) {
             this.reconnectAttempts++;
             console.log(`Attempting to reconnect to Voice Assistant (${this.reconnectAttempts}/${WS_CONFIG.MAX_RECONNECT_ATTEMPTS})...`);
-            setTimeout(() => this.connect(), WS_CONFIG.RECONNECT_DELAY);
+            this.reconnectTimer = setTimeout(() => {
+              this.reconnectTimer = null;
+              this.connect();
+            }, WS_CONFIG.RECONNECT_DELAY);
+          } else {
+            console.error('Max reconnection attempts reached');
           }
           
           resolve(false);
@@ -90,6 +123,7 @@ class VoiceControllerService {
         setTimeout(() => {
           if (!this.connected) {
             console.error('Voice Assistant connection timeout');
+            this.isConnecting = false;
             this.ws?.close();
             resolve(false);
           }
@@ -97,6 +131,7 @@ class VoiceControllerService {
 
       } catch (error) {
         console.error('Failed to connect to Voice Assistant:', error);
+        this.isConnecting = false;
         resolve(false);
       }
     });
@@ -162,11 +197,17 @@ class VoiceControllerService {
 
   /**
    * Start voice assistant call
+   * @param {object} variables - User variables { phone, allergies, dietary_needs, barcode }
+   * @param {Array} messages - Previous messages for context [{ role: 'user'|'assistant', content: string }]
    * @returns {boolean} Success status
    */
-  startCall() {
-    console.log('Starting voice assistant call...');
-    return this._sendCommand(VOICE_COMMANDS.START_CALL);
+  startCall(variables, messages = []) {
+    console.log('Starting voice assistant call with variables:', variables);
+    return this._sendCommand({
+      cmd_type: VOICE_COMMANDS.START_CALL,
+      variables: variables,
+      messages: messages,
+    });
   }
 
   /**
@@ -175,7 +216,7 @@ class VoiceControllerService {
    */
   stopCall() {
     console.log('Stopping voice assistant call...');
-    return this._sendCommand(VOICE_COMMANDS.STOP_CALL);
+    return this._sendCommand({ cmd_type: VOICE_COMMANDS.STOP_CALL });
   }
 
   /**
@@ -222,15 +263,25 @@ class VoiceControllerService {
   disconnect() {
     console.log('Disconnecting from Voice Assistant controller...');
 
+    // Clear any pending reconnection attempts
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+
+    // Stop reconnection attempts
+    this.reconnectAttempts = WS_CONFIG.MAX_RECONNECT_ATTEMPTS;
+
     // Send end session command before closing
     if (this.connected) {
-      this._sendCommand(VOICE_COMMANDS.END_SESSION);
+      this._sendCommand({ cmd_type: VOICE_COMMANDS.END_SESSION });
     }
 
     // Close connection
     this.ws?.close();
 
     this.connected = false;
+    this.isConnecting = false;
     this.ws = null;
 
     console.log('Disconnected from Voice Assistant controller');
