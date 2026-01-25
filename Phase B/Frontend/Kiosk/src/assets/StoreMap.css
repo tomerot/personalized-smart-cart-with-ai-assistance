@@ -64,14 +64,15 @@
 }
 
 .product-location-map {
-  margin-top: 4px;
+  margin-top: 8px;
   margin-left: -12px;
   margin-right: -12px;
-  border-radius: 12px;
+  margin-bottom: -12px;
+  border-radius: 12px 12px 0 0;
   overflow: hidden;
   width: calc(100% + 24px);
   height: 0;
-  padding-bottom: 60%; /* slightly taller aspect ratio to fill more space */
+  padding-bottom: 50%; /* slightly larger to fill chat bubble */
   position: relative;
 }
 
