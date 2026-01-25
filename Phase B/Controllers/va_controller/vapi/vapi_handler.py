@@ -183,6 +183,7 @@ class VapiHandler:
             if self.silence_timer: # In case user activity is detected
                 self.__stop_silence_timer()
                 logger.info("User voice activity detected. Stopped silence timer.")
+                await self.event_callback(UserActivityDetectedEvent())
             if not event.is_final: # No need to send partial transcripts
                 return
 

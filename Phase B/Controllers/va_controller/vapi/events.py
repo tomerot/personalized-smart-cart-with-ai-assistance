@@ -56,3 +56,8 @@ class EndCallEvent(Event):
     def __init__(self, expected: bool):
         self.event_type = "end-call"
         self.expected = expected
+
+class UserActivityDetectedEvent(Event):
+    """Event indicating that user activity has been detected."""
+    def __init__(self):
+        self.event_type = "user-activity-detected"
