@@ -58,11 +58,6 @@ class EndCallEvent(Event):
         self.expected = expected
         self.reason = reason # Used in case of expected termination
 
-# class PolicyViolationHangupEvent(Event):
-#     """Event indicating that a call was terminated by VAPI due to policy violation."""
-#     def __init__(self):
-#         self.event_type = "policy-violation-hangup"
-
 class UserActivityDetectedEvent(Event):
     """Event indicating that user activity has been detected."""
     def __init__(self):
