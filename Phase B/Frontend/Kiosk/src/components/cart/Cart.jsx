@@ -13,10 +13,12 @@ import { ICONS } from "@/components/icons/icons.config";
  * Supports inverted touch scrolling: drag up to scroll down, drag down to scroll up.
  *
  * @param {function} onCheckout - Callback when checkout button is clicked
+ * @param {string|number} highlightedProductId - ID of product to highlight (for voice assistant context)
  * @param {string} className - Additional CSS classes
  */
 const Cart = ({
   onCheckout,
+  highlightedProductId = null,
   className = "",
 }) => {
   const { cartItems, totalPrice, increaseQuantity, decreaseQuantity, deleteProduct } = useCart();
@@ -24,6 +26,9 @@ const Cart = ({
   const [isDragging, setIsDragging] = useState(false);
   const [startY, setStartY] = useState(0);
   const [scrollTop, setScrollTop] = useState(0);
+
+  // Debug: Log highlighted product
+  console.log('📦 Cart - highlightedProductId:', highlightedProductId, 'cartItems:', cartItems.length);
 
   // Handle mouse/touch start
   const handleDragStart = useCallback((e) => {
@@ -167,6 +172,7 @@ const Cart = ({
                 onIncrease={() => increaseQuantity(product.id)}
                 onDecrease={() => decreaseQuantity(product.id)}
                 onDelete={() => deleteProduct(product.id)}
+                isHighlighted={highlightedProductId === product.id}
               />
             ))
           )}

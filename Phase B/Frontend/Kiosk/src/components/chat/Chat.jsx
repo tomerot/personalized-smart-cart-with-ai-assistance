@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import ChatBar from "./ChatBar";
 import ChatBubble from "./ChatBubble";
 import { ICONS } from "@/components/icons/icons.config";
@@ -30,6 +30,18 @@ const Chat = ({
   const [isDragging, setIsDragging] = useState(false);
   const [startY, setStartY] = useState(0);
   const [scrollTop, setScrollTop] = useState(0);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (container && messages.length > 0) {
+      // Smooth scroll to bottom
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  }, [messages]);
 
   // Handle mouse/touch start
   const handleDragStart = useCallback((e) => {

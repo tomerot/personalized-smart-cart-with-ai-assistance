@@ -6,6 +6,7 @@ import Icon from "@/components/icons/ICON";
 import Cart from "@/components/cart/Cart";
 import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 import { useUser } from "@/context/UserContext";
+import { useVoiceAssistant } from "@/context/VoiceAssistantContext";
 import { NAV_VIEWS, VIEW_CONFIG, useViewTransition } from "@/features/navigation";
 import { CompanionView } from "@/features/smart-companion";
 import { GroceryListView } from "@/features/grocery-list";
@@ -23,6 +24,7 @@ import { GroceryListView } from "@/features/grocery-list";
 function DashboardLayout({ children }) {
   const { hasShoppingList } = useUser();
   const { activeView, setActiveView, isTransitioning, displayView } = useViewTransition(NAV_VIEWS.GROCERY_LIST);
+  const { highlightedProductId } = useVoiceAssistant();
   
   // Log hasShoppingList only once per session
   const hasLoggedShoppingList = useRef(false);
@@ -254,7 +256,7 @@ function DashboardLayout({ children }) {
 
       {/* My Cart section - Always visible, integrated with background */}
       <div className="shrink-0 w-[580px] h-full ml-6">
-        <Cart onCheckout={handleCheckout} />
+        <Cart onCheckout={handleCheckout} highlightedProductId={highlightedProductId} />
       </div>
     </div>
   );

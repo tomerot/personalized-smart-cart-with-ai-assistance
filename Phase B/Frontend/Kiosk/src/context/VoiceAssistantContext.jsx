@@ -41,6 +41,10 @@ export function VoiceAssistantProvider({ children }) {
   // Track last speaker for transcription concatenation
   const lastSpeakerRef = useRef(null); // 'user' | 'assistant' | null
 
+  // Track the product ID that was sent when starting the conversation
+  // Used to highlight the product in the cart during the conversation
+  const [highlightedProductId, setHighlightedProductId] = useState(null);
+
   // Tracks if user activity was detected in the current turn
   // Once detected, timer stops for the rest of this turn
   const [activityDetectedInTurn, setActivityDetectedInTurn] = useState(false);
@@ -113,6 +117,20 @@ export function VoiceAssistantProvider({ children }) {
       sessionStorage.setItem('voiceMessages', JSON.stringify(messages));
     }
   }, [messages]);
+
+  /**
+   * Always track the top product in cart for highlighting
+   * The top product is the one whose barcode will be sent to voice assistant
+   */
+  useEffect(() => {
+    if (cartItems.length > 0) {
+      setHighlightedProductId(cartItems[0].id);
+      console.log('🎨 Top product highlighted:', cartItems[0].name, 'ID:', cartItems[0].id);
+    } else {
+      setHighlightedProductId(null);
+      console.log('🎨 Cart empty, no highlight');
+    }
+  }, [cartItems]);
 
   /**
    * Handle incoming events from va_controller
@@ -340,6 +358,7 @@ export function VoiceAssistantProvider({ children }) {
     callStartedRef.current = false;
     isFirstUserMessageInCallRef.current = true;
     pendingAssistantOutputRef.current = '';
+    // Don't clear highlightedProductId - it should stay on the top product
   }, []);
 
   /**
@@ -376,6 +395,7 @@ export function VoiceAssistantProvider({ children }) {
     chatStatus,
     timerProgress,
     messages,
+    highlightedProductId,
     
     // Actions
     toggleConversation,
