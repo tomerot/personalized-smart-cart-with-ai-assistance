@@ -1,6 +1,8 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import ChatBar from "./ChatBar";
 import ChatBubble from "./ChatBubble";
+import ProductLocationContent from "./ProductLocationContent";
+import ShimmerText from "./ShimmerText";
 import { ICONS } from "@/components/icons/icons.config";
 
 /**
@@ -128,20 +130,45 @@ const Chat = ({
             </p>
           </div>
         ) : (
-          messages.map((message, index) => (
-            <ChatBubble
-              key={index}
-              speakerIcon={message.type === 'user' ? ICONS.PERSON : ICONS.COMPANION}
-              speakerLabel={message.type === 'user' ? 'You' : 'Smart Companion'}
-              backgroundColor={message.type === 'user' ? '#e3e3e3' : '#e4fcec'}
-              iconColor={message.type === 'user' ? '#1f2937' : '#1f2937'}
-              textColor="#1f2937"
-              showConflict={message.showConflict || false}
-              conflictIconColor="#dc2626"
-            >
-              {message.content}
-            </ChatBubble>
-          ))
+          messages.map((message, index) => {
+            // Determine what content to render
+            let content;
+            
+            if (message.isLoading && message.loadingText) {
+              // Show shimmer loading text
+              content = (
+                <>
+                  {message.content && <>{message.content} </>}
+                  <ShimmerText text={message.loadingText} />
+                </>
+              );
+            } else if (message.toolCallData?.name === 'get_product_info') {
+              // Render ProductLocationContent for product location results
+              content = (
+                <ProductLocationContent
+                  responseText={message.content}
+                  productLocation={message.toolCallData.productLocation}
+                />
+              );
+            } else {
+              content = message.content;
+            }
+
+            return (
+              <ChatBubble
+                key={index}
+                speakerIcon={message.type === 'user' ? ICONS.PERSON : ICONS.COMPANION}
+                speakerLabel={message.type === 'user' ? 'You' : 'Smart Companion'}
+                backgroundColor={message.type === 'user' ? '#e3e3e3' : '#e4fcec'}
+                iconColor={message.type === 'user' ? '#1f2937' : '#1f2937'}
+                textColor="#1f2937"
+                showConflict={message.showConflict || false}
+                conflictIconColor="#dc2626"
+              >
+                {content}
+              </ChatBubble>
+            );
+          })
         )}
       </div>
 

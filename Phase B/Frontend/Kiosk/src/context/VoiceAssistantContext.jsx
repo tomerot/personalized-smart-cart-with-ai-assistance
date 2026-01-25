@@ -3,7 +3,6 @@ import { voiceControllerService, VOICE_EVENT_TYPES } from "@/services/voiceContr
 import { useUser } from "@/context/UserContext";
 import { useCart } from "@/context/CartContext";
 import { getToolCallMessage } from "@/data/toolCallMessages";
-import ShimmerText from "@/components/chat/ShimmerText";
 
 const VoiceAssistantContext = createContext();
 
@@ -43,8 +42,11 @@ export function VoiceAssistantProvider({ children }) {
   // Track last speaker for transcription concatenation
   const lastSpeakerRef = useRef(null); // 'user' | 'assistant' | null
 
-  // Track active tool calls - stores { executionId: toolName } mapping
+  // Track active tool calls - stores { executionId: { name: toolName, result?: parsedResult } } mapping
   const activeToolCallsRef = useRef(new Map());
+  
+  // Store the last tool call result data for rendering with the assistant response
+  const lastToolCallResultRef = useRef(null);
 
   // Track the product ID that was sent when starting the conversation
   // Used to highlight the product in the cart during the conversation
@@ -206,6 +208,31 @@ export function VoiceAssistantProvider({ children }) {
             const assistantContent = pendingAssistantOutputRef.current;
             pendingAssistantOutputRef.current = '';
             
+            // Check if we have a tool call result to render
+            const toolResult = lastToolCallResultRef.current;
+            lastToolCallResultRef.current = null; // Clear after use
+            
+            // Build the message object - store data, not React components (for sessionStorage serialization)
+            let messageData;
+            if (toolResult && toolResult.name === 'get_product_info') {
+              // Store the data needed to render ProductLocationContent
+              messageData = {
+                type: 'assistant',
+                content: assistantContent,
+                showConflict: false,
+                toolCallData: {
+                  name: toolResult.name,
+                  productLocation: toolResult.data
+                }
+              };
+            } else {
+              messageData = {
+                type: 'assistant',
+                content: assistantContent,
+                showConflict: false
+              };
+            }
+            
             setMessages(prev => {
               // Check if the last message has a tool call (shimmer text)
               if (prev.length > 0) {
@@ -216,17 +243,13 @@ export function VoiceAssistantProvider({ children }) {
                   console.log('Replacing shimmer text with actual tool result');
                   return [
                     ...prev.slice(0, -1),
-                    { 
-                      type: 'assistant', 
-                      content: assistantContent, 
-                      showConflict: false 
-                      // Remove toolCallId to indicate content has been replaced
-                    }
+                    messageData
                   ];
                 }
                 
                 // Check if we should concatenate to the last message (normal flow)
-                if (lastSpeakerRef.current === 'assistant' && lastMessage.type === 'assistant') {
+                // Only concatenate plain text, not special components
+                if (lastSpeakerRef.current === 'assistant' && lastMessage.type === 'assistant' && !toolResult && !lastMessage.toolCallData) {
                   // Append to existing assistant message
                   return [
                     ...prev.slice(0, -1),
@@ -237,7 +260,7 @@ export function VoiceAssistantProvider({ children }) {
               
               // Add new assistant message
               lastSpeakerRef.current = 'assistant';
-              return [...prev, { type: 'assistant', content: assistantContent, showConflict: false }];
+              return [...prev, messageData];
             });
           }
         } else {
@@ -298,40 +321,37 @@ export function VoiceAssistantProvider({ children }) {
         
         const toolMessage = getToolCallMessage(event.name);
         if (toolMessage) {
-          // Store the active tool call
-          activeToolCallsRef.current.set(event.execution_id, event.name);
+          // Store the active tool call with its name
+          activeToolCallsRef.current.set(event.execution_id, { name: event.name });
           
-          // Add a temporary assistant message with shimmer text
+          // Add a temporary assistant message with loading state (shimmer will be rendered in Chat)
           setMessages(prev => {
             // Check if we should concatenate to the last message
             if (lastSpeakerRef.current === 'assistant' && prev.length > 0) {
               const lastMessage = prev[prev.length - 1];
-              if (lastMessage.type === 'assistant') {
-                // Append to existing assistant message with shimmer
+              if (lastMessage.type === 'assistant' && !lastMessage.isLoading) {
+                // Append loading state to existing assistant message
                 return [
                   ...prev.slice(0, -1),
                   { 
                     ...lastMessage, 
-                    content: (
-                      <>
-                        {lastMessage.content}
-                        {' '}
-                        <ShimmerText text={toolMessage} />
-                      </>
-                    ),
-                    toolCallId: event.execution_id // Mark this message as having a tool call
+                    isLoading: true,
+                    loadingText: toolMessage,
+                    toolCallId: event.execution_id
                   }
                 ];
               }
             }
             
-            // Add new assistant message with shimmer
+            // Add new assistant message with loading state
             lastSpeakerRef.current = 'assistant';
             return [...prev, { 
               type: 'assistant', 
-              content: <ShimmerText text={toolMessage} />,
+              content: '',
               showConflict: false,
-              toolCallId: event.execution_id // Mark this message as having a tool call
+              isLoading: true,
+              loadingText: toolMessage,
+              toolCallId: event.execution_id
             }];
           });
         }
@@ -340,6 +360,19 @@ export function VoiceAssistantProvider({ children }) {
       case VOICE_EVENT_TYPES.TOOL_CALL_RESULT:
         // Tool call completed - the result will be spoken by the assistant
         console.log('Tool call result:', event.name, event.result);
+        
+        // Parse and store the result for use when rendering the assistant message
+        if (event.name === 'get_product_info') {
+          try {
+            const parsedResult = typeof event.result === 'string' 
+              ? JSON.parse(event.result) 
+              : event.result;
+            lastToolCallResultRef.current = { name: event.name, data: parsedResult };
+          } catch (e) {
+            console.error('Failed to parse tool call result:', e);
+            lastToolCallResultRef.current = null;
+          }
+        }
         
         // Remove the tool call from active tracking
         activeToolCallsRef.current.delete(event.execution_id);

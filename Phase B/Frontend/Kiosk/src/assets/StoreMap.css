@@ -4,27 +4,28 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px;
 }
 
 .store-map {
-  width: 100%;
   height: 100%;
+  
+  max-width: 100%;
   background: white;
   border-radius: 16px;
   border: 1px solid #e0e0e0;
-  padding: 16px;
+  padding: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   display: flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
 }
 
 .store-map-svg {
   width: 100%;
   height: 100%;
-  max-width: 100%;
-  max-height: 100%;
+  display: block;
+  shape-rendering: crispEdges;
 }
 
 /* Cell colors */
@@ -33,10 +34,36 @@
 }
 
 .cell-wall {
-  fill: #4a4a4a;
+  fill: #6b6b6b;
 }
 
 .cell-obstacle {
-  fill: #b0b0b0;
+  fill: #b8b8b8;
+}
+
+/* Marker styles */
+.map-marker {
+  pointer-events: none;
+  shape-rendering: geometricPrecision; /* Override crispEdges for smooth curves on markers */
+}
+
+.location-marker path {
+  filter: drop-shadow(0 0.05px 0.1px rgba(0, 0, 0, 0.3));
+}
+
+.route-marker circle {
+  filter: drop-shadow(0 0.05px 0.1px rgba(0, 0, 0, 0.3));
+}
+
+/* Product location content in chat bubbles */
+.product-location-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.product-location-map {
+  margin-top: 4px;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
