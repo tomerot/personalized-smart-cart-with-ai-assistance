@@ -9,6 +9,7 @@ import { useUser } from "@/context/UserContext";
 import ShimmerText from "@/components/chat/ShimmerText";
 import ChatBubble from "@/components/chat/ChatBubble";
 import ProductAlternatives from "@/components/chat/ProductAlternatives";
+import ConflictAlternativesContent from "@/components/chat/ConflictAlternativesContent";
 import { TOOL_CALL_MESSAGES } from "@/data/toolCallMessages";
 
 // Navigation views that change the content area (not modals)
@@ -80,6 +81,26 @@ const SAMPLE_ALTERNATIVES_3 = [
     company: "Telma",
     price: 11.90,
     imageUrl: "https://images.unsplash.com/photo-1587049352851-8d4e89133924?w=100&h=100&fit=crop",
+  },
+];
+
+// Sample conflict data for testing ConflictAlternativesContent
+const SAMPLE_CONFLICT_ALTERNATIVES = [
+  {
+    barcode: "7290000123456",
+    name: "Organic Tahini Paste",
+    size: "350g",
+    company: "Achva",
+    price: 18.90,
+    image_url: "https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=100&h=100&fit=crop",
+  },
+  {
+    barcode: "7290000123457",
+    name: "Sunflower Seed Butter",
+    size: "300g",
+    company: "Osem",
+    price: 22.50,
+    image_url: "https://images.unsplash.com/photo-1612871689353-cbc485bb0bcf?w=100&h=100&fit=crop",
   },
 ];
 
@@ -483,6 +504,138 @@ function Test() {
                         alternatives={SAMPLE_ALTERNATIVES_3}
                         onReplace={(product) => console.log("Replace with:", product)}
                       />
+                    </ChatBubble>
+                  </div>
+                </div>
+              </div>
+
+              {/* Conflict Alternatives Demo Section */}
+              <div className="p-4 rounded-lg bg-gray-50 border border-gray-200">
+                <h2 className="font-semibold text-gray-700 mb-3">Conflict Alternatives Component</h2>
+                <p className="text-sm text-gray-600 mb-4">
+                  Shows when a scanned product conflicts with user allergies or dietary needs.
+                  Includes conflict tags and product alternatives.
+                </p>
+                
+                <div className="space-y-6">
+                  {/* Conflict with Allergens */}
+                  <div>
+                    <div className="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded inline-block mb-3">
+                      Allergen Conflict (with warning border)
+                    </div>
+                    <ChatBubble
+                      speakerIcon={ICONS.COMPANION}
+                      speakerLabel="Smart Companion"
+                      backgroundColor="#e4fcec"
+                      iconColor="#1f2937"
+                      textColor="#1f2937"
+                      showConflict={true}
+                      conflictIconColor="#dc2626"
+                    >
+                      <ConflictAlternativesContent
+                        message="I found a conflict with at least one of your dietary needs or allergies:"
+                        allergenConflicts={["sesame", "peanuts"]}
+                        dietaryConflicts={[]}
+                        alternatives={SAMPLE_CONFLICT_ALTERNATIVES}
+                        onReplace={(product) => console.log("Replace with:", product)}
+                      />
+                    </ChatBubble>
+                  </div>
+
+                  {/* Conflict with Dietary Needs */}
+                  <div>
+                    <div className="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded inline-block mb-3">
+                      Dietary Conflict
+                    </div>
+                    <ChatBubble
+                      speakerIcon={ICONS.COMPANION}
+                      speakerLabel="Smart Companion"
+                      backgroundColor="#e4fcec"
+                      iconColor="#1f2937"
+                      textColor="#1f2937"
+                      showConflict={true}
+                      conflictIconColor="#dc2626"
+                    >
+                      <ConflictAlternativesContent
+                        message="I found a conflict with at least one of your dietary needs or allergies:"
+                        allergenConflicts={[]}
+                        dietaryConflicts={["vegan", "gluten-free"]}
+                        alternatives={SAMPLE_CONFLICT_ALTERNATIVES}
+                        onReplace={(product) => console.log("Replace with:", product)}
+                      />
+                    </ChatBubble>
+                  </div>
+
+                  {/* Mixed Conflicts */}
+                  <div>
+                    <div className="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded inline-block mb-3">
+                      Mixed Conflicts (Allergens + Dietary)
+                    </div>
+                    <ChatBubble
+                      speakerIcon={ICONS.COMPANION}
+                      speakerLabel="Smart Companion"
+                      backgroundColor="#e4fcec"
+                      iconColor="#1f2937"
+                      textColor="#1f2937"
+                      showConflict={true}
+                      conflictIconColor="#dc2626"
+                    >
+                      <ConflictAlternativesContent
+                        message="I found a conflict with at least one of your dietary needs or allergies:"
+                        allergenConflicts={["sesame"]}
+                        dietaryConflicts={["vegan"]}
+                        alternatives={SAMPLE_CONFLICT_ALTERNATIVES}
+                        onReplace={(product) => console.log("Replace with:", product)}
+                      />
+                    </ChatBubble>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Voice Assistant Alternatives Request Demo */}
+              <div className="p-4 rounded-lg bg-gray-50 border border-gray-200">
+                <h2 className="font-semibold text-gray-700 mb-3">Voice Assistant Alternatives Request</h2>
+                <p className="text-sm text-gray-600 mb-4">
+                  When user asks the Smart Companion for alternatives via voice. Shows shimmer while loading,
+                  then displays explanation + alternatives (no conflict styling).
+                </p>
+                
+                <div className="space-y-6">
+                  {/* Shimmer Loading State */}
+                  <div>
+                    <div className="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded inline-block mb-3">
+                      Loading State (Shimmer) - get_ai_alternatives tool call
+                    </div>
+                    <ChatBubble
+                      speakerIcon={ICONS.COMPANION}
+                      speakerLabel="Smart Companion"
+                      backgroundColor="#e4fcec"
+                      iconColor="#1f2937"
+                      textColor="#1f2937"
+                    >
+                      <ShimmerText text="Searching for suitable alternatives..." />
+                    </ChatBubble>
+                  </div>
+
+                  {/* Result State */}
+                  <div>
+                    <div className="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded inline-block mb-3">
+                      Result State - explanation + alternatives
+                    </div>
+                    <ChatBubble
+                      speakerIcon={ICONS.COMPANION}
+                      speakerLabel="Smart Companion"
+                      backgroundColor="#e4fcec"
+                      iconColor="#1f2937"
+                      textColor="#1f2937"
+                    >
+                      <div className="space-y-3">
+                        <p>I found some healthier alternatives that are lower in sodium and have less fat. Here are my recommendations:</p>
+                        <ProductAlternatives
+                          alternatives={SAMPLE_ALTERNATIVES_2}
+                          onReplace={(product) => console.log("Replace with:", product)}
+                        />
+                      </div>
                     </ChatBubble>
                   </div>
                 </div>

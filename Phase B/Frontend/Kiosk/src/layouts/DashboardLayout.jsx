@@ -24,7 +24,7 @@ import { GroceryListView } from "@/features/grocery-list";
 function DashboardLayout({ children }) {
   const { hasShoppingList } = useUser();
   const { activeView, setActiveView, isTransitioning, displayView } = useViewTransition(NAV_VIEWS.GROCERY_LIST);
-  const { highlightedProductId } = useVoiceAssistant();
+  const { highlightedProductId, addConflictMessage, hasUnreadConflict } = useVoiceAssistant();
   
   // Log hasShoppingList only once per session
   const hasLoggedShoppingList = useRef(false);
@@ -42,7 +42,6 @@ function DashboardLayout({ children }) {
     onScanSuccess: (product, hasConflict) => {
       console.log("Product scanned:", product.name);
       if (hasConflict) {
-        // TODO: Show conflict modal/notification to user
         console.log("⚠️ Product has conflict with user preferences");
       }
     },
@@ -51,9 +50,18 @@ function DashboardLayout({ children }) {
       // TODO: Show error notification to user
     },
     onConflict: ({ product, conflict, alternatives }) => {
-      // TODO: Show alternatives modal with conflict details
-      console.log("Conflict details:", conflict);
+      console.log("Conflict detected:", conflict);
       console.log(`${alternatives.length} alternatives available`);
+      
+      // Add conflict message to Smart Companion chat
+      addConflictMessage({
+        originalProduct: product.originalProduct || product,
+        conflict: conflict,
+        alternatives: alternatives,
+      });
+      
+      // Switch to Smart Companion view to show the conflict
+      setActiveView(NAV_VIEWS.COMPANION);
     },
   });
 
@@ -123,6 +131,7 @@ function DashboardLayout({ children }) {
           inactiveIconWeight={200}
           activeLabelFontWeight={500}
           inactiveLabelFontWeight={300}
+          showNotificationDot={hasUnreadConflict && activeView !== NAV_VIEWS.COMPANION}
         />
         <NavRailButton
           icon={ICONS.DISCOUNT}

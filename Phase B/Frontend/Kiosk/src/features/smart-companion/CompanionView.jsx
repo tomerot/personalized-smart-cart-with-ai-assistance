@@ -1,5 +1,8 @@
+import { useCallback, useEffect } from "react";
 import Chat from "@/components/chat/Chat";
 import { useVoiceAssistant } from "@/context/VoiceAssistantContext";
+import { useCart } from "@/context/CartContext";
+import { productService } from "@/services/productService";
 
 /**
  * CompanionView Component
@@ -12,7 +15,38 @@ export default function CompanionView() {
     timerProgress,
     messages,
     toggleConversation,
+    highlightedProductId,
+    markConflictsAsRead,
   } = useVoiceAssistant();
+
+  const { cartItems, deleteProduct, addProduct } = useCart();
+
+  // Mark conflicts as read when this view is shown
+  useEffect(() => {
+    markConflictsAsRead();
+  }, [markConflictsAsRead]);
+
+  /**
+   * Handle replacing a product with an alternative
+   * Removes the original product from cart and adds the alternative
+   */
+  const handleReplaceProduct = useCallback((alternative) => {
+    console.log("Replacing product with alternative:", alternative);
+    
+    // The highlighted product is the one that caused the conflict
+    if (highlightedProductId) {
+      // Remove the original product
+      deleteProduct(highlightedProductId);
+    }
+    
+    // Add the alternative product to cart
+    // Use originalProduct if available (full product data), otherwise use alternative directly
+    const productData = alternative.originalProduct || alternative;
+    const cartItem = productService.transformToCartItem(productData);
+    addProduct(cartItem);
+    
+    console.log("Product replaced successfully:", cartItem.name);
+  }, [highlightedProductId, deleteProduct, addProduct]);
 
   return (
     <Chat
@@ -21,6 +55,9 @@ export default function CompanionView() {
       status={chatStatus}
       timerProgress={timerProgress}
       messages={messages}
+      onReplaceProduct={handleReplaceProduct}
+      cartItems={cartItems}
+      highlightedProductId={highlightedProductId}
     />
   );
 }

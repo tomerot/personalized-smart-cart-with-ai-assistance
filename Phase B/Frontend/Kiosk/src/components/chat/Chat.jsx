@@ -2,6 +2,8 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import ChatBar from "./ChatBar";
 import ChatBubble from "./ChatBubble";
 import ProductLocationContent from "./ProductLocationContent";
+import ConflictAlternativesContent from "./ConflictAlternativesContent";
+import ProductAlternatives from "./ProductAlternatives";
 import ShimmerText from "./ShimmerText";
 import { ICONS } from "@/components/icons/icons.config";
 
@@ -18,6 +20,9 @@ import { ICONS } from "@/components/icons/icons.config";
  * @param {string} status - Current status: 'idle', 'connecting', 'assistant', 'user'
  * @param {number} timerProgress - Progress of inactivity timer (0-100)
  * @param {Array} messages - Array of message objects: { type: 'user' | 'assistant', content: ReactNode, showConflict: boolean }
+ * @param {function} onReplaceProduct - Callback when "Replace" button is clicked on an alternative
+ * @param {Array} cartItems - Current cart items (for checking if product is still in cart)
+ * @param {string} highlightedProductId - Currently highlighted product ID (for checking if alternatives are still relevant)
  * @param {string} className - Additional CSS classes
  */
 const Chat = ({
@@ -26,6 +31,9 @@ const Chat = ({
   status = 'idle',
   timerProgress = 0,
   messages = [],
+  onReplaceProduct,
+  cartItems = [],
+  highlightedProductId = null,
   className = "",
 }) => {
   const scrollContainerRef = useRef(null);
@@ -141,6 +149,51 @@ const Chat = ({
                   {message.content && <>{message.content} </>}
                   <ShimmerText text={message.loadingText} />
                 </>
+              );
+            } else if (message.conflictData) {
+              // Check if alternatives are still valid (product still in cart and is the highlighted one)
+              const isProductInCart = cartItems.some(item => item.id === message.forProductId);
+              const isStillRelevant = isProductInCart && message.forProductId === highlightedProductId;
+              
+              // Render ConflictAlternativesContent for product conflict with alternatives (from barcode scan)
+              content = (
+                <ConflictAlternativesContent
+                  message={message.content}
+                  allergenConflicts={message.conflictData.allergenConflicts}
+                  dietaryConflicts={message.conflictData.dietaryConflicts}
+                  alternatives={message.conflictData.alternatives}
+                  onReplace={onReplaceProduct}
+                  disabled={!isStillRelevant}
+                />
+              );
+            } else if (message.toolCallData?.name === 'get_ai_alternatives') {
+              // Check if alternatives are still valid (product still in cart and is the highlighted one)
+              const isProductInCart = cartItems.some(item => item.id === message.forProductId);
+              const isStillRelevant = isProductInCart && message.forProductId === highlightedProductId;
+              
+              // Render ProductAlternatives for voice assistant alternatives request
+              // Transform alternatives to the format expected by ProductAlternatives
+              const transformedAlternatives = (message.toolCallData.alternatives || []).map(product => ({
+                id: product.barcode,
+                name: product.name,
+                size: product.size,
+                company: product.company,
+                price: product.price,
+                imageUrl: product.image_url,
+                originalProduct: product,
+              }));
+              
+              content = (
+                <div className="space-y-3">
+                  <p>{message.content}</p>
+                  {transformedAlternatives.length > 0 && (
+                    <ProductAlternatives
+                      alternatives={transformedAlternatives}
+                      onReplace={onReplaceProduct}
+                      disabled={!isStillRelevant}
+                    />
+                  )}
+                </div>
               );
             } else if (message.toolCallData?.name === 'get_product_info') {
               // Render ProductLocationContent for product location results

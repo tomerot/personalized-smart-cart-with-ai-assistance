@@ -30,6 +30,7 @@ import Icon from "@/components/icons/ICON";
  * @param {number} activeLabelFontWeight - Font weight of the label when active (default: 700)
  * @param {number} inactiveLabelFontWeight - Font weight of the label when inactive (default: 500)
  * @param {number} labelGap - Gap between icon/pill and label in pixels (default: 8)
+ * @param {boolean} showNotificationDot - Whether to show a red notification dot (default: false)
  * @param {string} className - Additional CSS classes
  * @param {object} style - Additional inline styles
  */
@@ -58,6 +59,7 @@ const NavRailButton = ({
   activeLabelFontWeight = 700,
   inactiveLabelFontWeight = 500,
   labelGap = 8,
+  showNotificationDot = false,
   className = "",
   style = {},
   ...props
@@ -129,6 +131,16 @@ const NavRailButton = ({
             transition: "all 0.2s ease-in-out",
           }}
         />
+        {/* Notification dot */}
+        {showNotificationDot && (
+          <div
+            className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white"
+            style={{
+              transform: "translate(25%, -25%)",
+              zIndex: 2,
+            }}
+          />
+        )}
       </div>
 
       {/* Label */}

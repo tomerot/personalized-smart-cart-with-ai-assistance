@@ -52,6 +52,9 @@ export function VoiceAssistantProvider({ children }) {
   // Used to highlight the product in the cart during the conversation
   const [highlightedProductId, setHighlightedProductId] = useState(null);
 
+  // Track unread conflict notifications (show red dot on Smart Companion nav)
+  const [hasUnreadConflict, setHasUnreadConflict] = useState(false);
+
   // Tracks if user activity was detected in the current turn
   // Once detected, timer stops for the rest of this turn
   const [activityDetectedInTurn, setActivityDetectedInTurn] = useState(false);
@@ -225,6 +228,22 @@ export function VoiceAssistantProvider({ children }) {
                   productLocation: toolResult.data
                 }
               };
+            } else if (toolResult && toolResult.name === 'get_ai_alternatives') {
+              // Store the data needed to render ProductAlternatives
+              // Response structure: { alternatives: [...], explanation: "string" }
+              // Get the current highlighted product ID at the time of the tool call
+              const currentHighlightedId = cartItems.length > 0 ? cartItems[0].id : null;
+              messageData = {
+                type: 'assistant',
+                content: assistantContent,
+                showConflict: false,
+                forProductId: currentHighlightedId, // Track which product this is for
+                toolCallData: {
+                  name: toolResult.name,
+                  alternatives: toolResult.data.alternatives || [],
+                  explanation: toolResult.data.explanation || ''
+                }
+              };
             } else {
               messageData = {
                 type: 'assistant',
@@ -362,7 +381,7 @@ export function VoiceAssistantProvider({ children }) {
         console.log('Tool call result:', event.name, event.result);
         
         // Parse and store the result for use when rendering the assistant message
-        if (event.name === 'get_product_info') {
+        if (event.name === 'get_product_info' || event.name === 'get_ai_alternatives') {
           try {
             const parsedResult = typeof event.result === 'string' 
               ? JSON.parse(event.result) 
@@ -489,6 +508,51 @@ export function VoiceAssistantProvider({ children }) {
     lastSpeakerRef.current = type;
   }, []);
 
+  /**
+   * Add a conflict message with alternatives
+   * Called when a scanned product conflicts with user preferences
+   * @param {object} conflictData - Conflict data from product scan
+   * @param {object} conflictData.originalProduct - The original scanned product
+   * @param {object} conflictData.conflict - Conflict details { allergen_conflicts, dietary_conflicts, details }
+   * @param {Array} conflictData.alternatives - Array of alternative products
+   */
+  const addConflictMessage = useCallback((conflictData) => {
+    const { originalProduct, conflict, alternatives } = conflictData;
+    
+    // Get the product ID to track which product this conflict is for
+    const productId = originalProduct.barcode || originalProduct.id;
+    
+    const messageData = {
+      type: 'assistant',
+      content: 'I found a conflict with at least one of your dietary needs or allergies:',
+      showConflict: true,
+      forProductId: productId, // Track which product this is for
+      conflictData: {
+        originalProduct,
+        allergenConflicts: conflict.allergen_conflicts || [],
+        dietaryConflicts: conflict.dietary_conflicts || [],
+        details: conflict.details || '',
+        alternatives: alternatives || [],
+      },
+    };
+    
+    setMessages(prev => [...prev, messageData]);
+    lastSpeakerRef.current = 'assistant';
+    
+    // Set unread conflict notification (shows red dot on Smart Companion nav)
+    setHasUnreadConflict(true);
+    
+    // TODO: Later - trigger pre-made voice for conflict notification
+  }, []);
+
+  /**
+   * Mark conflict notifications as read (clears the red dot)
+   * Called when user navigates to Smart Companion view
+   */
+  const markConflictsAsRead = useCallback(() => {
+    setHasUnreadConflict(false);
+  }, []);
+
   const value = {
     // State
     isConversationActive,
@@ -496,6 +560,7 @@ export function VoiceAssistantProvider({ children }) {
     timerProgress,
     messages,
     highlightedProductId,
+    hasUnreadConflict,
     
     // Actions
     toggleConversation,
@@ -503,6 +568,8 @@ export function VoiceAssistantProvider({ children }) {
     stopConversation,
     clearMessages,
     addMessage,
+    addConflictMessage,
+    markConflictsAsRead,
     
     // Setters for external control
     setChatStatus,
