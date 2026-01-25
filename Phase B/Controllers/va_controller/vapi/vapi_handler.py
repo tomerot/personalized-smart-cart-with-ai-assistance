@@ -98,7 +98,7 @@ class VapiHandler:
             try:
                 await self.call_websocket.send(json.dumps({"type": "end-call"}))
                 logger.info("Request to end the call was sent to VAPI servers.")
-                await self.event_callback(EndCallEvent(expected = True))
+                await self.event_callback(EndCallEvent(expected = True, reason = "CLIENT_REQUEST"))
             except Exception:
                 logger.error(f"Failed to send a request to end the call to VAPI servers.")
     
@@ -167,7 +167,7 @@ class VapiHandler:
 
     async def __process_event(self, event):
         """Processes various events before transmission."""
-        if isinstance(event, EndCallEvent): # Indicates an unexpected termination from the VAPI side
+        if isinstance(event, EndCallEvent): # Indicates a termination from the VAPI side
             await self.end_call(notify_vapi = False) # Local cleanup only
 
         elif isinstance(event, AssistantSpeechUpdateEvent):
