@@ -8,6 +8,7 @@ import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 import { useUser } from "@/context/UserContext";
 import ShimmerText from "@/components/chat/ShimmerText";
 import ChatBubble from "@/components/chat/ChatBubble";
+import ProductAlternatives from "@/components/chat/ProductAlternatives";
 import { TOOL_CALL_MESSAGES } from "@/data/toolCallMessages";
 
 // Navigation views that change the content area (not modals)
@@ -22,6 +23,64 @@ const SAMPLE_BARCODES = [
   "7290117906477", // Sesame Kabukis (from the example)
   "7290000066318", // Another product
   "7290004131074", // Another product
+];
+
+// Sample product alternatives for testing the ProductAlternatives component
+const SAMPLE_ALTERNATIVES_1 = [
+  {
+    id: "alt-1",
+    name: "Hellman's Light Mayonnaise",
+    size: "400g",
+    company: "Hellman's",
+    price: 12.90,
+    imageUrl: "https://images.unsplash.com/photo-1585325701165-351af916e581?w=100&h=100&fit=crop",
+  },
+];
+
+const SAMPLE_ALTERNATIVES_2 = [
+  {
+    id: "alt-1",
+    name: "Hellman's Light Mayonnaise",
+    size: "400g",
+    company: "Hellman's",
+    price: 12.90,
+    imageUrl: "https://images.unsplash.com/photo-1585325701165-351af916e581?w=100&h=100&fit=crop",
+  },
+  {
+    id: "alt-2",
+    name: "Heinz Mayonnaise Light",
+    size: "420g",
+    company: "Heinz",
+    price: 13.50,
+    imageUrl: "https://images.unsplash.com/photo-1613478223719-2ab802602423?w=100&h=100&fit=crop",
+  },
+];
+
+const SAMPLE_ALTERNATIVES_3 = [
+  {
+    id: "alt-1",
+    name: "Hellman's Light Mayonnaise",
+    size: "400g",
+    company: "Hellman's",
+    price: 12.90,
+    imageUrl: "https://images.unsplash.com/photo-1585325701165-351af916e581?w=100&h=100&fit=crop",
+  },
+  {
+    id: "alt-2",
+    name: "Heinz Mayonnaise Light",
+    size: "420g",
+    company: "Heinz",
+    price: 13.50,
+    imageUrl: "https://images.unsplash.com/photo-1613478223719-2ab802602423?w=100&h=100&fit=crop",
+  },
+  {
+    id: "alt-3",
+    name: "Telma Low Fat Mayo",
+    size: "380g",
+    company: "Telma",
+    price: 11.90,
+    imageUrl: "https://images.unsplash.com/photo-1587049352851-8d4e89133924?w=100&h=100&fit=crop",
+  },
 ];
 
 function Test() {
@@ -353,11 +412,83 @@ function Test() {
           </div>
         )}
         {activeView === NAV_VIEWS.COMPANION && (
-          <div className="w-full h-full p-6">
+          <div className="w-full h-full p-6 overflow-y-auto">
             <h1 className="font-[Montserrat] text-2xl font-bold text-gray-800 mb-4">
-              Smart Companion - Shimmer Text Demo
+              Smart Companion - Component Demos
             </h1>
-            <div className="space-y-4">
+            <div className="space-y-6">
+              
+              {/* Product Alternatives Demo Section */}
+              <div className="p-4 rounded-lg bg-gray-50 border border-gray-200">
+                <h2 className="font-semibold text-gray-700 mb-3">Product Alternatives Component</h2>
+                <p className="text-sm text-gray-600 mb-4">
+                  Shows healthier alternatives inside chat bubbles. Supports 1-3 alternatives.
+                </p>
+                
+                <div className="space-y-6">
+                  {/* 1 Alternative */}
+                  <div>
+                    <div className="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded inline-block mb-3">
+                      1 Alternative
+                    </div>
+                    <ChatBubble
+                      speakerIcon={ICONS.CART}
+                      speakerLabel="Smart Companion"
+                      backgroundColor="#e4fcec"
+                      iconColor="#1f2937"
+                      textColor="#1f2937"
+                    >
+                      <p className="mb-3">Light mayonnaise contains less fat and fewer calories.</p>
+                      <ProductAlternatives
+                        alternatives={SAMPLE_ALTERNATIVES_1}
+                        onReplace={(product) => console.log("Replace with:", product)}
+                      />
+                    </ChatBubble>
+                  </div>
+
+                  {/* 2 Alternatives */}
+                  <div>
+                    <div className="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded inline-block mb-3">
+                      2 Alternatives
+                    </div>
+                    <ChatBubble
+                      speakerIcon={ICONS.CART}
+                      speakerLabel="Smart Companion"
+                      backgroundColor="#e4fcec"
+                      iconColor="#1f2937"
+                      textColor="#1f2937"
+                    >
+                      <p className="mb-3">Light mayonnaise contains less fat and fewer calories.</p>
+                      <ProductAlternatives
+                        alternatives={SAMPLE_ALTERNATIVES_2}
+                        onReplace={(product) => console.log("Replace with:", product)}
+                      />
+                    </ChatBubble>
+                  </div>
+
+                  {/* 3 Alternatives */}
+                  <div>
+                    <div className="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded inline-block mb-3">
+                      3 Alternatives
+                    </div>
+                    <ChatBubble
+                      speakerIcon={ICONS.CART}
+                      speakerLabel="Smart Companion"
+                      backgroundColor="#e4fcec"
+                      iconColor="#1f2937"
+                      textColor="#1f2937"
+                    >
+                      <p className="mb-3">Light mayonnaise contains less fat and fewer calories.</p>
+                      <ProductAlternatives
+                        alternatives={SAMPLE_ALTERNATIVES_3}
+                        onReplace={(product) => console.log("Replace with:", product)}
+                      />
+                    </ChatBubble>
+                  </div>
+                </div>
+              </div>
+
+              {/* Shimmer Text Demo Section */}
               <div className="p-4 rounded-lg bg-gray-50 border border-gray-200">
                 <h2 className="font-semibold text-gray-700 mb-3">Tool Call Loading Messages</h2>
                 <p className="text-sm text-gray-600 mb-4">
