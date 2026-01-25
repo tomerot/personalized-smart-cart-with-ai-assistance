@@ -28,7 +28,7 @@ class VoiceAssistantController:
             return
 
         command_actions = {
-            StartCallCommand: lambda cmd: self.vapi_handler.start_call(cmd.variables),
+            StartCallCommand: lambda cmd: self.vapi_handler.start_call(cmd.variables, cmd.messages),
             StopCallCommand:  lambda cmd: self.vapi_handler.end_call(notify_vapi = True)
         }
 

@@ -4,8 +4,9 @@ class Command:
 
 class StartCallCommand(Command):
     """Command instructing to start a new call with VAPI."""
-    def __init__(self, variables: dict):
+    def __init__(self, variables: dict, messages: list):
         self.variables = variables
+        self.messages = messages # Can be empty, if no previous messages are available
 
 class StopCallCommand(Command):
     """Command instructing to stop a call with VAPI."""

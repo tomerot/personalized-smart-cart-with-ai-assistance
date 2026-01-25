@@ -33,7 +33,7 @@ class VapiHandler:
         self.silence_timer = None
 
 
-    async def start_call(self, variables: dict):
+    async def start_call(self, variables: dict, messages: list = None):
         """
         Start a new VAPI call with provided variables.
         """
@@ -57,6 +57,11 @@ class VapiHandler:
         try:
             self.call_websocket = await websockets.connect(url)
             logger.info("WebSocket connection with VAPI established.")
+
+            # Restore previous conversation history silently
+            if messages:
+                await self.__restore_message_history(messages)
+
             self.__init_call_tasks()
             self.call_active = True
             logger.info("Call started successfully.")
@@ -279,6 +284,34 @@ class VapiHandler:
                 return True # At least one required variable is not set
                 
         return False # All required variables are set
+
+
+    async def __restore_message_history(self, messages: list):
+        """
+        Send previous conversation messages to VAPI using add-message control message.
+        Sets triggerResponseEnabled to false to add messages silently without triggering responses.
+        """
+        logger.info(f"Restoring {len(messages)} messages from previous calls...")
+        
+        count = 0 # Count of successfully restored messages
+        
+        for msg in messages:
+            add_message_payload = {
+                "type": "add-message",
+                "message": {
+                    "role": msg.get("role"),
+                    "content": msg.get("content")
+                },
+                "triggerResponseEnabled": False  # Insert silently, don't trigger assistant responses
+            }
+            
+            try:
+                await self.call_websocket.send(json.dumps(add_message_payload))
+                count += 1
+            except Exception as e:
+                logger.error(f"Failed to restore a message.")
+        
+        logger.info(f"Restored {count} out of {len(messages)} messages successfully.")
 
 
     def __log_vapi_call_error(self, e: requests.exceptions.RequestException):
