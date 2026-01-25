@@ -1,0 +1,42 @@
+.store-map-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+}
+
+.store-map {
+  width: 100%;
+  height: 100%;
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e0e0e0;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.store-map-svg {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* Cell colors */
+.cell-path {
+  fill: white;
+}
+
+.cell-wall {
+  fill: #4a4a4a;
+}
+
+.cell-obstacle {
+  fill: #b0b0b0;
+}
+

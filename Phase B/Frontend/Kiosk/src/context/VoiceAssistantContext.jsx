@@ -2,6 +2,8 @@ import { createContext, useContext, useState, useCallback, useRef, useEffect } f
 import { voiceControllerService, VOICE_EVENT_TYPES } from "@/services/voiceControllerService";
 import { useUser } from "@/context/UserContext";
 import { useCart } from "@/context/CartContext";
+import { getToolCallMessage } from "@/data/toolCallMessages";
+import ShimmerText from "@/components/chat/ShimmerText";
 
 const VoiceAssistantContext = createContext();
 
@@ -40,6 +42,9 @@ export function VoiceAssistantProvider({ children }) {
   
   // Track last speaker for transcription concatenation
   const lastSpeakerRef = useRef(null); // 'user' | 'assistant' | null
+
+  // Track active tool calls - stores { executionId: toolName } mapping
+  const activeToolCallsRef = useRef(new Map());
 
   // Track the product ID that was sent when starting the conversation
   // Used to highlight the product in the cart during the conversation
@@ -202,10 +207,26 @@ export function VoiceAssistantProvider({ children }) {
             pendingAssistantOutputRef.current = '';
             
             setMessages(prev => {
-              // Check if we should concatenate to the last message
-              if (lastSpeakerRef.current === 'assistant' && prev.length > 0) {
+              // Check if the last message has a tool call (shimmer text)
+              if (prev.length > 0) {
                 const lastMessage = prev[prev.length - 1];
-                if (lastMessage.type === 'assistant') {
+                
+                // If the last message is an assistant message with a tool call, replace its content
+                if (lastMessage.type === 'assistant' && lastMessage.toolCallId) {
+                  console.log('Replacing shimmer text with actual tool result');
+                  return [
+                    ...prev.slice(0, -1),
+                    { 
+                      type: 'assistant', 
+                      content: assistantContent, 
+                      showConflict: false 
+                      // Remove toolCallId to indicate content has been replaced
+                    }
+                  ];
+                }
+                
+                // Check if we should concatenate to the last message (normal flow)
+                if (lastSpeakerRef.current === 'assistant' && lastMessage.type === 'assistant') {
                   // Append to existing assistant message
                   return [
                     ...prev.slice(0, -1),
@@ -272,13 +293,59 @@ export function VoiceAssistantProvider({ children }) {
         break;
         
       case VOICE_EVENT_TYPES.TOOL_CALL:
-        // Tool calls can be handled here if needed
+        // Handle tool call by showing loading message if configured
         console.log('Tool call received:', event.name, event.arguments);
+        
+        const toolMessage = getToolCallMessage(event.name);
+        if (toolMessage) {
+          // Store the active tool call
+          activeToolCallsRef.current.set(event.execution_id, event.name);
+          
+          // Add a temporary assistant message with shimmer text
+          setMessages(prev => {
+            // Check if we should concatenate to the last message
+            if (lastSpeakerRef.current === 'assistant' && prev.length > 0) {
+              const lastMessage = prev[prev.length - 1];
+              if (lastMessage.type === 'assistant') {
+                // Append to existing assistant message with shimmer
+                return [
+                  ...prev.slice(0, -1),
+                  { 
+                    ...lastMessage, 
+                    content: (
+                      <>
+                        {lastMessage.content}
+                        {' '}
+                        <ShimmerText text={toolMessage} />
+                      </>
+                    ),
+                    toolCallId: event.execution_id // Mark this message as having a tool call
+                  }
+                ];
+              }
+            }
+            
+            // Add new assistant message with shimmer
+            lastSpeakerRef.current = 'assistant';
+            return [...prev, { 
+              type: 'assistant', 
+              content: <ShimmerText text={toolMessage} />,
+              showConflict: false,
+              toolCallId: event.execution_id // Mark this message as having a tool call
+            }];
+          });
+        }
         break;
         
       case VOICE_EVENT_TYPES.TOOL_CALL_RESULT:
-        // Tool call results can be handled here if needed
+        // Tool call completed - the result will be spoken by the assistant
         console.log('Tool call result:', event.name, event.result);
+        
+        // Remove the tool call from active tracking
+        activeToolCallsRef.current.delete(event.execution_id);
+        
+        // The actual result will be delivered via MODEL_OUTPUT and ASSISTANT_SPEAKING events
+        // We need to replace the shimmer message with the actual content when it arrives
         break;
         
       default:

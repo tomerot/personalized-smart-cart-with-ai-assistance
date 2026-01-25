@@ -6,6 +6,9 @@ import { ICONS } from "@/components/icons/icons.config";
 import Cart from "@/components/cart/Cart";
 import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 import { useUser } from "@/context/UserContext";
+import ShimmerText from "@/components/chat/ShimmerText";
+import ChatBubble from "@/components/chat/ChatBubble";
+import { TOOL_CALL_MESSAGES } from "@/data/toolCallMessages";
 
 // Navigation views that change the content area (not modals)
 const NAV_VIEWS = {
@@ -352,10 +355,48 @@ function Test() {
         {activeView === NAV_VIEWS.COMPANION && (
           <div className="w-full h-full p-6">
             <h1 className="font-[Montserrat] text-2xl font-bold text-gray-800 mb-4">
-              Smart Companion
+              Smart Companion - Shimmer Text Demo
             </h1>
-            <div className="text-gray-600">
-              AI assistant content will appear here
+            <div className="space-y-4">
+              <div className="p-4 rounded-lg bg-gray-50 border border-gray-200">
+                <h2 className="font-semibold text-gray-700 mb-3">Tool Call Loading Messages</h2>
+                <p className="text-sm text-gray-600 mb-4">
+                  These messages appear with shimmer effect while tools are executing:
+                </p>
+                
+                {/* Demo chat bubbles showing shimmer text */}
+                <div className="space-y-4">
+                  {Object.entries(TOOL_CALL_MESSAGES).map(([toolName, message]) => (
+                    <ChatBubble
+                      key={toolName}
+                      speakerIcon={ICONS.COMPANION}
+                      speakerLabel="Smart Companion"
+                      backgroundColor="#e4fcec"
+                      iconColor="#1f2937"
+                      textColor="#1f2937"
+                    >
+                      <div className="space-y-2">
+                        <div className="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded inline-block">
+                          {toolName}
+                        </div>
+                        <div>
+                          <ShimmerText text={message} />
+                        </div>
+                      </div>
+                    </ChatBubble>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-4 rounded-lg bg-blue-50 border border-blue-200">
+                <h2 className="font-semibold text-blue-700 mb-2">How it Works</h2>
+                <ul className="text-sm text-blue-600 space-y-1 list-disc list-inside">
+                  <li>When a tool is called, shimmer text appears immediately</li>
+                  <li>The shimmer effect indicates processing/loading state</li>
+                  <li>Once the tool completes, the shimmer is replaced with actual result</li>
+                  <li>This provides visual feedback and improves user experience</li>
+                </ul>
+              </div>
             </div>
           </div>
         )}
