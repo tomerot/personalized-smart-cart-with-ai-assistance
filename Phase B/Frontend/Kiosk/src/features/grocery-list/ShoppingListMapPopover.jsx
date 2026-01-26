@@ -10,7 +10,7 @@
  * - Black: Completed stops
  */
 
-import { useMemo } from 'react';
+import { useMemo, useState, useCallback, useRef } from 'react';
 import StoreMap from '@/components/map/StoreMap';
 import Icon from '@/components/icons/Icon';
 import { ICONS } from '@/components/icons/icons.config';
@@ -57,7 +57,7 @@ function NextUpItemCard({ item }) {
 /**
  * Section showing items at the current/next stop
  */
-function NextUpSection({ categoryName, items }) {
+function NextUpSection({ items }) {
   if (!items?.length) return null;
 
   return (
@@ -66,7 +66,7 @@ function NextUpSection({ categoryName, items }) {
         <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
           <Icon name={ICONS.LOCATION} size={14} className="text-white" />
         </div>
-        <h3 className="font-semibold text-orange-700 text-sm">Next Up: {categoryName}</h3>
+        <h3 className="font-semibold text-orange-700 text-sm">Next Up</h3>
       </div>
       <div className="space-y-2">
         {items.map(item => (
@@ -88,6 +88,52 @@ export default function ShoppingListMapPopover({
   onClose,
   buttonRef,
 }) {
+  // Touch/drag scrolling state
+  const scrollContainerRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startY, setStartY] = useState(0);
+  const [scrollTop, setScrollTop] = useState(0);
+
+  // Handle mouse/touch start
+  const handleDragStart = useCallback((e) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    setIsDragging(true);
+    
+    // Get the Y position from mouse or touch event
+    const clientY = e.type === "touchstart" ? e.touches[0].clientY : e.clientY;
+    setStartY(clientY);
+    setScrollTop(container.scrollTop);
+
+    // Prevent text selection during drag
+    e.preventDefault();
+  }, []);
+
+  // Handle mouse/touch move
+  const handleDragMove = useCallback((e) => {
+    if (!isDragging) return;
+
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    // Get the Y position from mouse or touch event
+    const clientY = e.type === "touchmove" ? e.touches[0].clientY : e.clientY;
+    
+    // Calculate the distance moved
+    const deltaY = clientY - startY;
+    
+    // Inverted scrolling: drag up scrolls down, drag down scrolls up
+    container.scrollTop = scrollTop - deltaY;
+
+    e.preventDefault();
+  }, [isDragging, startY, scrollTop]);
+
+  // Handle mouse/touch end
+  const handleDragEnd = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
   // Calculate which stops are complete, current, and future
   const routeStatus = useMemo(() => {
     if (!shoppingList?.categoryOrder?.length || !shoppingList?.items?.length) {
@@ -183,15 +229,47 @@ export default function ShoppingListMapPopover({
         </div>
 
         {/* Map - full width, larger size */}
-        <div className="px-3 py-3 h-[300px]">
+        <div className="px-3 py-3 h-[300px] flex-shrink-0">
           <StoreMap 
             markers={markers}
             markerStyle="numbered"
           />
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-4">
+        {/* Hide scrollbar style */}
+        <style>
+          {`
+            .popover-scroll-container::-webkit-scrollbar {
+              display: none;
+            }
+          `}
+        </style>
+
+        {/* Content - scrollable with touch/drag */}
+        <div 
+          ref={scrollContainerRef}
+          className={`
+            popover-scroll-container
+            flex-1 
+            overflow-y-auto 
+            px-4 
+            pb-4 
+            space-y-4
+            select-none
+            ${isDragging ? "cursor-grabbing" : "cursor-grab"}
+          `}
+          style={{
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+          }}
+          onMouseDown={handleDragStart}
+          onMouseMove={handleDragMove}
+          onMouseUp={handleDragEnd}
+          onMouseLeave={handleDragEnd}
+          onTouchStart={handleDragStart}
+          onTouchMove={handleDragMove}
+          onTouchEnd={handleDragEnd}
+        >
           {/* Legend */}
           <div className="flex items-center justify-center gap-4 text-xs text-gray-500">
             <div className="flex items-center gap-1.5">
@@ -210,10 +288,7 @@ export default function ShoppingListMapPopover({
 
           {/* Next Up section */}
           {currentItems.length > 0 && (
-            <NextUpSection
-              categoryName={currentCategory}
-              items={currentItems}
-            />
+            <NextUpSection items={currentItems} />
           )}
 
           {/* All complete message */}

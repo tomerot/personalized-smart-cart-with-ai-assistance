@@ -6,7 +6,7 @@
  * Shopping list is fetched only when user clicks "Load List" button
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import { useUser } from '@/context/UserContext';
 import { useCart } from '@/context/CartContext';
 import Icon from '@/components/icons/Icon';
@@ -162,6 +162,52 @@ export default function GroceryListView({
   const { hasShoppingList } = useUser();
   const { cartItems } = useCart();
 
+  // Touch/drag scrolling state
+  const scrollContainerRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startY, setStartY] = useState(0);
+  const [scrollTop, setScrollTop] = useState(0);
+
+  // Handle mouse/touch start
+  const handleDragStart = useCallback((e) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    setIsDragging(true);
+    
+    // Get the Y position from mouse or touch event
+    const clientY = e.type === "touchstart" ? e.touches[0].clientY : e.clientY;
+    setStartY(clientY);
+    setScrollTop(container.scrollTop);
+
+    // Prevent text selection during drag
+    e.preventDefault();
+  }, []);
+
+  // Handle mouse/touch move
+  const handleDragMove = useCallback((e) => {
+    if (!isDragging) return;
+
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    // Get the Y position from mouse or touch event
+    const clientY = e.type === "touchmove" ? e.touches[0].clientY : e.clientY;
+    
+    // Calculate the distance moved
+    const deltaY = clientY - startY;
+    
+    // Inverted scrolling: drag up scrolls down, drag down scrolls up
+    container.scrollTop = scrollTop - deltaY;
+
+    e.preventDefault();
+  }, [isDragging, startY, scrollTop]);
+
+  // Handle mouse/touch end
+  const handleDragEnd = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
   // Create a map of cart items by barcode for quick lookup
   const cartItemsMap = useMemo(() => {
     const map = new Map();
@@ -225,8 +271,39 @@ export default function GroceryListView({
         </div>
       </div>
 
-      {/* Items list */}
-      <div className="flex-1 overflow-y-auto space-y-2 min-h-0">
+      {/* Hide scrollbar style */}
+      <style>
+        {`
+          .grocery-list-scroll::-webkit-scrollbar {
+            display: none;
+          }
+        `}
+      </style>
+
+      {/* Items list - scrollable with touch/drag */}
+      <div 
+        ref={scrollContainerRef}
+        className={`
+          grocery-list-scroll
+          flex-1 
+          overflow-y-auto 
+          space-y-2 
+          min-h-0
+          select-none
+          ${isDragging ? "cursor-grabbing" : "cursor-grab"}
+        `}
+        style={{
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+        }}
+        onMouseDown={handleDragStart}
+        onMouseMove={handleDragMove}
+        onMouseUp={handleDragEnd}
+        onMouseLeave={handleDragEnd}
+        onTouchStart={handleDragStart}
+        onTouchMove={handleDragMove}
+        onTouchEnd={handleDragEnd}
+      >
         {allCollected ? (
           <AllCollectedState totalItems={stats.totalItems} />
         ) : (
