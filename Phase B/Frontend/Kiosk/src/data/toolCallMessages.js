@@ -12,6 +12,10 @@ export const TOOL_CALL_MESSAGES = {
   get_ai_alternatives: "Searching for suitable alternatives...",
   get_nutrition_details: "Reading product information...",
   get_product_info: "Searching for the product location...",
+  add_allergies: "Enabling awareness of relevant allergies...",
+  remove_allergies: "Disabling awareness of relevant allergies...",
+  add_dietary_needs: "Enabling awareness of relevant dietary needs...",
+  remove_dietary_needs: "Disabling awareness of relevant dietary needs..."
 };
 
 /**
