@@ -1,6 +1,7 @@
 import { useRef, useState, useCallback } from "react";
 import ProductCard from "./ProductCard";
 import CheckoutBar from "./CheckoutBar";
+import BarcodeInputModal from "@/components/modal/BarcodeInputModal";
 import { useCart } from "@/context/CartContext";
 import Icon from "@/components/icons/ICON";
 import { ICONS } from "@/components/icons/icons.config";
@@ -13,11 +14,13 @@ import { ICONS } from "@/components/icons/icons.config";
  * Supports inverted touch scrolling: drag up to scroll down, drag down to scroll up.
  *
  * @param {function} onCheckout - Callback when checkout button is clicked
+ * @param {function} onManualBarcodeSubmit - Callback when barcode is manually entered
  * @param {string|number} highlightedProductId - ID of product to highlight (for voice assistant context)
  * @param {string} className - Additional CSS classes
  */
 const Cart = ({
   onCheckout,
+  onManualBarcodeSubmit,
   highlightedProductId = null,
   className = "",
 }) => {
@@ -26,6 +29,7 @@ const Cart = ({
   const [isDragging, setIsDragging] = useState(false);
   const [startY, setStartY] = useState(0);
   const [scrollTop, setScrollTop] = useState(0);
+  const [showBarcodeModal, setShowBarcodeModal] = useState(false);
 
   // Debug: Log highlighted product
   console.log('📦 Cart - highlightedProductId:', highlightedProductId, 'cartItems:', cartItems.length);
@@ -90,12 +94,9 @@ const Cart = ({
           </h2>
         </div>
         
-        <button 
+        <button
           className="flex items-center gap-3 px-4 py-1 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-semibold rounded-xl transition-colors duration-150"
-          onClick={() => {
-            // TODO: Add barcode input functionality
-            console.log("Type Barcode clicked");
-          }}
+          onClick={() => setShowBarcodeModal(true)}
         >
           <Icon 
             name={ICONS.BARCODE} 
@@ -186,6 +187,18 @@ const Cart = ({
           />
         </div>
       </div>
+
+      {/* Barcode Input Modal */}
+      <BarcodeInputModal
+        isOpen={showBarcodeModal}
+        onClose={() => setShowBarcodeModal(false)}
+        onSubmit={(barcode) => {
+          setShowBarcodeModal(false);
+          if (onManualBarcodeSubmit) {
+            onManualBarcodeSubmit(barcode);
+          }
+        }}
+      />
     </div>
   );
 };
