@@ -39,3 +39,13 @@ export const formatTime = (seconds) => {
   return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 };
 
+/**
+ * Format price for display with currency symbol
+ * @param {number} price - Price value
+ * @returns {string} Formatted price string (e.g., "₪12.50")
+ */
+export const formatPrice = (price) => {
+  if (price == null || isNaN(price)) return '₪0.00';
+  return `₪${price.toFixed(2)}`;
+};
+

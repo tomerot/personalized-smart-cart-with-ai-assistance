@@ -25,5 +25,8 @@ export const ICONS = {
   STOP_CONVERSATION: "voice_selection_off",
   MUTE: "mic_off",
   UNMUTE: "mic",
-  LOCATION: "location_on"
+  LOCATION: "location_on",
+  MAP: "map",
+  CHECK: "check",
+  CANCEL: "close",
 };

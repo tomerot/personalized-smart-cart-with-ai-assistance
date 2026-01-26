@@ -9,7 +9,10 @@ import '../../assets/StoreMap.css';
  * The map is responsive and maintains aspect ratio.
  * 
  * @param {string} className - Additional CSS classes
- * @param {Array} markers - Array of marker objects: { x: col, y: row, type: 'location' | 'route', label?: string }
+ * @param {Array} markers - Array of marker objects: 
+ *   - { x: col, y: row, type: 'location' } - Simple green dot
+ *   - { x: col, y: row, type: 'route', label: string } - Green circle with label
+ *   - { x: col, y: row, type: 'numbered', label: string, color: string } - Custom colored circle with number
  */
 const StoreMap = ({ className = '', markers = [] }) => {
   const { grid } = storeLayout;
@@ -56,7 +59,7 @@ const StoreMap = ({ className = '', markers = [] }) => {
           
           {/* Markers overlay */}
           {markers.map((marker, index) => {
-            const { x, y, type = 'location', label } = marker;
+            const { x, y, type = 'location', label, color } = marker;
             const centerX = x + 0.5;
             const centerY = y + 0.5;
             
@@ -68,7 +71,7 @@ const StoreMap = ({ className = '', markers = [] }) => {
                     cx={centerX}
                     cy={centerY}
                     r={0.35}
-                    fill="#16a34a"
+                    fill={color || "#16a34a"}
                     stroke="#ffffff"
                     strokeWidth={0.08}
                   />
@@ -83,7 +86,7 @@ const StoreMap = ({ className = '', markers = [] }) => {
                     cx={centerX}
                     cy={centerY}
                     r={0.4}
-                    fill="#16a34a"
+                    fill={color || "#16a34a"}
                     stroke="#ffffff"
                     strokeWidth={0.05}
                   />
@@ -96,6 +99,35 @@ const StoreMap = ({ className = '', markers = [] }) => {
                     fontSize={0.5}
                     fontFamily="Montserrat, sans-serif"
                     fontWeight="600"
+                  >
+                    {label}
+                  </text>
+                </g>
+              );
+            }
+
+            if (type === 'numbered' && label) {
+              // Numbered marker with custom color (for shopping route)
+              const markerColor = color || "#16a34a";
+              return (
+                <g key={`marker-${index}`} className="map-marker numbered-marker">
+                  <circle
+                    cx={centerX}
+                    cy={centerY}
+                    r={0.45}
+                    fill={markerColor}
+                    stroke="#ffffff"
+                    strokeWidth={0.06}
+                  />
+                  <text
+                    x={centerX}
+                    y={centerY}
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    fill="#ffffff"
+                    fontSize={0.55}
+                    fontFamily="Montserrat, sans-serif"
+                    fontWeight="700"
                   >
                     {label}
                   </text>

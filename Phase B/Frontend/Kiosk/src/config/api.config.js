@@ -37,7 +37,11 @@ export const API_ENDPOINTS = {
     LOCATION: (barcode) => `/products/${barcode}/location`,
     AI_ALTERNATIVES: (barcode) => `/products/${barcode}/ai-alternatives`,
   },
-  // Add other endpoints here as needed
+  SHOPPING_LIST: {
+    GET: (phone) => `/shopping-list/${phone}`,
+    SAVE: (phone) => `/shopping-list/${phone}`,
+    DELETE: (phone) => `/shopping-list/${phone}`,
+  },
 };
 
 /**
