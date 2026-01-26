@@ -26,6 +26,8 @@ export const ICONS = {
   MUTE: "mic_off",
   UNMUTE: "mic",
   LOCATION: "location_on",
+  WARNING: "warning",
+  CHECK_CIRCLE: "check_circle"
   MAP: "map",
   CHECK: "check",
   CANCEL: "close",
