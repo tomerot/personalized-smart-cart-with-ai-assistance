@@ -6,6 +6,11 @@ import { ICONS } from "@/components/icons/icons.config";
 import Cart from "@/components/cart/Cart";
 import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 import { useUser } from "@/context/UserContext";
+import ShimmerText from "@/components/chat/ShimmerText";
+import ChatBubble from "@/components/chat/ChatBubble";
+import ProductAlternatives from "@/components/chat/ProductAlternatives";
+import ConflictAlternativesContent from "@/components/chat/ConflictAlternativesContent";
+import { TOOL_CALL_MESSAGES } from "@/data/toolCallMessages";
 
 // Navigation views that change the content area (not modals)
 const NAV_VIEWS = {
@@ -19,6 +24,84 @@ const SAMPLE_BARCODES = [
   "7290117906477", // Sesame Kabukis (from the example)
   "7290000066318", // Another product
   "7290004131074", // Another product
+];
+
+// Sample product alternatives for testing the ProductAlternatives component
+const SAMPLE_ALTERNATIVES_1 = [
+  {
+    id: "alt-1",
+    name: "Hellman's Light Mayonnaise",
+    size: "400g",
+    company: "Hellman's",
+    price: 12.90,
+    imageUrl: "https://images.unsplash.com/photo-1585325701165-351af916e581?w=100&h=100&fit=crop",
+  },
+];
+
+const SAMPLE_ALTERNATIVES_2 = [
+  {
+    id: "alt-1",
+    name: "Hellman's Light Mayonnaise",
+    size: "400g",
+    company: "Hellman's",
+    price: 12.90,
+    imageUrl: "https://images.unsplash.com/photo-1585325701165-351af916e581?w=100&h=100&fit=crop",
+  },
+  {
+    id: "alt-2",
+    name: "Heinz Mayonnaise Light",
+    size: "420g",
+    company: "Heinz",
+    price: 13.50,
+    imageUrl: "https://images.unsplash.com/photo-1613478223719-2ab802602423?w=100&h=100&fit=crop",
+  },
+];
+
+const SAMPLE_ALTERNATIVES_3 = [
+  {
+    id: "alt-1",
+    name: "Hellman's Light Mayonnaise",
+    size: "400g",
+    company: "Hellman's",
+    price: 12.90,
+    imageUrl: "https://images.unsplash.com/photo-1585325701165-351af916e581?w=100&h=100&fit=crop",
+  },
+  {
+    id: "alt-2",
+    name: "Heinz Mayonnaise Light",
+    size: "420g",
+    company: "Heinz",
+    price: 13.50,
+    imageUrl: "https://images.unsplash.com/photo-1613478223719-2ab802602423?w=100&h=100&fit=crop",
+  },
+  {
+    id: "alt-3",
+    name: "Telma Low Fat Mayo",
+    size: "380g",
+    company: "Telma",
+    price: 11.90,
+    imageUrl: "https://images.unsplash.com/photo-1587049352851-8d4e89133924?w=100&h=100&fit=crop",
+  },
+];
+
+// Sample conflict data for testing ConflictAlternativesContent
+const SAMPLE_CONFLICT_ALTERNATIVES = [
+  {
+    barcode: "7290000123456",
+    name: "Organic Tahini Paste",
+    size: "350g",
+    company: "Achva",
+    price: 18.90,
+    image_url: "https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=100&h=100&fit=crop",
+  },
+  {
+    barcode: "7290000123457",
+    name: "Sunflower Seed Butter",
+    size: "300g",
+    company: "Osem",
+    price: 22.50,
+    image_url: "https://images.unsplash.com/photo-1612871689353-cbc485bb0bcf?w=100&h=100&fit=crop",
+  },
 ];
 
 function Test() {
@@ -350,12 +433,254 @@ function Test() {
           </div>
         )}
         {activeView === NAV_VIEWS.COMPANION && (
-          <div className="w-full h-full p-6">
+          <div className="w-full h-full p-6 overflow-y-auto">
             <h1 className="font-[Montserrat] text-2xl font-bold text-gray-800 mb-4">
-              Smart Companion
+              Smart Companion - Component Demos
             </h1>
-            <div className="text-gray-600">
-              AI assistant content will appear here
+            <div className="space-y-6">
+              
+              {/* Product Alternatives Demo Section */}
+              <div className="p-4 rounded-lg bg-gray-50 border border-gray-200">
+                <h2 className="font-semibold text-gray-700 mb-3">Product Alternatives Component</h2>
+                <p className="text-sm text-gray-600 mb-4">
+                  Shows healthier alternatives inside chat bubbles. Supports 1-3 alternatives.
+                </p>
+                
+                <div className="space-y-6">
+                  {/* 1 Alternative */}
+                  <div>
+                    <div className="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded inline-block mb-3">
+                      1 Alternative
+                    </div>
+                    <ChatBubble
+                      speakerIcon={ICONS.CART}
+                      speakerLabel="Smart Companion"
+                      backgroundColor="#e4fcec"
+                      iconColor="#1f2937"
+                      textColor="#1f2937"
+                    >
+                      <p className="mb-3">Light mayonnaise contains less fat and fewer calories.</p>
+                      <ProductAlternatives
+                        alternatives={SAMPLE_ALTERNATIVES_1}
+                        onReplace={(product) => console.log("Replace with:", product)}
+                      />
+                    </ChatBubble>
+                  </div>
+
+                  {/* 2 Alternatives */}
+                  <div>
+                    <div className="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded inline-block mb-3">
+                      2 Alternatives
+                    </div>
+                    <ChatBubble
+                      speakerIcon={ICONS.CART}
+                      speakerLabel="Smart Companion"
+                      backgroundColor="#e4fcec"
+                      iconColor="#1f2937"
+                      textColor="#1f2937"
+                    >
+                      <p className="mb-3">Light mayonnaise contains less fat and fewer calories.</p>
+                      <ProductAlternatives
+                        alternatives={SAMPLE_ALTERNATIVES_2}
+                        onReplace={(product) => console.log("Replace with:", product)}
+                      />
+                    </ChatBubble>
+                  </div>
+
+                  {/* 3 Alternatives */}
+                  <div>
+                    <div className="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded inline-block mb-3">
+                      3 Alternatives
+                    </div>
+                    <ChatBubble
+                      speakerIcon={ICONS.CART}
+                      speakerLabel="Smart Companion"
+                      backgroundColor="#e4fcec"
+                      iconColor="#1f2937"
+                      textColor="#1f2937"
+                    >
+                      <p className="mb-3">Light mayonnaise contains less fat and fewer calories.</p>
+                      <ProductAlternatives
+                        alternatives={SAMPLE_ALTERNATIVES_3}
+                        onReplace={(product) => console.log("Replace with:", product)}
+                      />
+                    </ChatBubble>
+                  </div>
+                </div>
+              </div>
+
+              {/* Conflict Alternatives Demo Section */}
+              <div className="p-4 rounded-lg bg-gray-50 border border-gray-200">
+                <h2 className="font-semibold text-gray-700 mb-3">Conflict Alternatives Component</h2>
+                <p className="text-sm text-gray-600 mb-4">
+                  Shows when a scanned product conflicts with user allergies or dietary needs.
+                  Includes conflict tags and product alternatives.
+                </p>
+                
+                <div className="space-y-6">
+                  {/* Conflict with Allergens */}
+                  <div>
+                    <div className="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded inline-block mb-3">
+                      Allergen Conflict (with warning border)
+                    </div>
+                    <ChatBubble
+                      speakerIcon={ICONS.COMPANION}
+                      speakerLabel="Smart Companion"
+                      backgroundColor="#e4fcec"
+                      iconColor="#1f2937"
+                      textColor="#1f2937"
+                      showConflict={true}
+                      conflictIconColor="#dc2626"
+                    >
+                      <ConflictAlternativesContent
+                        message="I found a conflict with at least one of your dietary needs or allergies:"
+                        allergenConflicts={["sesame", "peanuts"]}
+                        dietaryConflicts={[]}
+                        alternatives={SAMPLE_CONFLICT_ALTERNATIVES}
+                        onReplace={(product) => console.log("Replace with:", product)}
+                      />
+                    </ChatBubble>
+                  </div>
+
+                  {/* Conflict with Dietary Needs */}
+                  <div>
+                    <div className="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded inline-block mb-3">
+                      Dietary Conflict
+                    </div>
+                    <ChatBubble
+                      speakerIcon={ICONS.COMPANION}
+                      speakerLabel="Smart Companion"
+                      backgroundColor="#e4fcec"
+                      iconColor="#1f2937"
+                      textColor="#1f2937"
+                      showConflict={true}
+                      conflictIconColor="#dc2626"
+                    >
+                      <ConflictAlternativesContent
+                        message="I found a conflict with at least one of your dietary needs or allergies:"
+                        allergenConflicts={[]}
+                        dietaryConflicts={["vegan", "gluten-free"]}
+                        alternatives={SAMPLE_CONFLICT_ALTERNATIVES}
+                        onReplace={(product) => console.log("Replace with:", product)}
+                      />
+                    </ChatBubble>
+                  </div>
+
+                  {/* Mixed Conflicts */}
+                  <div>
+                    <div className="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded inline-block mb-3">
+                      Mixed Conflicts (Allergens + Dietary)
+                    </div>
+                    <ChatBubble
+                      speakerIcon={ICONS.COMPANION}
+                      speakerLabel="Smart Companion"
+                      backgroundColor="#e4fcec"
+                      iconColor="#1f2937"
+                      textColor="#1f2937"
+                      showConflict={true}
+                      conflictIconColor="#dc2626"
+                    >
+                      <ConflictAlternativesContent
+                        message="I found a conflict with at least one of your dietary needs or allergies:"
+                        allergenConflicts={["sesame"]}
+                        dietaryConflicts={["vegan"]}
+                        alternatives={SAMPLE_CONFLICT_ALTERNATIVES}
+                        onReplace={(product) => console.log("Replace with:", product)}
+                      />
+                    </ChatBubble>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Voice Assistant Alternatives Request Demo */}
+              <div className="p-4 rounded-lg bg-gray-50 border border-gray-200">
+                <h2 className="font-semibold text-gray-700 mb-3">Voice Assistant Alternatives Request</h2>
+                <p className="text-sm text-gray-600 mb-4">
+                  When user asks the Smart Companion for alternatives via voice. Shows shimmer while loading,
+                  then displays explanation + alternatives (no conflict styling).
+                </p>
+                
+                <div className="space-y-6">
+                  {/* Shimmer Loading State */}
+                  <div>
+                    <div className="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded inline-block mb-3">
+                      Loading State (Shimmer) - get_ai_alternatives tool call
+                    </div>
+                    <ChatBubble
+                      speakerIcon={ICONS.COMPANION}
+                      speakerLabel="Smart Companion"
+                      backgroundColor="#e4fcec"
+                      iconColor="#1f2937"
+                      textColor="#1f2937"
+                    >
+                      <ShimmerText text="Searching for suitable alternatives..." />
+                    </ChatBubble>
+                  </div>
+
+                  {/* Result State */}
+                  <div>
+                    <div className="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded inline-block mb-3">
+                      Result State - explanation + alternatives
+                    </div>
+                    <ChatBubble
+                      speakerIcon={ICONS.COMPANION}
+                      speakerLabel="Smart Companion"
+                      backgroundColor="#e4fcec"
+                      iconColor="#1f2937"
+                      textColor="#1f2937"
+                    >
+                      <div className="space-y-3">
+                        <p>I found some healthier alternatives that are lower in sodium and have less fat. Here are my recommendations:</p>
+                        <ProductAlternatives
+                          alternatives={SAMPLE_ALTERNATIVES_2}
+                          onReplace={(product) => console.log("Replace with:", product)}
+                        />
+                      </div>
+                    </ChatBubble>
+                  </div>
+                </div>
+              </div>
+
+              {/* Shimmer Text Demo Section */}
+              <div className="p-4 rounded-lg bg-gray-50 border border-gray-200">
+                <h2 className="font-semibold text-gray-700 mb-3">Tool Call Loading Messages</h2>
+                <p className="text-sm text-gray-600 mb-4">
+                  These messages appear with shimmer effect while tools are executing:
+                </p>
+                
+                {/* Demo chat bubbles showing shimmer text */}
+                <div className="space-y-4">
+                  {Object.entries(TOOL_CALL_MESSAGES).map(([toolName, message]) => (
+                    <ChatBubble
+                      key={toolName}
+                      speakerIcon={ICONS.COMPANION}
+                      speakerLabel="Smart Companion"
+                      backgroundColor="#e4fcec"
+                      iconColor="#1f2937"
+                      textColor="#1f2937"
+                    >
+                      <div className="space-y-2">
+                        <div className="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded inline-block">
+                          {toolName}
+                        </div>
+                        <div>
+                          <ShimmerText text={message} />
+                        </div>
+                      </div>
+                    </ChatBubble>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-4 rounded-lg bg-blue-50 border border-blue-200">
+                <h2 className="font-semibold text-blue-700 mb-2">How it Works</h2>
+                <ul className="text-sm text-blue-600 space-y-1 list-disc list-inside">
+                  <li>When a tool is called, shimmer text appears immediately</li>
+                  <li>The shimmer effect indicates processing/loading state</li>
+                  <li>Once the tool completes, the shimmer is replaced with actual result</li>
+                  <li>This provides visual feedback and improves user experience</li>
+                </ul>
+              </div>
             </div>
           </div>
         )}

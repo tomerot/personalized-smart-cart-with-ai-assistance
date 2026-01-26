@@ -53,6 +53,12 @@ class StartCallEvent(Event):
 
 class EndCallEvent(Event):
     """Event indicating that a call has ended, either expectedly or unexpectedly."""
-    def __init__(self, expected: bool):
+    def __init__(self, expected: bool, reason: str = None):
         self.event_type = "end-call"
         self.expected = expected
+        self.reason = reason # Used in case of expected termination
+
+class UserActivityDetectedEvent(Event):
+    """Event indicating that user activity has been detected."""
+    def __init__(self):
+        self.event_type = "user-activity-detected"

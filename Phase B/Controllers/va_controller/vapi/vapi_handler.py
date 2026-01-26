@@ -33,7 +33,7 @@ class VapiHandler:
         self.silence_timer = None
 
 
-    async def start_call(self, variables: dict):
+    async def start_call(self, variables: dict, messages: list = None):
         """
         Start a new VAPI call with provided variables.
         """
@@ -47,7 +47,7 @@ class VapiHandler:
             return
         
         # Get WebSocket URL from VAPI API
-        url = self.__fetch_websocket_url(variables)
+        url = self.__fetch_websocket_url()
         if not url:
             await self.event_callback(StartCallEvent(started = False))
             return
@@ -57,6 +57,11 @@ class VapiHandler:
         try:
             self.call_websocket = await websockets.connect(url)
             logger.info("WebSocket connection with VAPI established.")
+
+            # Restore previous conversation history silently
+            # Always pass variables to inject current state as final system message
+            await self.__restore_message_history(messages or [], variables)
+
             self.__init_call_tasks()
             self.call_active = True
             logger.info("Call started successfully.")
@@ -98,7 +103,7 @@ class VapiHandler:
             try:
                 await self.call_websocket.send(json.dumps({"type": "end-call"}))
                 logger.info("Request to end the call was sent to VAPI servers.")
-                await self.event_callback(EndCallEvent(expected = True))
+                await self.event_callback(EndCallEvent(expected = True, reason = "CLIENT_REQUEST"))
             except Exception:
                 logger.error(f"Failed to send a request to end the call to VAPI servers.")
     
@@ -167,7 +172,7 @@ class VapiHandler:
 
     async def __process_event(self, event):
         """Processes various events before transmission."""
-        if isinstance(event, EndCallEvent): # Indicates an unexpected termination from the VAPI side
+        if isinstance(event, EndCallEvent): # Indicates a termination from the VAPI side
             await self.end_call(notify_vapi = False) # Local cleanup only
 
         elif isinstance(event, AssistantSpeechUpdateEvent):
@@ -183,6 +188,7 @@ class VapiHandler:
             if self.silence_timer: # In case user activity is detected
                 self.__stop_silence_timer()
                 logger.info("User voice activity detected. Stopped silence timer.")
+                await self.event_callback(UserActivityDetectedEvent())
             if not event.is_final: # No need to send partial transcripts
                 return
 
@@ -219,7 +225,7 @@ class VapiHandler:
         self.audio_handler.start_player_task()
         
 
-    def __fetch_websocket_url(self, variables: dict) -> str | None:
+    def __fetch_websocket_url(self) -> str | None:
         """Request WebSocket URL from VAPI API."""
         logger.info("Requesting WebSocket URL from VAPI...")
         
@@ -230,11 +236,10 @@ class VapiHandler:
         }
         
         # Structured JSON payload specifying the assistant configuration,
-        # transport settings, runtime variables, and session metadata
+        # transport settings and session metadata
         payload = {
             "assistantId": config.VAPI_ASSISTANT_ID,
             "assistantOverrides": {
-                "variableValues": variables,
                 "clientMessages": config.VAPI_CLIENT_MESSAGES
             },
             "transport": config.VAPI_TRANSPORT_CONFIG,
@@ -279,6 +284,66 @@ class VapiHandler:
                 
         return False # All required variables are set
 
+
+    async def __restore_message_history(self, messages: list, variables):
+        """
+        Send previous conversation messages to VAPI using add-message control message.
+        Appends current state (variables) as the final system message.
+        """
+        logger.info(f"Restoring {len(messages)} messages from previous calls...")
+        
+        count = 0 # Count of successfully restored messages
+        
+        for msg in messages:
+            add_message_payload = {
+                "type": "add-message",
+                "message": {
+                    "role": msg.get("role"),
+                    "content": msg.get("content")
+                },
+                "triggerResponseEnabled": False  # Insert silently, don't trigger assistant responses
+            }
+            
+            try:
+                await self.call_websocket.send(json.dumps(add_message_payload))
+                count += 1
+            except Exception:
+                logger.error(f"Failed to restore a message.")
+        
+        logger.info(f"Restored {count} out of {len(messages)} messages successfully.")
+
+        try:
+            state_message = self.__build_state_message(variables)
+            await self.call_websocket.send(json.dumps({
+                "type": "add-message",
+                "message": {
+                    "role": "system",
+                    "content": state_message
+                },
+                "triggerResponseEnabled": False
+            }))
+            logger.info("Added current state as final system message.")
+        except Exception:
+            logger.error(f"Failed to add the current state as the final system message.")
+
+
+    def __build_state_message(self, variables: dict) -> str:
+        """Build a readable system message from variables."""
+        phone = variables.get('phone', 'unknown')
+        allergies = variables.get('allergies', [])
+        dietary_needs = variables.get('dietary_needs', [])
+        barcode = variables.get('barcode', '')
+        
+        lines = [
+            "=== CURRENT CONTEXT (focus on this) ===",
+            f"User phone: {phone}",
+            f"User allergies: {', '.join(allergies) if allergies else 'None'}",
+            f"User dietary needs: {', '.join(dietary_needs) if dietary_needs else 'None'}",
+            f"Currently scanned product barcode: {barcode if barcode else 'None'}",
+            "Please assist with the CURRENTLY SCANNED product above, not previous products in the conversation."
+        ]
+        
+        return '\n'.join(lines)
 
     def __log_vapi_call_error(self, e: requests.exceptions.RequestException):
         """Log errors when attempting to call the VAPI API."""

@@ -14,6 +14,7 @@ import { ICONS } from "@/components/icons/icons.config";
  * @param {function} onIncrease - Callback when quantity is increased
  * @param {function} onDecrease - Callback when quantity is decreased (deletes if quantity is 1)
  * @param {function} onDelete - Callback when product is deleted from cart
+ * @param {boolean} isHighlighted - Whether to highlight this product (voice assistant context)
  * @param {string} className - Additional CSS classes
  */
 const ProductCard = ({
@@ -25,6 +26,7 @@ const ProductCard = ({
   onIncrease,
   onDecrease,
   onDelete,
+  isHighlighted = false,
   className = "",
 }) => {
   const handleIncrease = () => {
@@ -39,18 +41,58 @@ const ProductCard = ({
     if (onDelete) onDelete();
   };
 
+  // Debug log
+  if (isHighlighted) {
+    console.log('🎨 Product is highlighted:', productName);
+  }
+
   return (
-    <div
-      className={`
-        flex items-center
-        bg-white rounded-2xl
-        px-4 py-4
-        border border-gray-200
-        ${className}
-      `}
-    >
-      {/* Left Section: Product Image */}
-      <div className="shrink-0 w-20 h-20 mr-4">
+    <>
+      {isHighlighted && (
+        <style>
+          {`
+            @keyframes border-shimmer {
+              0% {
+                background-position: -200% 0;
+              }
+              100% {
+                background-position: 200% 0;
+              }
+            }
+            
+            .highlighted-border {
+              background: linear-gradient(
+                90deg,
+                #22c55e 0%,
+                #22c55e 40%,
+                #86efac 50%,
+                #22c55e 60%,
+                #22c55e 100%
+              );
+              background-size: 200% 100%;
+              animation: border-shimmer 2s linear infinite;
+            }
+          `}
+        </style>
+      )}
+      
+      <div
+        className={`
+          ${isHighlighted ? 'highlighted-border rounded-2xl' : ''}
+          ${className}
+        `}
+        style={isHighlighted ? { padding: '3px' } : {}}
+      >
+        <div
+          className={`
+            flex items-center
+            bg-white rounded-2xl
+            px-4 py-4
+            ${!isHighlighted ? 'border border-gray-200' : ''}
+          `}
+        >
+          {/* Left Section: Product Image */}
+          <div className="shrink-0 w-20 h-20 mr-4">
         <img
           src={imageUrl}
           alt={productName}
@@ -59,8 +101,8 @@ const ProductCard = ({
         />
       </div>
 
-      {/* Middle Section: Product Info and Quantity */}
-      <div className="flex-1 flex flex-col justify-center min-w-0">
+          {/* Middle Section: Product Info and Quantity */}
+          <div className="flex-1 flex flex-col justify-center min-w-0">
         {/* Product Name */}
         <h3 className="text-sm font-medium text-gray-800 truncate mb-4">
           {productName}
@@ -135,8 +177,8 @@ const ProductCard = ({
         </div>
       </div>
 
-      {/* Right Section: Price */}
-      <div className="flex items-center ml-4 mr-4">
+          {/* Right Section: Price */}
+          <div className="flex items-center ml-4 mr-4">
         {/* Price Section */}
         <div className="text-center">
           {/* Current Price */}
@@ -148,9 +190,11 @@ const ProductCard = ({
           <div className="text-xs text-gray-500 mt-0.5">
             ₪{pricePerUnit.toFixed(2)} per unit
           </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

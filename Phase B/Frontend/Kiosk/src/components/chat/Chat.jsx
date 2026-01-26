@@ -1,6 +1,10 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import ChatBar from "./ChatBar";
 import ChatBubble from "./ChatBubble";
+import ProductLocationContent from "./ProductLocationContent";
+import ConflictAlternativesContent from "./ConflictAlternativesContent";
+import ProductAlternatives from "./ProductAlternatives";
+import ShimmerText from "./ShimmerText";
 import { ICONS } from "@/components/icons/icons.config";
 
 /**
@@ -16,6 +20,8 @@ import { ICONS } from "@/components/icons/icons.config";
  * @param {string} status - Current status: 'idle', 'connecting', 'assistant', 'user'
  * @param {number} timerProgress - Progress of inactivity timer (0-100)
  * @param {Array} messages - Array of message objects: { type: 'user' | 'assistant', content: ReactNode, showConflict: boolean }
+ * @param {function} onReplaceProduct - Callback when "Replace" button is clicked on an alternative
+ * @param {Array} cartItems - Current cart items (for checking if product is still in cart)
  * @param {string} className - Additional CSS classes
  */
 const Chat = ({
@@ -24,12 +30,26 @@ const Chat = ({
   status = 'idle',
   timerProgress = 0,
   messages = [],
+  onReplaceProduct,
+  cartItems = [],
   className = "",
 }) => {
   const scrollContainerRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startY, setStartY] = useState(0);
   const [scrollTop, setScrollTop] = useState(0);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (container && messages.length > 0) {
+      // Smooth scroll to bottom
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  }, [messages]);
 
   // Handle mouse/touch start
   const handleDragStart = useCallback((e) => {
@@ -116,20 +136,93 @@ const Chat = ({
             </p>
           </div>
         ) : (
-          messages.map((message, index) => (
-            <ChatBubble
-              key={index}
-              speakerIcon={message.type === 'user' ? ICONS.PERSON : ICONS.COMPANION}
-              speakerLabel={message.type === 'user' ? 'You' : 'Smart Companion'}
-              backgroundColor={message.type === 'user' ? '#e3e3e3' : '#e4fcec'}
-              iconColor={message.type === 'user' ? '#1f2937' : '#1f2937'}
-              textColor="#1f2937"
-              showConflict={message.showConflict || false}
-              conflictIconColor="#dc2626"
-            >
-              {message.content}
-            </ChatBubble>
-          ))
+          messages.map((message, index) => {
+            // Determine what content to render
+            let content;
+            
+            if (message.isLoading && message.loadingText) {
+              // Show shimmer loading text
+              content = (
+                <>
+                  {message.content && <>{message.content} </>}
+                  <ShimmerText text={message.loadingText} />
+                </>
+              );
+            } else if (message.conflictData) {
+              // Check if product is still in cart AND is the current (top) product
+              // Disabled when: removed, replaced, or a new product was scanned
+              const currentProductId = cartItems.length > 0 ? cartItems[0].id : null;
+              const isProductInCart = cartItems.some(item => item.id === message.forProductId);
+              const isCurrentProduct = message.forProductId === currentProductId;
+              
+              // Render ConflictAlternativesContent for product conflict with alternatives (from barcode scan)
+              content = (
+                <ConflictAlternativesContent
+                  message={message.content}
+                  allergenConflicts={message.conflictData.allergenConflicts}
+                  dietaryConflicts={message.conflictData.dietaryConflicts}
+                  alternatives={message.conflictData.alternatives}
+                  onReplace={onReplaceProduct}
+                  disabled={!isProductInCart || !isCurrentProduct}
+                />
+              );
+            } else if (message.toolCallData?.name === 'get_ai_alternatives') {
+              // Check if product is still in cart AND is the current (top) product
+              const currentProductId = cartItems.length > 0 ? cartItems[0].id : null;
+              const isProductInCart = cartItems.some(item => item.id === message.forProductId);
+              const isCurrentProduct = message.forProductId === currentProductId;
+              
+              // Render ProductAlternatives for voice assistant alternatives request
+              // Transform alternatives to the format expected by ProductAlternatives
+              const transformedAlternatives = (message.toolCallData.alternatives || []).map(product => ({
+                id: product.barcode,
+                name: product.name,
+                size: product.size,
+                company: product.company,
+                price: product.price,
+                imageUrl: product.image_url,
+                originalProduct: product,
+              }));
+              
+              content = (
+                <div className="space-y-3">
+                  <p>{message.content}</p>
+                  {transformedAlternatives.length > 0 && (
+                    <ProductAlternatives
+                      alternatives={transformedAlternatives}
+                      onReplace={onReplaceProduct}
+                      disabled={!isProductInCart || !isCurrentProduct}
+                    />
+                  )}
+                </div>
+              );
+            } else if (message.toolCallData?.name === 'get_product_info') {
+              // Render ProductLocationContent for product location results
+              content = (
+                <ProductLocationContent
+                  responseText={message.content}
+                  productLocation={message.toolCallData.productLocation}
+                />
+              );
+            } else {
+              content = message.content;
+            }
+
+            return (
+              <ChatBubble
+                key={index}
+                speakerIcon={message.type === 'user' ? ICONS.PERSON : ICONS.COMPANION}
+                speakerLabel={message.type === 'user' ? 'You' : 'Smart Companion'}
+                backgroundColor={message.type === 'user' ? '#e3e3e3' : '#e4fcec'}
+                iconColor={message.type === 'user' ? '#1f2937' : '#1f2937'}
+                textColor="#1f2937"
+                showConflict={message.showConflict || false}
+                conflictIconColor="#dc2626"
+              >
+                {content}
+              </ChatBubble>
+            );
+          })
         )}
       </div>
 

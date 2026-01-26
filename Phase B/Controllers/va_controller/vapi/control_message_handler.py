@@ -13,9 +13,9 @@ class ControlMessageHandler:
             "model-output": self.__handle_model_tokens,
             "tool-calls": self.__handle_tool_calls,
             "tool.completed": self.__handle_tool_completed,
-            "hang": self.__handle_unexpected_call_end
+            "hang": self.__handle_unexpected_call_end,
+            "hangup": self.__handle_expected_call_end
         }
-
 
     def route(self, message: str) -> Event | None:
         """Route a control message to its handler and return the event."""
@@ -132,6 +132,10 @@ class ControlMessageHandler:
         logger.error("Call ended by VAPI unexpectedly, received 'hang' control message.")
         return EndCallEvent(expected = False)
 
+    def __handle_expected_call_end(self, msg: dict) -> EndCallEvent:
+        """Handles cases where VAPI ends the call intentionally, due to policy violation."""
+        logger.info("Received 'hangup' control message.")
+        return EndCallEvent(expected = True, reason = "POLICY_VIOLATION") # Hangup is sent from VAPI due to policy violation
 
     def __log_missing_key(self, key: str, control_message: str):
         logger.error(f"Key '{key}' missing in '{control_message}' control message.'")
