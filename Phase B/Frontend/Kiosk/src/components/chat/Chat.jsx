@@ -151,9 +151,14 @@ const Chat = ({
             } else if (message.conflictData) {
               // Check if product is still in cart AND is the current (top) product
               // Disabled when: removed, replaced, or a new product was scanned
-              const currentProductId = cartItems.length > 0 ? cartItems[0].id : null;
-              const isProductInCart = cartItems.some(item => item.id === message.forProductId);
-              const isCurrentProduct = message.forProductId === currentProductId;
+              // Use String() to ensure consistent comparison (avoid type mismatches)
+              const currentProductId = cartItems.length > 0 ? String(cartItems[0].id) : null;
+              const forProductId = message.forProductId ? String(message.forProductId) : null;
+              const isProductInCart = cartItems.some(item => String(item.id) === forProductId);
+              const isCurrentProduct = forProductId && forProductId === currentProductId;
+              
+              // Debug logging
+              console.log('🔍 Conflict alternatives check:', { forProductId, currentProductId, isProductInCart, isCurrentProduct });
               
               // Render ConflictAlternativesContent for product conflict with alternatives (from barcode scan)
               content = (
@@ -168,9 +173,14 @@ const Chat = ({
               );
             } else if (message.toolCallData?.name === 'get_ai_alternatives') {
               // Check if product is still in cart AND is the current (top) product
-              const currentProductId = cartItems.length > 0 ? cartItems[0].id : null;
-              const isProductInCart = cartItems.some(item => item.id === message.forProductId);
-              const isCurrentProduct = message.forProductId === currentProductId;
+              // Use String() to ensure consistent comparison (avoid type mismatches)
+              const currentProductId = cartItems.length > 0 ? String(cartItems[0].id) : null;
+              const forProductId = message.forProductId ? String(message.forProductId) : null;
+              const isProductInCart = cartItems.some(item => String(item.id) === forProductId);
+              const isCurrentProduct = forProductId && forProductId === currentProductId;
+              
+              // Debug logging
+              console.log('🔍 AI alternatives check:', { forProductId, currentProductId, isProductInCart, isCurrentProduct });
               
               // Render ProductAlternatives for voice assistant alternatives request
               // Transform alternatives to the format expected by ProductAlternatives
@@ -184,6 +194,7 @@ const Chat = ({
                 originalProduct: product,
               }));
               
+              // Debug logging already done above
               content = (
                 <div className="space-y-3">
                   <p>{message.content}</p>

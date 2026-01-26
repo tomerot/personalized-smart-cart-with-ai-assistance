@@ -29,6 +29,12 @@ export function VoiceAssistantProvider({ children }) {
   // Cart context for last scanned barcode
   const { cartItems } = useCart();
   
+  // Ref to always access current cartItems (avoids stale closure in event handlers)
+  const cartItemsRef = useRef(cartItems);
+  useEffect(() => {
+    cartItemsRef.current = cartItems;
+  }, [cartItems]);
+  
   // Pending assistant output (held until assistant actually starts speaking)
   const pendingAssistantOutputRef = useRef('');
   
@@ -229,7 +235,16 @@ export function VoiceAssistantProvider({ children }) {
               // Store the data needed to render ProductAlternatives
               // Response structure: { alternatives: [...], explanation: "string" }
               // Get the current highlighted product ID at the time of the tool call
-              const currentHighlightedId = cartItems.length > 0 ? cartItems[0].id : null;
+              // Use ref to always get the latest cart state (avoids stale closure)
+              const currentHighlightedId = cartItemsRef.current.length > 0 ? cartItemsRef.current[0].id : null;
+              
+              // Debug logging
+              console.log('🤖 get_ai_alternatives result:', { 
+                currentHighlightedId, 
+                cartLength: cartItemsRef.current.length,
+                topCartItemId: cartItemsRef.current[0]?.id 
+              });
+              
               messageData = {
                 type: 'assistant',
                 content: assistantContent,
@@ -518,6 +533,14 @@ export function VoiceAssistantProvider({ children }) {
     
     // Get the product ID to track which product this conflict is for
     const productId = originalProduct.barcode || originalProduct.id;
+    
+    // Debug logging
+    console.log('🚨 addConflictMessage:', { 
+      productId, 
+      barcode: originalProduct.barcode, 
+      id: originalProduct.id,
+      productName: originalProduct.name 
+    });
     
     const messageData = {
       type: 'assistant',
