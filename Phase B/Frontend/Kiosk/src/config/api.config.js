@@ -40,6 +40,10 @@ export const API_ENDPOINTS = {
   CHECKOUT: {
     PROCESS: (phone) => `/checkout/${phone}`,
     SUGGESTIONS: (phone) => `/checkout/${phone}/suggestions`,
+  SHOPPING_LIST: {
+    GET: (phone) => `/shopping-list/${phone}`,
+    SAVE: (phone) => `/shopping-list/${phone}`,
+    DELETE: (phone) => `/shopping-list/${phone}`,
   },
 };
 

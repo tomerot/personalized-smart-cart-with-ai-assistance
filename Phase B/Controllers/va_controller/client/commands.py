@@ -15,3 +15,8 @@ class StopCallCommand(Command):
 class EndSessionCommand(Command):
     """Command instructing to terminate the client session and stop logging."""
     pass
+
+class PlayAlertCommand(Command):
+    """Command instructing to play a pre-made audio alert."""
+    def __init__(self, alert_name: str):
+        self.alert_name = alert_name

@@ -24,10 +24,28 @@ export function VoiceAssistantProvider({ children }) {
   const [messages, setMessages] = useState([]);
   
   // User context for variables
-  const { user } = useUser();
+  const { user, updateUser } = useUser();
   
   // Cart context for last scanned barcode
   const { cartItems } = useCart();
+  
+  // Ref to always access current cartItems (avoids stale closure in event handlers)
+  const cartItemsRef = useRef(cartItems);
+  useEffect(() => {
+    cartItemsRef.current = cartItems;
+  }, [cartItems]);
+  
+  // Ref to always access current user (avoids stale closure in event handlers)
+  const userRef = useRef(user);
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+  
+  // Ref for updateUser to avoid stale closure
+  const updateUserRef = useRef(updateUser);
+  useEffect(() => {
+    updateUserRef.current = updateUser;
+  }, [updateUser]);
   
   // Pending assistant output (held until assistant actually starts speaking)
   const pendingAssistantOutputRef = useRef('');
@@ -229,7 +247,16 @@ export function VoiceAssistantProvider({ children }) {
               // Store the data needed to render ProductAlternatives
               // Response structure: { alternatives: [...], explanation: "string" }
               // Get the current highlighted product ID at the time of the tool call
-              const currentHighlightedId = cartItems.length > 0 ? cartItems[0].id : null;
+              // Use ref to always get the latest cart state (avoids stale closure)
+              const currentHighlightedId = cartItemsRef.current.length > 0 ? cartItemsRef.current[0].id : null;
+              
+              // Debug logging
+              console.log('🤖 get_ai_alternatives result:', { 
+                currentHighlightedId, 
+                cartLength: cartItemsRef.current.length,
+                topCartItemId: cartItemsRef.current[0]?.id 
+              });
+              
               messageData = {
                 type: 'assistant',
                 content: assistantContent,
@@ -390,6 +417,46 @@ export function VoiceAssistantProvider({ children }) {
           }
         }
         
+        // Handle allergy and dietary needs updates
+        if (event.name === 'add_allergies' || event.name === 'remove_allergies' ||
+            event.name === 'add_dietary_needs' || event.name === 'remove_dietary_needs') {
+          try {
+            const parsedResult = typeof event.result === 'string' 
+              ? JSON.parse(event.result) 
+              : event.result;
+            
+            const currentUser = userRef.current;
+            if (currentUser && parsedResult) {
+              // Extract the items to add/remove from the result
+              const items = parsedResult.items || parsedResult.allergies || parsedResult.dietary_needs || [];
+              
+              if (event.name === 'add_allergies') {
+                const currentAllergies = currentUser.allergies || [];
+                const newAllergies = [...new Set([...currentAllergies, ...items])];
+                updateUserRef.current({ allergies: newAllergies });
+                console.log('Updated user allergies (added):', newAllergies);
+              } else if (event.name === 'remove_allergies') {
+                const currentAllergies = currentUser.allergies || [];
+                const newAllergies = currentAllergies.filter(a => !items.includes(a));
+                updateUserRef.current({ allergies: newAllergies });
+                console.log('Updated user allergies (removed):', newAllergies);
+              } else if (event.name === 'add_dietary_needs') {
+                const currentDietaryNeeds = currentUser.dietary_needs || [];
+                const newDietaryNeeds = [...new Set([...currentDietaryNeeds, ...items])];
+                updateUserRef.current({ dietary_needs: newDietaryNeeds });
+                console.log('Updated user dietary needs (added):', newDietaryNeeds);
+              } else if (event.name === 'remove_dietary_needs') {
+                const currentDietaryNeeds = currentUser.dietary_needs || [];
+                const newDietaryNeeds = currentDietaryNeeds.filter(d => !items.includes(d));
+                updateUserRef.current({ dietary_needs: newDietaryNeeds });
+                console.log('Updated user dietary needs (removed):', newDietaryNeeds);
+              }
+            }
+          } catch (e) {
+            console.error('Failed to parse allergy/dietary tool call result:', e);
+          }
+        }
+        
         // Remove the tool call from active tracking
         activeToolCallsRef.current.delete(event.execution_id);
         
@@ -498,6 +565,18 @@ export function VoiceAssistantProvider({ children }) {
   }, []);
 
   /**
+   * Play a pre-made audio alert through the voice controller
+   * @param {string} alertName - Name of the alert audio file (without extension)
+   */
+  const playAlert = useCallback((alertName) => {
+    if (voiceControllerService.isConnected()) {
+      voiceControllerService.playAlert(alertName);
+    } else {
+      console.warn('Cannot play alert: Voice controller not connected');
+    }
+  }, []);
+
+  /**
    * Add a message manually (for system messages or testing)
    */
   const addMessage = useCallback((type, content, showConflict = false) => {
@@ -519,6 +598,14 @@ export function VoiceAssistantProvider({ children }) {
     // Get the product ID to track which product this conflict is for
     const productId = originalProduct.barcode || originalProduct.id;
     
+    // Debug logging
+    console.log('🚨 addConflictMessage:', { 
+      productId, 
+      barcode: originalProduct.barcode, 
+      id: originalProduct.id,
+      productName: originalProduct.name 
+    });
+    
     const messageData = {
       type: 'assistant',
       content: 'I found a conflict with at least one of your dietary needs or allergies:',
@@ -536,7 +623,10 @@ export function VoiceAssistantProvider({ children }) {
     setMessages(prev => [...prev, messageData]);
     lastSpeakerRef.current = 'assistant';
     
-    // TODO: Later - trigger pre-made voice for conflict notification
+    // Play conflict warning audio alert
+    if (voiceControllerService.isConnected()) {
+      voiceControllerService.playAlert('warning');
+    }
   }, []);
 
   const value = {
@@ -554,6 +644,7 @@ export function VoiceAssistantProvider({ children }) {
     clearMessages,
     addMessage,
     addConflictMessage,
+    playAlert,
     
     // Setters for external control
     setChatStatus,

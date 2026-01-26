@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useRef, useState, useMemo, useCallback } from "react";
 import NavRail from "@/components/navrail/NavRail";
 import NavRailButton from "@/components/navrail/NavRailButton";
 import { ICONS } from "@/components/icons/icons.config";
@@ -15,11 +15,12 @@ import { useCart } from "@/context/CartContext";
 import { useVoiceAssistant } from "@/context/VoiceAssistantContext";
 import { NAV_VIEWS, VIEW_CONFIG, useViewTransition } from "@/features/navigation";
 import { CompanionView } from "@/features/smart-companion";
-import { GroceryListView } from "@/features/grocery-list";
 import { voiceControllerService } from "@/services/voiceControllerService";
 import { barcodeControllerService } from "@/services/barcodeControllerService";
 import { checkoutService } from "@/services/checkoutService";
 import { productService } from "@/services/productService";
+import { GroceryListView, ShoppingListMapPopover } from "@/features/grocery-list";
+import { shoppingListService } from "@/services/shoppingListService";
 
 /**
  * DashboardLayout Component
@@ -49,13 +50,42 @@ function DashboardLayout({ children }) {
   const [checkoutSuggestions, setCheckoutSuggestions] = useState([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [checkoutItemsTracked, setCheckoutItemsTracked] = useState(0);
-
+  
+  // Shopping list state - managed here so it persists across view changes
+  const [shoppingList, setShoppingList] = useState(null);
+  const [isLoadingList, setIsLoadingList] = useState(false);
+  const [skippedItems, setSkippedItems] = useState(new Set());
+  const [showMapPopover, setShowMapPopover] = useState(false);
+  const actionButtonRef = useRef(null);
+  
   // Log hasShoppingList only once per session
   const hasLoggedShoppingList = useRef(false);
   if (!hasLoggedShoppingList.current) {
     console.log('🔍 DashboardLayout - hasShoppingList:', hasShoppingList, '| Type:', typeof hasShoppingList);
     hasLoggedShoppingList.current = true;
   }
+
+  // Cart items map for quick lookup
+  const cartItemsMap = useMemo(() => {
+    const map = new Map();
+    cartItems.forEach(item => {
+      map.set(item.id, item.quantity);
+    });
+    return map;
+  }, [cartItems]);
+
+  // Toggle skip status for an item
+  const handleToggleSkip = useCallback((barcode) => {
+    setSkippedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(barcode)) {
+        newSet.delete(barcode);
+      } else {
+        newSet.add(barcode);
+      }
+      return newSet;
+    });
+  }, []);
 
   // Barcode scanner integration
   const {
@@ -256,9 +286,35 @@ function DashboardLayout({ children }) {
     }, 50);
   };
 
-  const handleLoadGroceryList = () => {
-    // TODO: Implement load grocery list functionality
-    console.log("Load Grocery List clicked");
+  // Load shopping list from backend
+  const handleLoadGroceryList = async () => {
+    if (!user?.phone || isLoadingList) return;
+    
+    setIsLoadingList(true);
+    console.log("Loading grocery list from backend...");
+
+    try {
+      const result = await shoppingListService.getShoppingList(user.phone);
+      
+      if (result.success && result.data?.items?.length > 0) {
+        // Store the shopping list in state
+        setShoppingList(result.data);
+        setSkippedItems(new Set()); // Reset skipped items
+        console.log(`✅ Loaded shopping list with ${result.data.items.length} items`);
+      } else {
+        console.log("No items in shopping list");
+        setShoppingList(null);
+      }
+    } catch (error) {
+      console.error("Failed to load grocery list:", error);
+    } finally {
+      setIsLoadingList(false);
+    }
+  };
+
+  // Toggle map popover
+  const handleToggleMapPopover = () => {
+    setShowMapPopover(prev => !prev);
   };
 
   const handleAudioSettings = () => {
@@ -268,6 +324,9 @@ function DashboardLayout({ children }) {
 
   // Get current view info for title/icon (use displayView for smooth transitions)
   const viewInfo = VIEW_CONFIG[displayView];
+
+  // Determine button state for Grocery List view
+  const isListLoaded = shoppingList !== null && shoppingList.items?.length > 0;
 
   return (
     <div className="flex h-full w-full p-4">
@@ -376,24 +435,58 @@ function DashboardLayout({ children }) {
             </h2>
           </div>
           
-          {displayView === NAV_VIEWS.GROCERY_LIST && viewInfo.actionButton && (
-            <button 
-              disabled={!hasShoppingList}
-              className={`flex items-center gap-3 px-3 py-1 font-semibold rounded-xl transition-colors duration-150 ${
-                !hasShoppingList 
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                  : 'bg-green-600 hover:bg-green-700 active:bg-green-800 text-white'
-              } ${isTransitioning ? 'animate-fadeOut' : 'animate-fadeIn'}`}
-              onClick={handleLoadGroceryList}
-            >
-              <Icon 
-                name={viewInfo.actionButton.icon} 
-                size={20} 
-                weight={500}
-                style={{ color: !hasShoppingList ? "#6b7280" : "white" }}
-              />
-              <span className="font-[Montserrat] pr-1">{viewInfo.actionButton.label}</span>
-            </button>
+          {/* Grocery List action button - toggles between Load List and Display Map */}
+          {displayView === NAV_VIEWS.GROCERY_LIST && (
+            <div className="relative">
+              {isListLoaded ? (
+                // Show "Display Map" button after list is loaded
+                <button 
+                  ref={actionButtonRef}
+                  className={`flex items-center gap-3 px-3 py-1 font-semibold rounded-xl transition-colors duration-150 
+                    ${showMapPopover 
+                      ? 'bg-green-700 text-white' 
+                      : 'bg-green-600 hover:bg-green-700 active:bg-green-800 text-white'
+                    } ${isTransitioning ? 'animate-fadeOut' : 'animate-fadeIn'}`}
+                  onClick={handleToggleMapPopover}
+                >
+                  <Icon 
+                    name={ICONS.MAP} 
+                    size={20} 
+                    weight={500}
+                    style={{ color: "white" }}
+                  />
+                  <span className="font-[Montserrat] pr-1">Display Map</span>
+                </button>
+              ) : (
+                // Show "Load List" button before list is loaded
+                <button 
+                  disabled={!hasShoppingList || isLoadingList}
+                  className={`flex items-center gap-3 px-3 py-1 font-semibold rounded-xl transition-colors duration-150 ${
+                    !hasShoppingList || isLoadingList
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                      : 'bg-green-600 hover:bg-green-700 active:bg-green-800 text-white'
+                  } ${isTransitioning ? 'animate-fadeOut' : 'animate-fadeIn'}`}
+                  onClick={handleLoadGroceryList}
+                >
+                  {isLoadingList ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                      <span className="font-[Montserrat] pr-1">Loading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Icon 
+                        name={ICONS.LOAD_LIST} 
+                        size={20} 
+                        weight={500}
+                        style={{ color: !hasShoppingList ? "#6b7280" : "white" }}
+                      />
+                      <span className="font-[Montserrat] pr-1">Load List</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
           )}
           
           {displayView === NAV_VIEWS.COMPANION && viewInfo.actionButton && (
@@ -415,7 +508,13 @@ function DashboardLayout({ children }) {
         {/* Dynamic content area - Changes based on NavRail selection */}
         <div className="flex-1 rounded-2xl border border-gray-200 overflow-hidden" style={{ backgroundColor: '#f7fef9' }}>
           <div className={`w-full h-full p-6 flex flex-col ${isTransitioning ? 'animate-fadeOut' : 'animate-fadeIn'}`}>
-            {displayView === NAV_VIEWS.GROCERY_LIST && <GroceryListView />}
+            {displayView === NAV_VIEWS.GROCERY_LIST && (
+              <GroceryListView 
+                shoppingList={shoppingList}
+                skippedItems={skippedItems}
+                onToggleSkip={handleToggleSkip}
+              />
+            )}
             {displayView === NAV_VIEWS.COMPANION && <CompanionView />}
             {displayView === NAV_VIEWS.DISCOUNTS && (
               <div className="text-gray-600">
@@ -474,9 +573,19 @@ function DashboardLayout({ children }) {
         onClose={handleCheckoutComplete}
         itemsTracked={checkoutItemsTracked}
       />
+      {/* Map Popover */}
+      {showMapPopover && shoppingList && (
+        <ShoppingListMapPopover
+          shoppingList={shoppingList}
+          cartItemsMap={cartItemsMap}
+          skippedItems={skippedItems}
+          onToggleSkip={handleToggleSkip}
+          onClose={() => setShowMapPopover(false)}
+          buttonRef={actionButtonRef}
+        />
+      )}
     </div>
   );
 }
 
 export default DashboardLayout;
-

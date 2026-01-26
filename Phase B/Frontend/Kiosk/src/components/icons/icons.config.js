@@ -28,4 +28,7 @@ export const ICONS = {
   LOCATION: "location_on",
   WARNING: "warning",
   CHECK_CIRCLE: "check_circle"
+  MAP: "map",
+  CHECK: "check",
+  CANCEL: "close",
 };
