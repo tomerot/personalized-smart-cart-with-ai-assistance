@@ -19,6 +19,7 @@ export const VOICE_COMMANDS = {
   START_CALL: 'start-call',
   STOP_CALL: 'stop-call',
   END_SESSION: 'end-session',
+  PLAY_ALERT: 'play-alert',
 };
 
 // Event Types - matches va_controller/vapi/events.py
@@ -217,6 +218,19 @@ class VoiceControllerService {
   stopCall() {
     console.log('Stopping voice assistant call...');
     return this._sendCommand({ cmd_type: VOICE_COMMANDS.STOP_CALL });
+  }
+
+  /**
+   * Play a pre-made audio alert
+   * @param {string} alertName - Name of the alert audio file (without extension)
+   * @returns {boolean} Success status
+   */
+  playAlert(alertName) {
+    console.log(`Playing alert: ${alertName}`);
+    return this._sendCommand({
+      cmd_type: VOICE_COMMANDS.PLAY_ALERT,
+      alert_name: alertName,
+    });
   }
 
   /**

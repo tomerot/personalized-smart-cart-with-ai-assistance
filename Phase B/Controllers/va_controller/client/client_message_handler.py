@@ -10,7 +10,8 @@ class ClientMessageHandler:
         self.cmd_map = {
             "start-call": StartCallCommand,
             "stop-call": StopCallCommand,
-            "end-session": EndSessionCommand
+            "end-session": EndSessionCommand,
+            "play-alert": PlayAlertCommand
         }
 
     def handle(self, message: str) -> Command:

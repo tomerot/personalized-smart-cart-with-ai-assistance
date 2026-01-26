@@ -1,4 +1,5 @@
 import asyncio
+from alert_audio_player import AlertAudioPlayer
 from client.client_handler import ClientHandler
 from vapi.vapi_handler import VapiHandler
 from client.commands import *
@@ -10,6 +11,7 @@ class VoiceAssistantController:
     def __init__(self):
         self.client_handler = ClientHandler(self.__on_command)
         self.vapi_handler = VapiHandler(self.__on_event)
+        self.alert_player = AlertAudioPlayer()
     
     async def start(self):
         """Starts the controller."""
@@ -29,13 +31,17 @@ class VoiceAssistantController:
 
         command_actions = {
             StartCallCommand: lambda cmd: self.vapi_handler.start_call(cmd.variables, cmd.messages),
-            StopCallCommand:  lambda cmd: self.vapi_handler.end_call(notify_vapi = True)
+            StopCallCommand:  lambda cmd: self.vapi_handler.end_call(notify_vapi = True),
+            PlayAlertCommand: lambda cmd: self.__play_alert(cmd.alert_name)
         }
 
         action = command_actions.get(type(command))
         if action:
             await action(command)
 
+    async def __play_alert(self, alert_name: str):
+        """Play an audio alert (runs synchronously but called as async)."""
+        self.alert_player.play_alert(alert_name)
     
     async def __on_event(self, event):
         """
