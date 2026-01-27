@@ -95,10 +95,10 @@ function ShoppingListItem({ item, isCollected, collectedQuantity, isSkipped, onT
         </div>
 
         {/* Quantity */}
-        <div className={`shrink-0 ${
+        <div className={`shrink-0 mr-8 ${
           isFullyCollected || isSkipped ? 'text-gray-400' : 'text-gray-700'
         }`}>
-          <span className="text-sm font-medium">×{quantity}</span>
+          <span className="text-lg font-semibold">×{quantity}</span>
         </div>
       </div>
     </div>
@@ -262,22 +262,6 @@ export default function GroceryListView({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Progress header */}
-      <div className="mb-4 shrink-0">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-gray-600">
-            {stats.collectedItems} of {stats.totalItems} items collected
-          </span>
-          <span className="text-sm font-semibold text-green-600">{progressPercent}%</span>
-        </div>
-        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-          <div 
-            className="h-full bg-green-500 rounded-full transition-all duration-500 ease-out"
-            style={{ width: `${progressPercent}%` }}
-          />
-        </div>
-      </div>
-
       {/* Hide scrollbar style */}
       <style>
         {`
@@ -311,24 +295,35 @@ export default function GroceryListView({
         onTouchMove={handleDragMove}
         onTouchEnd={handleDragEnd}
       >
-        {allCollected ? (
-          <AllCollectedState totalItems={stats.totalItems} />
-        ) : (
-          shoppingList.items.map((item) => {
-            const collectedQty = cartItemsMap.get(item.barcode) || 0;
-            const isSkipped = skippedItems?.has(item.barcode);
-            return (
-              <ShoppingListItem
-                key={item.barcode}
-                item={item}
-                isCollected={collectedQty >= item.quantity}
-                collectedQuantity={collectedQty}
-                isSkipped={isSkipped}
-                onToggleSkip={onToggleSkip}
-              />
-            );
-          })
-        )}
+        {shoppingList.items.map((item) => {
+          const collectedQty = cartItemsMap.get(item.barcode) || 0;
+          const isSkipped = skippedItems?.has(item.barcode);
+          return (
+            <ShoppingListItem
+              key={item.barcode}
+              item={item}
+              isCollected={collectedQty >= item.quantity}
+              collectedQuantity={collectedQty}
+              isSkipped={isSkipped}
+              onToggleSkip={onToggleSkip}
+            />
+          );
+        })}
+      </div>
+
+      {/* Progress bar - bottom */}
+      <div className="mt-4 shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="h-2 bg-gray-200 rounded-full overflow-hidden flex-1">
+            <div 
+              className="h-full bg-green-500 rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+          <span className="text-sm font-medium text-gray-600 whitespace-nowrap">
+            {stats.collectedItems}/{stats.totalItems} Products Collected
+          </span>
+        </div>
       </div>
     </div>
   );
