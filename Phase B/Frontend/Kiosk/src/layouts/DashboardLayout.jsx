@@ -19,7 +19,8 @@ import { voiceControllerService } from "@/services/voiceControllerService";
 import { barcodeControllerService } from "@/services/barcodeControllerService";
 import { checkoutService } from "@/services/checkoutService";
 import { productService } from "@/services/productService";
-import { GroceryListView, ShoppingListMapPopover } from "@/features/grocery-list";
+import { GroceryListView } from "@/features/grocery-list";
+import ShoppingRouteModal from "@/components/modal/ShoppingRouteModal";
 import { shoppingListService } from "@/services/shoppingListService";
 
 /**
@@ -429,11 +430,11 @@ function DashboardLayout({ children }) {
             </h2>
           </div>
           
-          {/* Grocery List action button - toggles between Load List and Display Map */}
+          {/* Grocery List action button - toggles between Load List and Shopping Route */}
           {displayView === NAV_VIEWS.GROCERY_LIST && (
             <div className="relative">
               {isListLoaded ? (
-                // Show "Display Map" button after list is loaded
+                // Show "Shopping Route" button after list is loaded
                 <button 
                   ref={actionButtonRef}
                   className={`flex items-center gap-3 px-3 py-1 font-semibold rounded-xl transition-colors duration-150 
@@ -449,7 +450,7 @@ function DashboardLayout({ children }) {
                     weight={500}
                     style={{ color: "white" }}
                   />
-                  <span className="font-[Montserrat] pr-1">Display Map</span>
+                  <span className="font-[Montserrat] pr-1">Shopping Route</span>
                 </button>
               ) : (
                 // Show "Load List" button before list is loaded
@@ -567,17 +568,15 @@ function DashboardLayout({ children }) {
         onClose={handleCheckoutComplete}
         itemsTracked={checkoutItemsTracked}
       />
-      {/* Map Popover */}
-      {showMapPopover && shoppingList && (
-        <ShoppingListMapPopover
-          shoppingList={shoppingList}
-          cartItemsMap={cartItemsMap}
-          skippedItems={skippedItems}
-          onToggleSkip={handleToggleSkip}
-          onClose={() => setShowMapPopover(false)}
-          buttonRef={actionButtonRef}
-        />
-      )}
+      {/* Shopping Route Modal */}
+      <ShoppingRouteModal
+        isOpen={showMapPopover && shoppingList !== null}
+        onClose={() => setShowMapPopover(false)}
+        anchorRef={actionButtonRef}
+        shoppingList={shoppingList}
+        cartItemsMap={cartItemsMap}
+        skippedItems={skippedItems}
+      />
     </div>
   );
 }
