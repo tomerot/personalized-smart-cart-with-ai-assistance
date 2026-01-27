@@ -219,7 +219,7 @@ const ShoppingRouteModal = ({
         >
 
           {/* Map - full width, larger size */}
-          <div className="px-3 pt-4 pb-3 h-[400px] shrink-0">
+          <div className="p-3 h-[330px] shrink-0">
             <StoreMap 
               markers={markers}
               markerStyle="numbered"

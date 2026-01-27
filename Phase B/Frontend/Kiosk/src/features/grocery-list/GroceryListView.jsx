@@ -295,7 +295,7 @@ export default function GroceryListView({
     });
   }, [shoppingList, cartItemsMap, skippedItems]);
 
-  // Auto-scroll to "Up Next" section when it changes
+  // Auto-scroll to "Next Stop" section when it changes
   useEffect(() => {
     if (nextUpRef.current && nextUpCoordIndex >= 0) {
       nextUpRef.current.scrollIntoView({
@@ -433,12 +433,12 @@ export default function GroceryListView({
           // Render groups
           return itemsGroupedByCoord.map((group, groupIndex) => {
             if (group.isNextUp) {
-              // Render "Up Next" section with all items at this coordinate
+              // Render "Next Stop" section with all items at this coordinate
               return (
                 <div key={`group-${groupIndex}`} ref={nextUpRef} className="bg-orange-50 rounded-xl p-3 border border-orange-200">
                   {/* Header */}
                   <div className="mb-2">
-                    <h3 className="font-semibold text-orange-700 text-sm">Up Next</h3>
+                    <h3 className="font-semibold text-orange-700 text-sm">Next Stop</h3>
                   </div>
                   {/* Items at this coordinate */}
                   <div className="space-y-2">
