@@ -9,6 +9,7 @@ import ConfirmationModal from "@/components/modal/ConfirmationModal";
 import MessageModal from "@/components/modal/MessageModal";
 import ForgotItemsModal from "@/components/modal/ForgotItemsModal";
 import CheckoutSuccessModal from "@/components/modal/CheckoutSuccessModal";
+import IncompleteListModal from "@/components/modal/IncompleteListModal";
 import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 import { useUser } from "@/context/UserContext";
 import { useCart } from "@/context/CartContext";
@@ -50,6 +51,7 @@ function DashboardLayout({ children }) {
   const [showCheckoutSuccessModal, setShowCheckoutSuccessModal] = useState(false);
   const [checkoutSuggestions, setCheckoutSuggestions] = useState([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [showIncompleteListModal, setShowIncompleteListModal] = useState(false);
   
   // Shopping list state - managed here so it persists across view changes
   const [shoppingList, setShoppingList] = useState(null);
@@ -169,11 +171,41 @@ function DashboardLayout({ children }) {
     console.log("Help clicked - will open modal");
   };
 
+  // Check if there are uncollected items from shopping list
+  const hasUncollectedItems = useCallback(() => {
+    if (!shoppingList?.items?.length) return false;
+
+    return shoppingList.items.some(item => {
+      // Skip items that user marked as skipped (not to take)
+      if (skippedItems?.has(item.barcode)) return false;
+
+      const collectedQty = cartItemsMap.get(item.barcode) || 0;
+      // If they still need to collect some of this item
+      return collectedQty < item.quantity;
+    });
+  }, [shoppingList, skippedItems, cartItemsMap]);
+
   const handleCheckout = async () => {
     if (!user?.phone) {
       console.error("No user phone for checkout");
       return;
     }
+
+    // Check if shopping list is loaded and there are uncollected items
+    const isListLoaded = shoppingList !== null && shoppingList.items?.length > 0;
+    if (isListLoaded && hasUncollectedItems()) {
+      console.log("User has uncollected items from shopping list - showing warning");
+      setShowIncompleteListModal(true);
+      return; // Wait for user decision
+    }
+
+    // Proceed to checkout flow (ForgotItems suggestions)
+    await proceedToCheckoutFlow();
+  };
+
+  // Continue checkout flow (fetch suggestions and show ForgotItems modal if needed)
+  const proceedToCheckoutFlow = async () => {
+    if (!user?.phone) return;
 
     console.log("Checkout clicked - fetching suggestions...");
     setIsLoadingSuggestions(true);
@@ -205,6 +237,12 @@ function DashboardLayout({ children }) {
       setCheckoutSuggestions([]);
       await handleProceedToCheckout();
     }
+  };
+
+  // Handle "Proceed Anyway" from IncompleteListModal
+  const handleProceedWithIncompleteList = async () => {
+    setShowIncompleteListModal(false);
+    await proceedToCheckoutFlow();
   };
 
   const handleAddSuggestedItem = (suggestion) => {
@@ -575,6 +613,14 @@ function DashboardLayout({ children }) {
         isOpen={showCheckoutSuccessModal}
         onClose={handleCheckoutComplete}
       />
+
+      {/* Incomplete List Modal (shown when checkout with uncollected items) */}
+      <IncompleteListModal
+        isOpen={showIncompleteListModal}
+        onClose={() => setShowIncompleteListModal(false)}
+        onProceed={handleProceedWithIncompleteList}
+      />
+
       {/* Shopping Route Modal */}
       <ShoppingRouteModal
         isOpen={showMapPopover && shoppingList !== null}

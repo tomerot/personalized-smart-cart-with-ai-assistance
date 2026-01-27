@@ -138,8 +138,10 @@ const ForgotItemsModal = ({
             </div>
           ) : (
             <>
-              <p className="text-sm text-gray-600 mb-4 text-center">
-                Based on your shopping habits, you might need the following products
+              <p className="text-center text-gray-600 mb-4">
+                Based on your shopping habits,
+                <br />
+                you might need the following products
               </p>
               <div className="space-y-3">
                 {suggestions.map((item) => (
