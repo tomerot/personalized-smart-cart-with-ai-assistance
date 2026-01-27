@@ -168,8 +168,8 @@ function Test() {
     console.log("Leave clicked - will open modal");
   };
 
-  const handleSettingsClick = () => {
-    console.log("Settings clicked - will open modal");
+  const handleProfileClick = () => {
+    console.log("Profile clicked - will open modal");
   };
 
   const handleHelpClick = () => {
@@ -255,10 +255,10 @@ function Test() {
           <div className="w-full h-px bg-white/30"></div>
         </div>
         <NavRailButton
-          icon={ICONS.SETTINGS}
-          label="Settings"
+          icon={ICONS.PROFILE}
+          label="Profile"
           isBottom={true}
-          onClick={handleSettingsClick}
+          onClick={handleProfileClick}
           showPill={false}
           fillIconWhenActive={false}
           activeColor="#e4fcec"

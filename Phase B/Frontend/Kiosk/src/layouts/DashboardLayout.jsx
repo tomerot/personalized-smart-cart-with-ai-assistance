@@ -159,9 +159,9 @@ function DashboardLayout({ children }) {
     setShowLeaveModal(false);
   };
 
-  const handleSettingsClick = () => {
-    // TODO: Open settings modal
-    console.log("Settings clicked - will open modal");
+  const handleProfileClick = () => {
+    // TODO: Open profile modal
+    console.log("Profile clicked - will open modal");
   };
 
   const handleHelpClick = () => {
@@ -395,10 +395,10 @@ function DashboardLayout({ children }) {
           <div className="w-full h-px bg-white/30"></div>
         </div>
         <NavRailButton
-          icon={ICONS.SETTINGS}
-          label="Settings"
+          icon={ICONS.PROFILE}
+          label="Profile"
           isBottom={true}
-          onClick={handleSettingsClick}
+          onClick={handleProfileClick}
           fillIconWhenActive={false}
           activeColor="#e4fcec"
           inactiveColor="#e4fcec"

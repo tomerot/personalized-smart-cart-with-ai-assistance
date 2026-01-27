@@ -7,7 +7,7 @@ export const ICONS = {
   DISCOUNT: "percent_discount",
   HELP: "help",
   LEAVE: "logout",
-  SETTINGS: "settings",
+  PROFILE: "account_circle",
   START: "start",
   BACKSPACE: "backspace",
   CLOSE: "close",
