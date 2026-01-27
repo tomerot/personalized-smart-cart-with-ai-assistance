@@ -6,23 +6,23 @@
  * Shopping list is fetched only when user clicks "Load List" button
  */
 
-import { useState, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useUser } from '@/context/UserContext';
 import { useCart } from '@/context/CartContext';
 import Icon from '@/components/icons/Icon';
 import { ICONS } from '@/components/icons/icons.config';
 
 /**
- * Individual shopping list item component
+ * Individual shopping list item component with optional Next Up wrapper
  */
-function ShoppingListItem({ item, isCollected, collectedQuantity, isSkipped, onToggleSkip }) {
-  const { name, image_url, company, quantity } = item;
+function ShoppingListItemWithNextUp({ item, isCollected, collectedQuantity, isSkipped, onToggleSkip, isNextUp }) {
+  const { name, image_url, company, quantity, barcode } = item;
   
   // Calculate progress for partial collection
   const isPartiallyCollected = collectedQuantity > 0 && collectedQuantity < quantity;
   const isFullyCollected = collectedQuantity >= quantity;
 
-  return (
+  const itemCard = (
     <div 
       className={`p-3 rounded-xl border transition-all duration-200 ${
         isFullyCollected 
@@ -37,7 +37,7 @@ function ShoppingListItem({ item, isCollected, collectedQuantity, isSkipped, onT
       <div className="flex items-center gap-3">
         {/* Checkbox indicator - touchable for skip */}
         <button
-          onClick={() => !isFullyCollected && onToggleSkip(item.barcode)}
+          onClick={() => !isFullyCollected && onToggleSkip(barcode)}
           disabled={isFullyCollected}
           className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-colors ${
             isFullyCollected 
@@ -103,6 +103,21 @@ function ShoppingListItem({ item, isCollected, collectedQuantity, isSkipped, onT
       </div>
     </div>
   );
+
+  // If this is the next up item, wrap it in the orange section
+  if (isNextUp) {
+    return (
+      <div className="bg-orange-50 rounded-xl p-3 border border-orange-200">
+        {/* Header */}
+        <div className="mb-2">
+          <h3 className="font-semibold text-orange-700 text-sm">Up Next</h3>
+        </div>
+        {itemCard}
+      </div>
+    );
+  }
+
+  return itemCard;
 }
 
 /**
@@ -171,6 +186,7 @@ export default function GroceryListView({
 
   // Touch/drag scrolling state
   const scrollContainerRef = useRef(null);
+  const nextUpRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startY, setStartY] = useState(0);
   const [scrollTop, setScrollTop] = useState(0);
@@ -255,6 +271,40 @@ export default function GroceryListView({
     ? Math.round((stats.collectedItems / stats.totalItems) * 100) 
     : 0;
 
+  // Calculate next up coordinate index for auto-scroll
+  const nextUpCoordIndex = useMemo(() => {
+    if (!shoppingList?.items?.length || !shoppingList?.categoryOrder || !shoppingList?.routeCoordinates) {
+      return -1;
+    }
+
+    const itemsByCategory = {};
+    shoppingList.items.forEach(item => {
+      if (!itemsByCategory[item.category]) {
+        itemsByCategory[item.category] = [];
+      }
+      itemsByCategory[item.category].push(item);
+    });
+
+    return shoppingList.categoryOrder.findIndex(category => {
+      const categoryItems = itemsByCategory[category] || [];
+      return categoryItems.some(item => {
+        const collectedQty = cartItemsMap.get(item.barcode) || 0;
+        const isSkipped = skippedItems?.has(item.barcode);
+        return collectedQty < item.quantity && !isSkipped;
+      });
+    });
+  }, [shoppingList, cartItemsMap, skippedItems]);
+
+  // Auto-scroll to "Up Next" section when it changes
+  useEffect(() => {
+    if (nextUpRef.current && nextUpCoordIndex >= 0) {
+      nextUpRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }
+  }, [nextUpCoordIndex]);
+
   // Empty state - no list loaded yet
   if (!shoppingList || !shoppingList.items?.length) {
     return <EmptyState hasShoppingList={hasShoppingList} />;
@@ -295,20 +345,133 @@ export default function GroceryListView({
         onTouchMove={handleDragMove}
         onTouchEnd={handleDragEnd}
       >
-        {shoppingList.items.map((item) => {
-          const collectedQty = cartItemsMap.get(item.barcode) || 0;
-          const isSkipped = skippedItems?.has(item.barcode);
-          return (
-            <ShoppingListItem
-              key={item.barcode}
-              item={item}
-              isCollected={collectedQty >= item.quantity}
-              collectedQuantity={collectedQty}
-              isSkipped={isSkipped}
-              onToggleSkip={onToggleSkip}
-            />
-          );
-        })}
+        {(() => {
+          // Group items by their category to find coordinates
+          const itemsByCategory = {};
+          shoppingList.items.forEach(item => {
+            if (!itemsByCategory[item.category]) {
+              itemsByCategory[item.category] = [];
+            }
+            itemsByCategory[item.category].push(item);
+          });
+
+          // Find the first coordinate location that has uncollected items
+          let nextUpCoordIndex = -1;
+          if (shoppingList.categoryOrder && shoppingList.routeCoordinates) {
+            nextUpCoordIndex = shoppingList.categoryOrder.findIndex(category => {
+              const categoryItems = itemsByCategory[category] || [];
+              return categoryItems.some(item => {
+                const collectedQty = cartItemsMap.get(item.barcode) || 0;
+                const isSkipped = skippedItems?.has(item.barcode);
+                return collectedQty < item.quantity && !isSkipped;
+              });
+            });
+          }
+
+          // Get the coordinate for the next location
+          const nextUpCoord = nextUpCoordIndex >= 0 && shoppingList.routeCoordinates 
+            ? shoppingList.routeCoordinates[nextUpCoordIndex] 
+            : null;
+
+          // Find all categories at the same coordinate as nextUpCoord
+          const nextUpCategories = new Set();
+          if (nextUpCoord && shoppingList.categoryOrder && shoppingList.routeCoordinates) {
+            shoppingList.routeCoordinates.forEach((coord, idx) => {
+              if (coord.x === nextUpCoord.x && coord.y === nextUpCoord.y) {
+                nextUpCategories.add(shoppingList.categoryOrder[idx]);
+              }
+            });
+          }
+
+          // Group items by coordinate for rendering
+          const itemsGroupedByCoord = [];
+          let currentCoordKey = null;
+          let currentGroup = [];
+
+          shoppingList.items.forEach((item, index) => {
+            const collectedQty = cartItemsMap.get(item.barcode) || 0;
+            const isSkipped = skippedItems?.has(item.barcode);
+            const isFullyCollected = collectedQty >= item.quantity;
+            
+            // Check if this item is at the "next up" coordinate
+            const isNextUp = nextUpCategories.has(item.category);
+            
+            // Find coordinate for this item's category
+            const categoryIndex = shoppingList.categoryOrder?.indexOf(item.category);
+            const coord = categoryIndex >= 0 && shoppingList.routeCoordinates?.[categoryIndex];
+            const coordKey = coord ? `${coord.x},${coord.y}` : 'unknown';
+
+            // If coordinate changes and we have items in current group, flush the group
+            if (coordKey !== currentCoordKey && currentGroup.length > 0) {
+              const groupIsNextUp = currentGroup[0].isNextUp;
+              itemsGroupedByCoord.push({
+                isNextUp: groupIsNextUp,
+                items: currentGroup,
+              });
+              currentGroup = [];
+            }
+
+            currentCoordKey = coordKey;
+            currentGroup.push({
+              item,
+              isCollected: isFullyCollected,
+              collectedQuantity: collectedQty,
+              isSkipped,
+              isNextUp,
+            });
+
+            // If this is the last item, flush the group
+            if (index === shoppingList.items.length - 1 && currentGroup.length > 0) {
+              const groupIsNextUp = currentGroup[0].isNextUp;
+              itemsGroupedByCoord.push({
+                isNextUp: groupIsNextUp,
+                items: currentGroup,
+              });
+            }
+          });
+
+          // Render groups
+          return itemsGroupedByCoord.map((group, groupIndex) => {
+            if (group.isNextUp) {
+              // Render "Up Next" section with all items at this coordinate
+              return (
+                <div key={`group-${groupIndex}`} ref={nextUpRef} className="bg-orange-50 rounded-xl p-3 border border-orange-200">
+                  {/* Header */}
+                  <div className="mb-2">
+                    <h3 className="font-semibold text-orange-700 text-sm">Up Next</h3>
+                  </div>
+                  {/* Items at this coordinate */}
+                  <div className="space-y-2">
+                    {group.items.map(({ item, isCollected, collectedQuantity, isSkipped }) => (
+                      <ShoppingListItemWithNextUp
+                        key={item.barcode}
+                        item={item}
+                        isCollected={isCollected}
+                        collectedQuantity={collectedQuantity}
+                        isSkipped={isSkipped}
+                        onToggleSkip={onToggleSkip}
+                        isNextUp={false} // Don't double-wrap
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            } else {
+              // Render regular items
+              return group.items.map(({ item, isCollected, collectedQuantity, isSkipped }) => (
+                <ShoppingListItemWithNextUp
+                  key={item.barcode}
+                  item={item}
+                  isCollected={isCollected}
+                  collectedQuantity={collectedQuantity}
+                  isSkipped={isSkipped}
+                  onToggleSkip={onToggleSkip}
+                  isNextUp={false}
+                />
+              ));
+            }
+          });
+        })()}
       </div>
 
       {/* Progress bar - bottom */}
