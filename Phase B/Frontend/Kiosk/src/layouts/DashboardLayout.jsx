@@ -175,12 +175,6 @@ function DashboardLayout({ children }) {
       return;
     }
 
-    if (cartItems.length === 0) {
-      setErrorMessage("Your cart is empty");
-      setShowErrorModal(true);
-      return;
-    }
-
     console.log("Checkout clicked - fetching suggestions...");
     setIsLoadingSuggestions(true);
     setShowForgotItemsModal(true);

@@ -191,6 +191,7 @@ const Cart = ({
           <CheckoutBar
             totalPrice={totalPrice}
             onCheckout={onCheckout}
+            disabled={cartItems.length === 0}
           />
         </div>
       </div>
