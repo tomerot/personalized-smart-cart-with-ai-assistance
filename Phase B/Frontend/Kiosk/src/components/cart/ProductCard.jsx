@@ -86,10 +86,14 @@ const ProductCard = ({
         <div
           className={`
             flex items-center
-            bg-white rounded-2xl
+            bg-white
             px-4 py-4
-            ${!isHighlighted ? 'border border-gray-200' : ''}
           `}
+          style={
+            isHighlighted 
+              ? { borderRadius: '13px' }  // 16px (rounded-2xl) - 3px padding = 13px for consistent curve
+              : { borderRadius: '16px', boxShadow: 'inset 0 0 0 1px #e5e7eb' }
+          }
         >
           {/* Left Section: Product Image */}
           <div className="shrink-0 w-20 h-20 mr-4">
