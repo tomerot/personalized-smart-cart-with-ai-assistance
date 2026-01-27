@@ -126,9 +126,9 @@ const ProductCard = ({
         {/* Quantity Pill and Delete Button */}
         <div className="flex items-center gap-4">
           {/* Quantity Pill - Horizontal Layout */}
-          <div className="flex items-center border border-gray-300 rounded-full w-fit overflow-hidden px-1">
+          <div className="flex items-center border border-gray-300 rounded-full overflow-hidden">
             {/* Quantity Display */}
-            <span className="pl-4 pr-2 text-base font-medium text-gray-800 min-w-6 text-center">
+            <span className="pl-4 pr-2 text-base font-medium text-gray-800 w-10 text-center">
               {quantity}
             </span>
 
