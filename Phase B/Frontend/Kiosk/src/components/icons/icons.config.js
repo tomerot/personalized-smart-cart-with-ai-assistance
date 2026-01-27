@@ -31,4 +31,5 @@ export const ICONS = {
   MAP: "map",
   CHECK: "check",
   CANCEL: "close",
+  CHECKOUT: "credit_card"
 };

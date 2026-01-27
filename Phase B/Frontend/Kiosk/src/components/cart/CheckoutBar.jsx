@@ -1,3 +1,6 @@
+import Icon from "@/components/icons/ICON";
+import { ICONS } from "@/components/icons/icons.config";
+
 /**
  * CheckoutBar Component
  *
@@ -38,6 +41,7 @@ const CheckoutBar = ({
       <button
         onClick={handleCheckout}
         className="
+          flex items-center gap-3
           bg-green-600
           hover:bg-green-700
           active:bg-green-800
@@ -51,7 +55,13 @@ const CheckoutBar = ({
           shrink-0
         "
       >
-        Checkout
+        <Icon 
+          name={ICONS.CHECKOUT} 
+          size={24} 
+          weight={500}
+          style={{ color: "white" }}
+        />
+        <span>Checkout</span>
       </button>
     </div>
   );
