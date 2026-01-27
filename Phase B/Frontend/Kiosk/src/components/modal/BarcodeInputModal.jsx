@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Icon from "@/components/icons/Icon";
 import { ICONS } from "@/components/icons/icons.config";
+import Numpad from "@/components/numpad/Numpad";
 
 /**
  * BarcodeInputModal Component
@@ -53,7 +54,6 @@ const BarcodeInputModal = ({ isOpen, onSubmit, onClose }) => {
 
   if (!isOpen) return null;
 
-  const digits = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   const isSubmitEnabled = barcode.length > 0;
 
   return (
@@ -108,66 +108,18 @@ const BarcodeInputModal = ({ isOpen, onSubmit, onClose }) => {
                      text-center text-2xl font-mono tracking-widest min-h-[60px]
                      flex items-center justify-center"
         >
-          {barcode || <span className="text-gray-400">Type barcode...</span>}
+          {barcode || <span className="text-gray-400">Type Barcode</span>}
         </div>
 
         {/* Numpad */}
-        <div className="flex flex-col gap-3 w-full max-w-[280px]">
-          {/* Grid for digits 1-9 */}
-          <div className="grid grid-cols-3 gap-3">
-            {digits.map((digit) => (
-              <button
-                key={digit}
-                onClick={() => handleNumberClick(digit)}
-                className="aspect-square rounded-xl bg-gray-100 hover:bg-gray-200 active:bg-gray-300
-                           text-2xl font-semibold text-gray-800
-                           transition-colors duration-150
-                           flex items-center justify-center"
-              >
-                {digit}
-              </button>
-            ))}
-          </div>
-
-          {/* Bottom row: Backspace, 0, OK */}
-          <div className="grid grid-cols-3 gap-3">
-            {/* Backspace button */}
-            <button
-              onClick={handleBackspace}
-              disabled={barcode.length === 0}
-              className={`aspect-square rounded-xl flex items-center justify-center
-                         transition-opacity duration-150
-                         ${barcode.length === 0
-                           ? "text-gray-300 cursor-not-allowed"
-                           : "text-green-600 hover:opacity-70 active:opacity-50"}`}
-            >
-              <Icon name={ICONS.BACKSPACE} size={36} weight={400} />
-            </button>
-
-            {/* 0 button */}
-            <button
-              onClick={() => handleNumberClick(0)}
-              className="aspect-square rounded-xl bg-gray-100 hover:bg-gray-200 active:bg-gray-300
-                         text-2xl font-semibold text-gray-800
-                         transition-colors duration-150
-                         flex items-center justify-center"
-            >
-              0
-            </button>
-
-            {/* OK button */}
-            <button
-              onClick={handleSubmit}
-              disabled={!isSubmitEnabled}
-              className={`aspect-square rounded-xl flex items-center justify-center
-                         text-xl font-semibold transition-all duration-150
-                         ${isSubmitEnabled
-                           ? "bg-green-600 hover:bg-green-700 active:bg-green-800 text-white cursor-pointer"
-                           : "bg-gray-200 text-gray-400 cursor-not-allowed"}`}
-            >
-              OK
-            </button>
-          </div>
+        <div className="w-full max-w-[280px]">
+          <Numpad
+            onNumberClick={handleNumberClick}
+            onBackspace={handleBackspace}
+            onSubmit={handleSubmit}
+            isSubmitEnabled={isSubmitEnabled}
+            variant="modal"
+          />
         </div>
       </div>
     </div>
