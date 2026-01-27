@@ -62,7 +62,11 @@ const BarcodeInputModal = ({ isOpen, onSubmit, onClose, anchorRef }) => {
   }, [isOpen, anchorRef]);
 
   const handleNumberClick = (digit) => {
-    setBarcode((prev) => prev + digit);
+    setBarcode((prev) => {
+      // Limit to 13 digits
+      if (prev.length >= 13) return prev;
+      return prev + digit;
+    });
   };
 
   const handleBackspace = () => {
