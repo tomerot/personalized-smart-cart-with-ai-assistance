@@ -171,6 +171,8 @@ const Cart = ({
               <ProductCard
                 key={product.id || index}
                 productName={product.name}
+                company={product.company}
+                size={product.size}
                 imageUrl={product.imageUrl}
                 quantity={product.quantity}
                 currentPrice={product.currentPrice}

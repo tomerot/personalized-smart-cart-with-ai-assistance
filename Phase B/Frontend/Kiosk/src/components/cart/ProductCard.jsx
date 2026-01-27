@@ -7,6 +7,8 @@ import { ICONS } from "@/components/icons/icons.config";
  * A card component for displaying products in the shopping cart.
  *
  * @param {string} productName - The name of the product
+ * @param {string} company - The company/brand name
+ * @param {string} size - The product size (optional)
  * @param {string} imageUrl - URL or path to the product image
  * @param {number} quantity - Current quantity of the product
  * @param {number} currentPrice - Current price of the product
@@ -19,6 +21,8 @@ import { ICONS } from "@/components/icons/icons.config";
  */
 const ProductCard = ({
   productName = "Product Name",
+  company = "",
+  size = "",
   imageUrl = "",
   quantity = 1,
   currentPrice = 0,
@@ -108,9 +112,16 @@ const ProductCard = ({
           {/* Middle Section: Product Info and Quantity */}
           <div className="flex-1 flex flex-col justify-center min-w-0">
         {/* Product Name */}
-        <h3 className="text-sm font-medium text-gray-800 truncate mb-4">
+        <h3 className="text-sm font-medium text-gray-800 truncate">
           {productName}
         </h3>
+        
+        {/* Company Name */}
+        {company && (
+          <p className="text-xs text-gray-500 truncate mb-3">
+            {company}
+          </p>
+        )}
 
         {/* Quantity Pill and Delete Button */}
         <div className="flex items-center gap-4">
