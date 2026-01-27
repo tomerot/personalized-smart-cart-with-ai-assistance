@@ -32,5 +32,6 @@ export const ICONS = {
   MAP: "map",
   CHECK: "check",
   CANCEL: "close",
-  CHECKOUT: "credit_card"
+  CHECKOUT: "credit_card",
+  NO_CHAT: "voice_chat_off"
 };
