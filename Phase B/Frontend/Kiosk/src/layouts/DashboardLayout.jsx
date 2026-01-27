@@ -50,7 +50,6 @@ function DashboardLayout({ children }) {
   const [showCheckoutSuccessModal, setShowCheckoutSuccessModal] = useState(false);
   const [checkoutSuggestions, setCheckoutSuggestions] = useState([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
-  const [checkoutItemsTracked, setCheckoutItemsTracked] = useState(0);
   
   // Shopping list state - managed here so it persists across view changes
   const [shoppingList, setShoppingList] = useState(null);
@@ -178,7 +177,6 @@ function DashboardLayout({ children }) {
 
     console.log("Checkout clicked - fetching suggestions...");
     setIsLoadingSuggestions(true);
-    setShowForgotItemsModal(true);
 
     // Get barcodes of items currently in cart
     const cartBarcodes = cartItems.map(item => item.id);
@@ -189,12 +187,23 @@ function DashboardLayout({ children }) {
     setIsLoadingSuggestions(false);
 
     if (result.success) {
-      setCheckoutSuggestions(result.data.suggestions || []);
-      console.log(`Found ${result.data.suggestions?.length || 0} suggestions`);
+      const suggestions = result.data.suggestions || [];
+      setCheckoutSuggestions(suggestions);
+      console.log(`Found ${suggestions.length} suggestions`);
+      
+      // If no suggestions, proceed directly to checkout
+      if (suggestions.length === 0) {
+        console.log("No suggestions found - proceeding directly to checkout");
+        await handleProceedToCheckout();
+      } else {
+        // Only open modal if there are suggestions
+        setShowForgotItemsModal(true);
+      }
     } else {
       console.error("Failed to get suggestions:", result.error);
-      // Still show the modal, just with no suggestions
+      // If failed to get suggestions, proceed directly to checkout
       setCheckoutSuggestions([]);
+      await handleProceedToCheckout();
     }
   };
 
@@ -245,7 +254,6 @@ function DashboardLayout({ children }) {
 
     if (result.success) {
       console.log("Checkout successful:", result.data);
-      setCheckoutItemsTracked(result.data.items_tracked || 0);
       setShowCheckoutSuccessModal(true);
     } else {
       console.error("Checkout failed:", result.error);
@@ -566,7 +574,6 @@ function DashboardLayout({ children }) {
       <CheckoutSuccessModal
         isOpen={showCheckoutSuccessModal}
         onClose={handleCheckoutComplete}
-        itemsTracked={checkoutItemsTracked}
       />
       {/* Shopping Route Modal */}
       <ShoppingRouteModal

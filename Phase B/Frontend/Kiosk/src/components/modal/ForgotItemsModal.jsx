@@ -1,6 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Icon from "@/components/icons/Icon";
 import { ICONS } from "@/components/icons/icons.config";
+import { useCart } from "@/context/CartContext";
 
 /**
  * ForgotItemsModal Component
@@ -22,6 +23,12 @@ const ForgotItemsModal = ({
   suggestions = [],
   isLoading = false,
 }) => {
+  // Get current cart total
+  const { totalPrice: currentCartTotal } = useCart();
+  
+  // Track quantities for each item by barcode (starts at 0)
+  const [itemQuantities, setItemQuantities] = useState({});
+
   // Prevent body scrolling when modal is open
   useEffect(() => {
     if (isOpen) {
@@ -32,7 +39,57 @@ const ForgotItemsModal = ({
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  // Reset quantities when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      setItemQuantities({});
+    }
+  }, [isOpen]);
+
+  // Increase quantity
+  const handleIncrease = (barcode) => {
+    setItemQuantities((prev) => ({
+      ...prev,
+      [barcode]: (prev[barcode] || 0) + 1,
+    }));
+  };
+
+  // Decrease quantity
+  const handleDecrease = (barcode) => {
+    setItemQuantities((prev) => {
+      const currentQty = prev[barcode] || 0;
+      if (currentQty <= 0) return prev;
+      return {
+        ...prev,
+        [barcode]: currentQty - 1,
+      };
+    });
+  };
+
+  // Calculate total price of items to be added
+  const totalNewItemsPrice = suggestions.reduce((total, item) => {
+    const qty = itemQuantities[item.barcode] || 0;
+    return total + (item.price * qty);
+  }, 0);
+
+  // Handle proceed - add items with quantities and process checkout
+  const handleProceed = () => {
+    // Add all items with quantity > 0 to cart
+    suggestions.forEach((item) => {
+      const qty = itemQuantities[item.barcode] || 0;
+      if (qty > 0) {
+        // Add item multiple times based on quantity
+        for (let i = 0; i < qty; i++) {
+          onAddItem(item);
+        }
+      }
+    });
+    // Proceed to checkout (which will sync cart, process checkout, and navigate back)
+    onCheckout();
+  };
+
+  // Don't show modal if not open OR if there are no suggestions (and not loading)
+  if (!isOpen || (!isLoading && suggestions.length === 0)) return null;
 
   return (
     <div
@@ -50,21 +107,13 @@ const ForgotItemsModal = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <Icon
-              name={ICONS.CART}
-              size={28}
-              weight={500}
-              style={{ color: "#16a34a" }}
-            />
-            <h2 className="text-xl font-semibold text-gray-800">
-              Forgot Something?
-            </h2>
-          </div>
+        <div className="flex items-center justify-center p-5 border-b border-gray-100 relative">
+          <h2 className="text-xl font-semibold text-gray-800">
+            Forgot Something?
+          </h2>
           <button
             onClick={onClose}
-            className="p-1 hover:opacity-70 active:opacity-50 transition-opacity"
+            className="absolute right-5 p-1 hover:opacity-70 active:opacity-50 transition-opacity"
             aria-label="Close modal"
           >
             <Icon
@@ -89,8 +138,8 @@ const ForgotItemsModal = ({
             </div>
           ) : (
             <>
-              <p className="text-gray-600 mb-4">
-                Based on your shopping habits, you might need these items:
+              <p className="text-sm text-gray-600 mb-4 text-center">
+                Based on your shopping habits, you might need the following products
               </p>
               <div className="space-y-3">
                 {suggestions.map((item) => (
@@ -119,30 +168,49 @@ const ForgotItemsModal = ({
                           ₪{item.price.toFixed(2)}
                         </span>
                       </p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        {item.status === "overdue" ? (
-                          <span className="text-amber-600">
-                            Usually buy every {item.average_purchase_interval} days
-                            ({item.days_since_last_purchase} days ago)
-                          </span>
-                        ) : (
-                          <span>
-                            Due soon ({item.days_since_last_purchase} days since last purchase)
-                          </span>
-                        )}
+                      <p className="text-xs mt-1">
+                        <span className="text-amber-600">
+                          {item.days_since_last_purchase} days since last purchase
+                        </span>
                       </p>
                     </div>
 
-                    {/* Add Button */}
-                    <button
-                      onClick={() => onAddItem(item)}
-                      className="shrink-0 px-4 py-2 rounded-lg
-                                 bg-green-600 hover:bg-green-700 active:bg-green-800
-                                 text-white font-medium text-sm
-                                 transition-colors duration-150"
-                    >
-                      Add
-                    </button>
+                    {/* Quantity Pill */}
+                    <div className="flex items-center border border-gray-300 rounded-full overflow-hidden shrink-0 bg-white mr-2">
+                      {/* Quantity Display */}
+                      <span className="pl-4 pr-2 text-base font-medium text-gray-800 w-10 text-center">
+                        {itemQuantities[item.barcode] || 0}
+                      </span>
+
+                      {/* Buttons Container */}
+                      <div className="flex flex-col">
+                        {/* Increase Button */}
+                        <button
+                          onClick={() => handleIncrease(item.barcode)}
+                          className="flex items-center justify-center w-6 h-3.5 bg-transparent cursor-pointer"
+                        >
+                          <Icon
+                            name={ICONS.ADD}
+                            size={12}
+                            weight={400}
+                            style={{ color: "#374151" }}
+                          />
+                        </button>
+
+                        {/* Decrease Button */}
+                        <button
+                          onClick={() => handleDecrease(item.barcode)}
+                          className="flex items-center justify-center w-6 h-3.5 bg-transparent cursor-pointer"
+                        >
+                          <Icon
+                            name={ICONS.REDUCE}
+                            size={12}
+                            weight={400}
+                            style={{ color: "#374151" }}
+                          />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -152,14 +220,30 @@ const ForgotItemsModal = ({
 
         {/* Footer */}
         <div className="p-5 border-t border-gray-100">
-          <button
-            onClick={onCheckout}
-            className="w-full px-6 py-3 rounded-xl font-semibold
-                       bg-green-600 hover:bg-green-700 active:bg-green-800
-                       text-white transition-colors duration-150"
-          >
-            Checkout
-          </button>
+          <div className="flex items-center justify-center gap-8">
+            {/* Total Price Display */}
+            <div className="flex flex-col items-center w-40 shrink-0">
+              <span className="text-sm font-medium text-gray-600 mb-1">
+                Total Price
+              </span>
+              <span className="text-2xl font-bold text-gray-800 tabular-nums">
+                <span className="text-lg">₪</span>{(currentCartTotal + totalNewItemsPrice).toFixed(2)}
+              </span>
+            </div>
+
+            {/* Proceed Button */}
+            <button
+              onClick={handleProceed}
+              className="flex items-center gap-3
+                         bg-green-600 hover:bg-green-700 active:bg-green-800
+                         text-white font-semibold text-lg
+                         px-16 py-4 rounded-xl
+                         transition-colors duration-150
+                         cursor-pointer shrink-0"
+            >
+              Proceed
+            </button>
+          </div>
         </div>
       </div>
     </div>
