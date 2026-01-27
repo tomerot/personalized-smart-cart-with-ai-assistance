@@ -39,7 +39,7 @@ function ShoppingListItem({ item, isCollected, collectedQuantity, isSkipped, onT
         <button
           onClick={() => !isFullyCollected && onToggleSkip(item.barcode)}
           disabled={isFullyCollected}
-          className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
+          className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-colors ${
             isFullyCollected 
               ? 'bg-green-500 cursor-default' 
               : isSkipped
@@ -59,7 +59,7 @@ function ShoppingListItem({ item, isCollected, collectedQuantity, isSkipped, onT
         </button>
 
         {/* Product image */}
-        <div className="w-12 h-12 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
+        <div className="w-12 h-12 shrink-0 bg-gray-100 rounded-lg overflow-hidden">
           {image_url ? (
             <img
               src={image_url}
@@ -95,7 +95,7 @@ function ShoppingListItem({ item, isCollected, collectedQuantity, isSkipped, onT
         </div>
 
         {/* Quantity */}
-        <div className={`flex-shrink-0 ${
+        <div className={`shrink-0 ${
           isFullyCollected || isSkipped ? 'text-gray-400' : 'text-gray-700'
         }`}>
           <span className="text-sm font-medium">×{quantity}</span>
@@ -110,22 +110,29 @@ function ShoppingListItem({ item, isCollected, collectedQuantity, isSkipped, onT
  */
 function EmptyState({ hasShoppingList }) {
   return (
-    <div className="flex flex-col items-center justify-center h-full text-center px-6">
-      <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-        <Icon name={ICONS.GROCERY_LIST} size={40} className="text-gray-300" />
-      </div>
+    <div className="flex flex-col items-center justify-center h-full text-gray-400 px-4 -mt-9">
+      <Icon 
+        name={hasShoppingList ? ICONS.LOAD_LIST : ICONS.LOAD_LIST_DISABLED} 
+        size={64} 
+        weight={350}
+        style={{ color: "#9ca3af", marginBottom: "16px" }}
+      />
       {hasShoppingList ? (
         <>
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">Shopping List Ready</h3>
-          <p className="text-gray-500 text-sm max-w-xs">
-            Click <strong>"Load List"</strong> above to load your pre-made shopping list and see the optimized route through the store.
+          <p className="font-bold text-lg mb-3">Shopping List Found</p>
+          <p className="text-center text-sm">
+            Tap <span className="font-semibold">"Load List"</span> to view your shopping list
+            <br />
+            and collect your products in an efficient order
           </p>
         </>
       ) : (
         <>
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">No Shopping List</h3>
-          <p className="text-gray-500 text-sm max-w-xs">
-            Create a shopping list at home using the Smart Cart app, and it will be available when you start shopping.
+          <p className="font-bold text-lg mb-3">No Shopping List Found</p>
+          <p className="text-center text-sm">
+            Create a shopping list in the app ahead of your next visit,
+            <br />
+            it will make your shopping faster and easier
           </p>
         </>
       )}
@@ -256,7 +263,7 @@ export default function GroceryListView({
   return (
     <div className="flex flex-col h-full">
       {/* Progress header */}
-      <div className="mb-4 flex-shrink-0">
+      <div className="mb-4 shrink-0">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-gray-600">
             {stats.collectedItems} of {stats.totalItems} items collected

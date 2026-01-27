@@ -17,6 +17,7 @@ export const ICONS = {
   REDUCE: "keyboard_arrow_down",
   BARCODE: "barcode",
   LOAD_LIST: "file_save",
+  LOAD_LIST_DISABLED: "file_save_off",
   AUDIO: "volume_up",
   CONFLICT: "health_and_safety",
   PERSON: "person",
