@@ -176,7 +176,7 @@ const BarcodeInputModal = ({ isOpen, onSubmit, onClose, anchorRef }) => {
                      font-mono tracking-widest
                      flex items-center justify-center`}
         >
-          {barcode || <span className="text-gray-400">Type Barcode</span>}
+          {barcode || <span className="text-gray-400">Barcode Number</span>}
         </div>
 
         {/* Numpad */}
