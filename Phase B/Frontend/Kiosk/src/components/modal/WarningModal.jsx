@@ -3,19 +3,31 @@ import Icon from "@/components/icons/Icon";
 import { ICONS } from "@/components/icons/icons.config";
 
 /**
- * IncompleteListModal Component
+ * WarningModal Component
  *
- * Shows a warning when user tries to checkout without collecting all items
- * from their shopping list that they intended to pick up.
+ * A reusable warning modal with a single action button and dismissal options.
+ * Used for warnings where user can proceed with an action or dismiss.
  *
  * @param {boolean} isOpen - Controls modal visibility
- * @param {function} onClose - Callback when modal is closed (X button)
- * @param {function} onProceed - Callback when user chooses to proceed anyway
+ * @param {function} onClose - Callback when modal is closed (X button or backdrop click)
+ * @param {function} onProceed - Callback when user chooses to proceed
+ * @param {string} title - Modal title text
+ * @param {string} message - Modal message text (can include JSX)
+ * @param {string} proceedText - Text for proceed button (default: "Proceed")
+ * @param {string} icon - Icon name from ICONS config (default: WARNING)
+ * @param {string} iconColor - Color for the icon (default: "#f59e0b" amber)
+ * @param {string} buttonColor - Background color for proceed button (default: amber-500)
  */
-const IncompleteListModal = ({
+const WarningModal = ({
   isOpen,
   onClose,
   onProceed,
+  title,
+  message,
+  proceedText = "Proceed",
+  icon = ICONS.WARNING,
+  iconColor = "#f59e0b",
+  buttonColor = "bg-amber-500 hover:bg-amber-600 active:bg-amber-700",
 }) => {
   // Prevent body scrolling when modal is open
   useEffect(() => {
@@ -62,24 +74,22 @@ const IncompleteListModal = ({
         {/* Warning Icon */}
         <div className="mb-4 mt-2">
           <Icon
-            name={ICONS.WARNING}
+            name={icon}
             size={64}
             weight={500}
-            style={{ color: "#f59e0b" }}
+            style={{ color: iconColor }}
           />
         </div>
 
         {/* Title */}
         <h2 className="text-xl font-semibold text-gray-800 mb-3 text-center">
-          Products Not Collected
+          {title}
         </h2>
 
         {/* Message */}
-        <p className="text-center text-gray-600 mb-6">
-          You haven't collected all products from the shopping list.
-          <br />
-          Are you sure you want to proceed to checkout?
-        </p>
+        <div className="text-center text-gray-600 mb-6">
+          {message}
+        </div>
 
         {/* Divider */}
         <div className="w-full border-t border-gray-100 mb-5" />
@@ -87,19 +97,18 @@ const IncompleteListModal = ({
         {/* Proceed Button */}
         <button
           onClick={onProceed}
-          className="w-full flex items-center justify-center gap-2
-                     bg-amber-500 hover:bg-amber-600 active:bg-amber-700
+          className={`w-full flex items-center justify-center gap-2
                      text-white font-semibold text-lg
                      px-6 py-4 rounded-xl
                      transition-colors duration-150
-                     cursor-pointer"
+                     cursor-pointer ${buttonColor}`}
         >
-          Proceed Anyway
+          {proceedText}
         </button>
       </div>
     </div>
   );
 };
 
-export default IncompleteListModal;
+export default WarningModal;
 

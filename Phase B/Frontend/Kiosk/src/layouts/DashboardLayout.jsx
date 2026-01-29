@@ -5,11 +5,10 @@ import NavRailButton from "@/components/navrail/NavRailButton";
 import { ICONS } from "@/components/icons/icons.config";
 import Icon from "@/components/icons/ICON";
 import Cart from "@/components/cart/Cart";
-import ConfirmationModal from "@/components/modal/ConfirmationModal";
+import WarningModal from "@/components/modal/WarningModal";
 import MessageModal from "@/components/modal/MessageModal";
 import ForgotItemsModal from "@/components/modal/ForgotItemsModal";
 import CheckoutSuccessModal from "@/components/modal/CheckoutSuccessModal";
-import IncompleteListModal from "@/components/modal/IncompleteListModal";
 import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 import { useUser } from "@/context/UserContext";
 import { useCart } from "@/context/CartContext";
@@ -566,7 +565,7 @@ function DashboardLayout({ children }) {
         </div>
       </div>
 
-      {/* My Cart section - Always visible, integrated with background */}
+      {/* My Cart section - Always visible*/}
       <div className="shrink-0 w-[580px] h-full ml-6">
         <Cart
           onCheckout={handleCheckout}
@@ -575,18 +574,20 @@ function DashboardLayout({ children }) {
         />
       </div>
 
-      {/* Leave Confirmation Modal */}
-      <ConfirmationModal
+      {/* Leave Warning Modal */}
+      <WarningModal
         isOpen={showLeaveModal}
-        onConfirm={handleConfirmLeave}
-        onCancel={handleCancelLeave}
-        icon={ICONS.WARNING}
-        title="Are you sure you want to leave?"
-        message="Your cart and conversation history will be cleared."
-        confirmText="Leave"
-        cancelText="Stay"
-        confirmColor="#dc2626"
-        iconColor="#f59e0b"
+        onClose={handleCancelLeave}
+        onProceed={handleConfirmLeave}
+        title="You Are About to Leave"
+        message={
+          <>
+          Your cart and conversation history will be cleared.
+          <br />
+          Are you sure you want to leave?
+          </>
+        }
+        proceedText="Leave Anyway"
       />
 
       {/* Error Modal */}
@@ -614,11 +615,20 @@ function DashboardLayout({ children }) {
         onClose={handleCheckoutComplete}
       />
 
-      {/* Incomplete List Modal (shown when checkout with uncollected items) */}
-      <IncompleteListModal
+      {/* Incomplete List Warning Modal (shown when checkout with uncollected items) */}
+      <WarningModal
         isOpen={showIncompleteListModal}
         onClose={() => setShowIncompleteListModal(false)}
         onProceed={handleProceedWithIncompleteList}
+        title="Products Not Collected"
+        message={
+          <>
+            You haven't collected all products from the shopping list.
+            <br />
+            Are you sure you want to proceed to checkout?
+          </>
+        }
+        proceedText="Proceed Anyway"
       />
 
       {/* Shopping Route Modal */}
