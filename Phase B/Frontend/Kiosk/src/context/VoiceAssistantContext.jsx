@@ -362,10 +362,14 @@ export function VoiceAssistantProvider({ children }) {
         // Handle tool call by showing loading message if configured
         console.log('Tool call received:', event.name, event.arguments);
         
+        // Store the active tool call with its name AND arguments (needed for allergy/dietary updates)
+        activeToolCallsRef.current.set(event.execution_id, { 
+          name: event.name, 
+          arguments: event.arguments 
+        });
+        
         const toolMessage = getToolCallMessage(event.name);
         if (toolMessage) {
-          // Store the active tool call with its name
-          activeToolCallsRef.current.set(event.execution_id, { name: event.name });
           
           // Add a temporary assistant message with loading state (shimmer will be rendered in Chat)
           setMessages(prev => {
@@ -418,42 +422,52 @@ export function VoiceAssistantProvider({ children }) {
         }
         
         // Handle allergy and dietary needs updates
+        // Use the stored tool call arguments (not the result, which is just a confirmation string)
         if (event.name === 'add_allergies' || event.name === 'remove_allergies' ||
             event.name === 'add_dietary_needs' || event.name === 'remove_dietary_needs') {
-          try {
-            const parsedResult = typeof event.result === 'string' 
-              ? JSON.parse(event.result) 
-              : event.result;
-            
-            const currentUser = userRef.current;
-            if (currentUser && parsedResult) {
-              // Extract the items to add/remove from the result
-              const items = parsedResult.items || parsedResult.allergies || parsedResult.dietary_needs || [];
+          
+          // Get the stored tool call to access the original arguments
+          const storedToolCall = activeToolCallsRef.current.get(event.execution_id);
+          if (storedToolCall) {
+            try {
+              // Arguments come as a JSON string from VAPI, need to parse them
+              const args = typeof storedToolCall.arguments === 'string'
+                ? JSON.parse(storedToolCall.arguments)
+                : storedToolCall.arguments;
               
-              if (event.name === 'add_allergies') {
-                const currentAllergies = currentUser.allergies || [];
-                const newAllergies = [...new Set([...currentAllergies, ...items])];
-                updateUserRef.current({ allergies: newAllergies });
-                console.log('Updated user allergies (added):', newAllergies);
-              } else if (event.name === 'remove_allergies') {
-                const currentAllergies = currentUser.allergies || [];
-                const newAllergies = currentAllergies.filter(a => !items.includes(a));
-                updateUserRef.current({ allergies: newAllergies });
-                console.log('Updated user allergies (removed):', newAllergies);
-              } else if (event.name === 'add_dietary_needs') {
-                const currentDietaryNeeds = currentUser.dietary_needs || [];
-                const newDietaryNeeds = [...new Set([...currentDietaryNeeds, ...items])];
-                updateUserRef.current({ dietary_needs: newDietaryNeeds });
-                console.log('Updated user dietary needs (added):', newDietaryNeeds);
-              } else if (event.name === 'remove_dietary_needs') {
-                const currentDietaryNeeds = currentUser.dietary_needs || [];
-                const newDietaryNeeds = currentDietaryNeeds.filter(d => !items.includes(d));
-                updateUserRef.current({ dietary_needs: newDietaryNeeds });
-                console.log('Updated user dietary needs (removed):', newDietaryNeeds);
+              const currentUser = userRef.current;
+              if (currentUser) {
+                if (event.name === 'add_allergies') {
+                  const items = args.allergies || [];
+                  const currentAllergies = currentUser.allergies || [];
+                  const newAllergies = [...new Set([...currentAllergies, ...items])];
+                  updateUserRef.current({ allergies: newAllergies });
+                  console.log('✅ Updated user allergies (added):', newAllergies);
+                } else if (event.name === 'remove_allergies') {
+                  const items = args.allergies || [];
+                  const currentAllergies = currentUser.allergies || [];
+                  const newAllergies = currentAllergies.filter(a => !items.includes(a));
+                  updateUserRef.current({ allergies: newAllergies });
+                  console.log('✅ Updated user allergies (removed):', newAllergies);
+                } else if (event.name === 'add_dietary_needs') {
+                  const items = args.dietary_needs || [];
+                  const currentDietaryNeeds = currentUser.dietary_needs || [];
+                  const newDietaryNeeds = [...new Set([...currentDietaryNeeds, ...items])];
+                  updateUserRef.current({ dietary_needs: newDietaryNeeds });
+                  console.log('✅ Updated user dietary needs (added):', newDietaryNeeds);
+                } else if (event.name === 'remove_dietary_needs') {
+                  const items = args.dietary_needs || [];
+                  const currentDietaryNeeds = currentUser.dietary_needs || [];
+                  const newDietaryNeeds = currentDietaryNeeds.filter(d => !items.includes(d));
+                  updateUserRef.current({ dietary_needs: newDietaryNeeds });
+                  console.log('✅ Updated user dietary needs (removed):', newDietaryNeeds);
+                }
               }
+            } catch (e) {
+              console.error('Failed to parse tool call arguments:', e);
             }
-          } catch (e) {
-            console.error('Failed to parse allergy/dietary tool call result:', e);
+          } else {
+            console.warn('No stored tool call found for execution_id:', event.execution_id);
           }
         }
         
