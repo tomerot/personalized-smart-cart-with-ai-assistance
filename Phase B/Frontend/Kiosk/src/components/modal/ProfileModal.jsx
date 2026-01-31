@@ -81,7 +81,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
         <div className="flex-1 overflow-y-auto">
           <div className="space-y-0">
             {/* Phone Number */}
-            <div className="flex flex-col items-center py-6 border-b border-gray-200">
+            <div className="flex flex-col items-center py-6">
               <div className="flex items-center gap-3">
                 <Icon
                   name={ICONS.PHONE}
@@ -93,6 +93,11 @@ const ProfileModal = ({ isOpen, onClose }) => {
                   {formattedPhone}
                 </span>
               </div>
+            </div>
+
+            {/* Divider with same padding as content below */}
+            <div className="px-6">
+              <div className="border-b border-gray-200"></div>
             </div>
 
             {/* Allergies and Dietary Needs */}
