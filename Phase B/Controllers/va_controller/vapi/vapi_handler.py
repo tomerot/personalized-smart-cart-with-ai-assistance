@@ -79,7 +79,7 @@ class VapiHandler:
     async def end_call(self, notify_vapi: bool):
         """End the current call and clean up the resources."""
         if not self.call_active:
-            logger.error("No active call to end.")
+            logger.info("No active call to end.")
             return
         
         # Stop the silence timer to prevent it from ending an already terminated call
