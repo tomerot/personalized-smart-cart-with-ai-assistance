@@ -275,17 +275,6 @@ const ShoppingRouteModal = ({
                 <span>Completed</span>
               </div>
             </div>
-
-            {/* All complete message */}
-            {currentStopIndex === -1 && shoppingList?.items?.length > 0 && (
-              <div className="text-center py-6">
-                <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Icon name={ICONS.CHECK} size={28} weight={700} className="text-green-500" />
-                </div>
-                <h3 className="font-semibold text-green-700">All Stops Complete!</h3>
-                <p className="text-sm text-gray-500 mt-1">You've collected all items on your route</p>
-              </div>
-            )}
           </div>
         </div>
       </div>
