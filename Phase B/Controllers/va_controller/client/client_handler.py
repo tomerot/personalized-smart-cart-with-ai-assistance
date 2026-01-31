@@ -104,7 +104,8 @@ class ClientHandler:
                     await self.__process_command(command)
         except websockets.exceptions.ConnectionClosed:
             # On crash
-            logger.error("Client WebSocket stopped unexpectedly.")
+            if not self.intentional_disconnect:
+                logger.error("Client WebSocket stopped unexpectedly.")
         finally:
             # Runs both when WebSocket closed intentionaly and when WebSocket crashed
             logger.info("Client handler 'Receiver Task' stopped.")
