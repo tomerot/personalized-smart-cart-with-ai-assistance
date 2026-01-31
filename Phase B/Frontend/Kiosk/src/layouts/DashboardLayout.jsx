@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useMemo } from "react";
+import { useMemo, useEffect, useRef } from "react";
 import { ICONS } from "@/components/icons/icons.config";
 import Icon from "@/components/icons/ICON";
 import Cart from "@/components/cart/Cart";
@@ -12,6 +12,7 @@ import { CompanionView } from "@/features/smart-companion";
 import { GroceryListView, useShoppingList } from "@/features/grocery-list";
 import { DashboardModals, useCheckout, useLeaveSession, useShoppingRoute, useProfile } from "@/features/dashboard";
 import ProfileModal from "@/components/modal/ProfileModal";
+import { cartAutoSaveService } from "@/services/cartAutoSaveService";
 
 /**
  * DashboardLayout Component
@@ -23,10 +24,86 @@ import ProfileModal from "@/components/modal/ProfileModal";
  */
 function DashboardLayout() {
   const navigate = useNavigate();
-  const { user, hasShoppingList, logout } = useUser();
-  const { cartItems, clearCart, addProduct } = useCart();
+  const { user, hasShoppingList, logout, savedCart, clearSavedCart } = useUser();
+  const { cartItems, clearCart, addProduct, loadCart, getHasChanged, resetChangedFlag } = useCart();
   const { activeView, setActiveView, isTransitioning, displayView } = useViewTransition(NAV_VIEWS.GROCERY_LIST);
   const { highlightedProductId, addConflictMessage, stopConversation, clearMessages } = useVoiceAssistant();
+
+  // Ref to always access current cart items (avoids stale closure in auto-save service)
+  const cartItemsRef = useRef(cartItems);
+  useEffect(() => {
+    cartItemsRef.current = cartItems;
+  }, [cartItems]);
+
+  // Load saved cart from crash recovery (if exists)
+  useEffect(() => {
+    if (savedCart && savedCart.items && savedCart.items.length > 0) {
+      console.log('🔄 Restoring cart from backup:', savedCart.items.length, 'items');
+      
+      // Transform backend format to frontend format
+      const cartItemsToLoad = savedCart.items.map(item => ({
+        id: item.barcode,
+        name: item.name,
+        imageUrl: item.image_url,
+        pricePerUnit: item.price,
+        quantity: item.quantity,
+        currentPrice: item.quantity * item.price,
+        originalProduct: {
+          barcode: item.barcode,
+          name: item.name,
+          image_url: item.image_url,
+          company: item.company,
+          category: item.category,
+          price: item.price,
+          size: item.size,
+          ingredients: item.ingredients,
+          allergens: item.allergens,
+          dietary_tags: item.dietary_tags,
+          nutritional_info: item.nutritional_info,
+          available: item.available,
+        },
+      }));
+      
+      loadCart(cartItemsToLoad);
+      console.log('✅ Cart restored successfully');
+      
+      // Clear saved cart after loading (so it doesn't reload on re-mount)
+      clearSavedCart();
+    }
+  }, [savedCart, loadCart, clearSavedCart]);
+
+  // Initialize cart auto-save service
+  useEffect(() => {
+    if (!user?.phone) return;
+
+    console.log('🔄 Starting cart auto-save service for user:', user.phone);
+    
+    // Start the auto-save service
+    // Using ref to always get current cart items (avoids stale closure)
+    cartAutoSaveService.start(
+      user.phone,
+      () => cartItemsRef.current,
+      getHasChanged,
+      resetChangedFlag
+    );
+
+    // DEVELOPMENT ONLY: Expose service for manual testing
+    if (import.meta.env.DEV) {
+      window.cartAutoSaveService = cartAutoSaveService;
+      console.log('💡 Dev Mode: You can manually trigger save with: window.cartAutoSaveService.triggerSave()');
+    }
+
+    // Cleanup: Stop the service when component unmounts
+    return () => {
+      console.log('🛑 Stopping cart auto-save service...');
+      cartAutoSaveService.stop();
+      if (import.meta.env.DEV) {
+        delete window.cartAutoSaveService;
+      }
+    };
+    // Only restart service if user phone changes (not on every cart update)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.phone]);
 
   // Cart items map for quick lookup
   const cartItemsMap = useMemo(() => {
@@ -49,7 +126,7 @@ function DashboardLayout() {
 
   // Leave session hook
   const leave = useLeaveSession({
-    navigate, stopConversation, clearMessages, clearCart, logout,
+    navigate, stopConversation, clearMessages, clearCart, logout, user,
   });
 
   // Shopping route modal hook

@@ -1,12 +1,13 @@
 import { useState, useCallback } from "react";
 import { voiceControllerService } from "@/services/voiceControllerService";
 import { barcodeControllerService } from "@/services/barcodeControllerService";
+import { cartAutoSaveService } from "@/services/cartAutoSaveService";
 
 /**
  * Custom hook to manage leaving/logout session flow
  * Also handles checkout complete (same cleanup logic)
  */
-export function useLeaveSession({ navigate, stopConversation, clearMessages, clearCart, logout }) {
+export function useLeaveSession({ navigate, stopConversation, clearMessages, clearCart, logout, user }) {
   const [showLeaveModal, setShowLeaveModal] = useState(false);
 
   const handleLeaveClick = () => {
@@ -14,7 +15,12 @@ export function useLeaveSession({ navigate, stopConversation, clearMessages, cle
   };
 
   // Core cleanup logic - reused by both leave and checkout complete
-  const performSessionCleanup = useCallback(() => {
+  const performSessionCleanup = useCallback(async () => {
+    // Delete cart backup from backend
+    if (user?.phone) {
+      await cartAutoSaveService.deleteCartBackup(user.phone);
+    }
+
     // Stop any active voice conversation
     stopConversation();
 
@@ -35,7 +41,7 @@ export function useLeaveSession({ navigate, stopConversation, clearMessages, cle
     setTimeout(() => {
       navigate("/");
     }, 50);
-  }, [navigate, stopConversation, clearMessages, clearCart, logout]);
+  }, [navigate, stopConversation, clearMessages, clearCart, logout, user?.phone]);
 
   const handleConfirmLeave = () => {
     console.log("Leave confirmed - resetting session and returning to landing page");
