@@ -20,6 +20,7 @@ export const ICONS = {
   LOAD_LIST_DISABLED: "file_save_off",
   AUDIO: "volume_up",
   CONFLICT: "health_and_safety",
+  NUTRITION: "nutrition",
   PERSON: "person",
   COMPANION: "network_intelligence",
   START_CONVERSATION: "voice_selection",
@@ -33,5 +34,6 @@ export const ICONS = {
   CHECK: "check",
   CANCEL: "close",
   CHECKOUT: "credit_card",
-  NO_CHAT: "voice_chat_off"
+  NO_CHAT: "voice_chat_off",
+  PHONE: "call"
 };

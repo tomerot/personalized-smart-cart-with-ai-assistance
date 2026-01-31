@@ -10,7 +10,8 @@ import { useVoiceAssistant } from "@/context/VoiceAssistantContext";
 import { NAV_VIEWS, VIEW_CONFIG, useViewTransition, DashboardNavRail } from "@/features/navigation";
 import { CompanionView } from "@/features/smart-companion";
 import { GroceryListView, useShoppingList } from "@/features/grocery-list";
-import { DashboardModals, useCheckout, useLeaveSession, useShoppingRoute } from "@/features/dashboard";
+import { DashboardModals, useCheckout, useLeaveSession, useShoppingRoute, useProfile } from "@/features/dashboard";
+import ProfileModal from "@/components/modal/ProfileModal";
 
 /**
  * DashboardLayout Component
@@ -54,6 +55,9 @@ function DashboardLayout() {
   // Shopping route modal hook
   const { showShoppingRoute, actionButtonRef, handleToggleShoppingRoute, setShowShoppingRoute } = useShoppingRoute();
 
+  // Profile modal hook
+  const { showProfileModal, handleProfileClick, handleCloseProfile } = useProfile();
+
   // Barcode scanner integration
   const { manualScan } = useBarcodeScanner({
     autoConnect: true,
@@ -76,7 +80,6 @@ function DashboardLayout() {
   });
 
   // Handlers for stub features
-  const handleProfileClick = () => console.log("Profile clicked - will open modal");
   const handleHelpClick = () => console.log("Help clicked - will open modal");
   const handleAudioSettings = () => console.log("Audio Settings clicked");
   
@@ -204,6 +207,12 @@ function DashboardLayout() {
         shoppingList={shoppingList}
         cartItemsMap={cartItemsMap}
         skippedItems={skippedItems}
+      />
+
+      {/* Profile Modal */}
+      <ProfileModal
+        isOpen={showProfileModal}
+        onClose={handleCloseProfile}
       />
     </div>
   );
