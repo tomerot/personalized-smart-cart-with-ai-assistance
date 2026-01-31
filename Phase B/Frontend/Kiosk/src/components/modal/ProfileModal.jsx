@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import Icon from "@/components/icons/Icon";
 import { ICONS } from "@/components/icons/icons.config";
 import { useUser } from "@/context/UserContext";
+import { formatAllergyNames, formatDietaryNeedNames } from "@/utils/formatters";
 
 /**
  * ProfileModal Component
@@ -40,8 +41,8 @@ const ProfileModal = ({ isOpen, onClose }) => {
   };
 
   const formattedPhone = formatPhoneNumber(user.phone);
-  const allergies = user.allergies || [];
-  const dietaryNeeds = user.dietary_needs || [];
+  const allergies = formatAllergyNames(user.allergies || []);
+  const dietaryNeeds = formatDietaryNeedNames(user.dietary_needs || []);
 
   return (
     <div

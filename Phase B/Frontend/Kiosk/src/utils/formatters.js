@@ -3,6 +3,11 @@
  * Pure functions for formatting data for display
  */
 
+import { 
+  ALLERGY_DISPLAY_NAMES, 
+  DIETARY_NEEDS_DISPLAY_NAMES 
+} from '@/config/preferences.config';
+
 /**
  * Format Israeli phone number for display (05X-XXXXXXX)
  * @param {string} phone - 10-digit phone number (e.g., "0541234567")
@@ -47,5 +52,45 @@ export const formatTime = (seconds) => {
 export const formatPrice = (price) => {
   if (price == null || isNaN(price)) return '₪0.00';
   return `₪${price.toFixed(2)}`;
+};
+
+/**
+ * Format an allergy name for display
+ * @param {string} allergyKey - The database key for the allergy
+ * @returns {string} The formatted display name, or the original key if not found
+ */
+export const formatAllergyName = (allergyKey) => {
+  if (!allergyKey) return '';
+  return ALLERGY_DISPLAY_NAMES[allergyKey] || allergyKey;
+};
+
+/**
+ * Format a dietary need name for display
+ * @param {string} dietaryKey - The database key for the dietary need
+ * @returns {string} The formatted display name, or the original key if not found
+ */
+export const formatDietaryNeedName = (dietaryKey) => {
+  if (!dietaryKey) return '';
+  return DIETARY_NEEDS_DISPLAY_NAMES[dietaryKey] || dietaryKey;
+};
+
+/**
+ * Format multiple allergy names
+ * @param {Array<string>} allergyKeys - Array of database keys
+ * @returns {Array<string>} Array of formatted display names
+ */
+export const formatAllergyNames = (allergyKeys) => {
+  if (!Array.isArray(allergyKeys)) return [];
+  return allergyKeys.map(formatAllergyName);
+};
+
+/**
+ * Format multiple dietary need names
+ * @param {Array<string>} dietaryKeys - Array of database keys
+ * @returns {Array<string>} Array of formatted display names
+ */
+export const formatDietaryNeedNames = (dietaryKeys) => {
+  if (!Array.isArray(dietaryKeys)) return [];
+  return dietaryKeys.map(formatDietaryNeedName);
 };
 
