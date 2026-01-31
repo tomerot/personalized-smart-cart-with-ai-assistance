@@ -95,9 +95,12 @@ export function useCheckout({ user, cartItems, addProduct, hasUncollectedItems }
 
     // Remove from suggestions list
     setCheckoutSuggestions(prev => prev.filter(s => s.barcode !== suggestion.barcode));
+
+    // Return the cart item so caller can track what was added
+    return cartItem;
   };
 
-  const handleProceedToCheckout = async () => {
+  const handleProceedToCheckout = async (additionalItems = []) => {
     if (!user?.phone) {
       console.error("No user phone for checkout");
       return;
@@ -106,9 +109,31 @@ export function useCheckout({ user, cartItems, addProduct, hasUncollectedItems }
     console.log("Processing checkout...");
     setShowForgotItemsModal(false);
 
+    // Merge current cart items with additional items being added
+    // This ensures newly added items are included in the sync (fixes stale closure issue)
+    let itemsToSync = [...cartItems];
+    
+    additionalItems.forEach(newItem => {
+      const existingIndex = itemsToSync.findIndex(item => item.id === newItem.id);
+      if (existingIndex !== -1) {
+        // Item exists - increase quantity
+        itemsToSync[existingIndex] = {
+          ...itemsToSync[existingIndex],
+          quantity: itemsToSync[existingIndex].quantity + newItem.quantity,
+          currentPrice: (itemsToSync[existingIndex].quantity + newItem.quantity) * itemsToSync[existingIndex].pricePerUnit,
+        };
+      } else {
+        // New item - add to list
+        itemsToSync.push({
+          ...newItem,
+          currentPrice: newItem.quantity * newItem.pricePerUnit,
+        });
+      }
+    });
+
     // First sync cart to backend (required before checkout)
-    console.log("Syncing cart to backend...");
-    const syncResult = await checkoutService.syncCart(user.phone, cartItems);
+    console.log("Syncing cart to backend...", itemsToSync.length, "items");
+    const syncResult = await checkoutService.syncCart(user.phone, itemsToSync);
 
     if (!syncResult.success) {
       console.error("Failed to sync cart:", syncResult.error);

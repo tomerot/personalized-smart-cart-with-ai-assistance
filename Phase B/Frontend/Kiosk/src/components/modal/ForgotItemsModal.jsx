@@ -74,18 +74,25 @@ const ForgotItemsModal = ({
 
   // Handle proceed - add items with quantities and process checkout
   const handleProceed = () => {
-    // Add all items with quantity > 0 to cart
+    // Collect all items with quantity > 0 to add
+    const itemsToAdd = [];
+    
     suggestions.forEach((item) => {
       const qty = itemQuantities[item.barcode] || 0;
       if (qty > 0) {
-        // Add item multiple times based on quantity
+        // Add item to cart and track for checkout
         for (let i = 0; i < qty; i++) {
-          onAddItem(item);
+          const cartItem = onAddItem(item);
+          if (cartItem) {
+            itemsToAdd.push(cartItem);
+          }
         }
       }
     });
-    // Proceed to checkout (which will sync cart, process checkout, and navigate back)
-    onCheckout();
+    
+    // Proceed to checkout WITH the items we just added
+    // This fixes the stale closure issue where cartItems wouldn't include newly added items
+    onCheckout(itemsToAdd);
   };
 
   // Don't show modal if not open OR if there are no suggestions (and not loading)
