@@ -39,6 +39,7 @@ export default function CompanionView() {
     messages,
     toggleConversation,
     highlightedProductId,
+    isVoiceControllerConnected,
   } = useVoiceAssistant();
 
   const { cartItems, deleteProduct, addProduct } = useCart();
@@ -87,6 +88,7 @@ export default function CompanionView() {
           onStartStop={toggleConversation}
           status={chatStatus}
           timerProgress={timerProgress}
+          disabled={!isVoiceControllerConnected}
         />
       </div>
     </div>

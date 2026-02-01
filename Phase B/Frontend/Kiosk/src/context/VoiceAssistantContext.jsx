@@ -20,6 +20,9 @@ export function VoiceAssistantProvider({ children }) {
   const [chatStatus, setChatStatus] = useState('idle'); // 'idle' | 'connecting' | 'assistant' | 'user'
   const [timerProgress, setTimerProgress] = useState(0);
   
+  // WebSocket connection state
+  const [isVoiceControllerConnected, setIsVoiceControllerConnected] = useState(false);
+  
   // Messages state - persisted through the whole session
   const [messages, setMessages] = useState([]);
   
@@ -492,6 +495,22 @@ export function VoiceAssistantProvider({ children }) {
   }, [handleVoiceEvent]);
 
   /**
+   * Subscribe to connection status changes on mount
+   */
+  useEffect(() => {
+    // Set initial connection status
+    setIsVoiceControllerConnected(voiceControllerService.isConnected());
+    
+    // Subscribe to connection status changes
+    const unsubscribe = voiceControllerService.onConnectionChange((connected) => {
+      console.log('Voice controller connection status changed:', connected);
+      setIsVoiceControllerConnected(connected);
+    });
+    
+    return () => unsubscribe();
+  }, []);
+
+  /**
    * Start a voice conversation
    */
   const startConversation = useCallback(() => {
@@ -650,6 +669,7 @@ export function VoiceAssistantProvider({ children }) {
     timerProgress,
     messages,
     highlightedProductId,
+    isVoiceControllerConnected,
     
     // Actions
     toggleConversation,

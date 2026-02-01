@@ -15,6 +15,7 @@ import { ICONS } from "@/components/icons/icons.config";
  * @param {function} onStartStop - Callback when start/stop button is clicked
  * @param {string} status - Current status: 'idle', 'connecting', 'assistant', 'user'
  * @param {number} timerProgress - Progress of inactivity timer (0-100)
+ * @param {boolean} disabled - Whether the button is disabled
  * @param {string} className - Additional CSS classes
  */
 const ChatBar = ({
@@ -22,6 +23,7 @@ const ChatBar = ({
   onStartStop,
   status = 'idle', // 'idle' | 'connecting' | 'assistant' | 'user'
   timerProgress = 0,
+  disabled = false,
   className = "",
 }) => {
   // Show timer stroke only when it's the user's turn to speak
@@ -51,6 +53,7 @@ const ChatBar = ({
           {/* Button */}
           <button
             onClick={onStartStop}
+            disabled={disabled}
             className={`
               relative
               font-semibold
@@ -58,12 +61,13 @@ const ChatBar = ({
               px-6 py-3
               rounded-xl
               transition-all duration-300
-              cursor-pointer
               flex items-center gap-3
               overflow-hidden
-              ${isConversationActive 
-                ? 'bg-white border-3 border-green-600' 
-                : 'bg-green-600 hover:bg-green-700 active:bg-green-800 border-3 border-green-600'
+              ${disabled
+                ? 'bg-gray-300 border-3 border-gray-300 cursor-not-allowed'
+                : isConversationActive 
+                  ? 'bg-white border-3 border-green-600 cursor-pointer' 
+                  : 'bg-green-600 hover:bg-green-700 active:bg-green-800 border-3 border-green-600 cursor-pointer'
               }
             `}
           >
@@ -89,11 +93,11 @@ const ChatBar = ({
                 size={24}
                 weight={500}
                 fill={1}
-                style={{ color: isConversationActive ? '#16a34a' : 'white' }}
+                style={{ color: disabled ? '#6b7280' : isConversationActive ? '#16a34a' : 'white' }}
               />
               <span 
                 className="font-[Montserrat]"
-                style={{ color: isConversationActive ? '#16a34a' : 'white' }}
+                style={{ color: disabled ? '#6b7280' : isConversationActive ? '#16a34a' : 'white' }}
               >
                 {isConversationActive ? "Stop Conversation" : "Start Conversation"}
               </span>
