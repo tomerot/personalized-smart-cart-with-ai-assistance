@@ -68,9 +68,10 @@ function DashboardModals({
       <MessageModal
         isOpen={showErrorModal}
         onClose={onCloseError}
-        icon={ICONS.BLOCK}
+        icon={ICONS.NOT_FOUND}
         message={errorMessage}
-        iconColor="#dc2626"
+        iconColor="black"
+        textColor="black"
       />
 
       {/* Forgot Items Modal (Checkout Suggestions) */}

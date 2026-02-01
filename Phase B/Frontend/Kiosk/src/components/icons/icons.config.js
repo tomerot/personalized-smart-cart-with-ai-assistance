@@ -35,5 +35,6 @@ export const ICONS = {
   CANCEL: "close",
   CHECKOUT: "credit_card",
   NO_CHAT: "voice_chat_off",
-  PHONE: "call"
+  PHONE: "call",
+  NOT_FOUND: "search_off"
 };

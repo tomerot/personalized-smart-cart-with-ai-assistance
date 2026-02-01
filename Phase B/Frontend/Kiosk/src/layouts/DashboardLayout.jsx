@@ -147,6 +147,7 @@ function DashboardLayout() {
     },
     onScanError: (barcode, error) => {
       console.error(`Scan error for ${barcode}:`, error);
+      checkout.setErrorMessage(["Barcode not recognized.", "Please try again."]);
       checkout.setShowErrorModal(true);
     },
     onConflict: ({ product, conflict, alternatives }) => {

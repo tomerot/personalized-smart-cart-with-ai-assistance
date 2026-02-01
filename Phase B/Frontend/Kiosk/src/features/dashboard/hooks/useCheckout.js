@@ -176,6 +176,7 @@ export function useCheckout({ user, cartItems, addProduct, hasUncollectedItems }
     setShowCheckoutSuccessModal,
     setShowIncompleteListModal,
     setShowErrorModal,
+    setErrorMessage,
   };
 }
 
