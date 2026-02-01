@@ -9,6 +9,7 @@ export function useAudioSettings() {
   const [volume, setVolume] = useState(50); // Default volume
   const [isLoading, setIsLoading] = useState(false);
   const [isVolumeControlAvailable, setIsVolumeControlAvailable] = useState(true); // Assume available until told otherwise
+  const [isConnected, setIsConnected] = useState(false);
   const audioButtonRef = useRef(null);
 
   // Listen for volume events from the controller
@@ -35,7 +36,12 @@ export function useAudioSettings() {
 
   // Request volume status when voice controller connects
   useEffect(() => {
+    // Set initial connection status
+    setIsConnected(voiceControllerService.isConnected());
+    
     const unsubscribe = voiceControllerService.onConnectionChange((connected) => {
+      setIsConnected(connected);
+      
       if (connected) {
         // Request volume status to check availability
         voiceControllerService.getVolume();
@@ -61,10 +67,10 @@ export function useAudioSettings() {
   }, [showAudioSettings, isVolumeControlAvailable]);
 
   const handleAudioSettingsClick = useCallback(() => {
-    if (isVolumeControlAvailable) {
+    if (isVolumeControlAvailable && isConnected) {
       setShowAudioSettings(true);
     }
-  }, [isVolumeControlAvailable]);
+  }, [isVolumeControlAvailable, isConnected]);
 
   const handleCloseAudioSettings = useCallback(() => {
     setShowAudioSettings(false);
@@ -86,7 +92,7 @@ export function useAudioSettings() {
     setShowAudioSettings,
     volume,
     isLoading,
-    isVolumeControlAvailable,
+    isVolumeControlAvailable: isVolumeControlAvailable && isConnected, // Both must be true
     audioButtonRef,
     handleAudioSettingsClick,
     handleCloseAudioSettings,
