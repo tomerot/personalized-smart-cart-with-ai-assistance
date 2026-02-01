@@ -579,14 +579,14 @@ export function VoiceAssistantProvider({ children }) {
   }, []);
 
   /**
-   * Play a pre-made audio alert through the voice controller
-   * @param {string} alertName - Name of the alert audio file (without extension)
+   * Play a pre-made audio through the voice controller
+   * @param {string} audioName - Name of the audio file (without extension)
    */
-  const playAlert = useCallback((alertName) => {
+  const playAudio = useCallback((audioName) => {
     if (voiceControllerService.isConnected()) {
-      voiceControllerService.playAlert(alertName);
+      voiceControllerService.playAudio(audioName);
     } else {
-      console.warn('Cannot play alert: Voice controller not connected');
+      console.warn('Cannot play audio: Voice controller not connected');
     }
   }, []);
 
@@ -637,9 +637,9 @@ export function VoiceAssistantProvider({ children }) {
     setMessages(prev => [...prev, messageData]);
     lastSpeakerRef.current = 'assistant';
     
-    // Play conflict warning audio alert
+    // Play conflict warning audio
     if (voiceControllerService.isConnected()) {
-      voiceControllerService.playAlert('warning');
+      voiceControllerService.playAudio('warning');
     }
   }, []);
 
@@ -658,7 +658,7 @@ export function VoiceAssistantProvider({ children }) {
     clearMessages,
     addMessage,
     addConflictMessage,
-    playAlert,
+    playAudio,
     
     // Setters for external control
     setChatStatus,

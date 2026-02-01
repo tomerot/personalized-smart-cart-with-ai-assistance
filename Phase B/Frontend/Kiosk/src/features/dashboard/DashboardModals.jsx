@@ -4,6 +4,7 @@ import MessageModal from "@/components/modal/MessageModal";
 import ForgotItemsModal from "@/components/modal/ForgotItemsModal";
 import CheckoutSuccessModal from "@/components/modal/CheckoutSuccessModal";
 import ShoppingRouteModal from "@/components/modal/ShoppingRouteModal";
+import AudioSettingsModal from "@/components/modal/AudioSettingsModal";
 
 /**
  * DashboardModals - Container for all dashboard modal dialogs
@@ -37,6 +38,13 @@ function DashboardModals({
   shoppingList,
   cartItemsMap,
   skippedItems,
+  // Audio settings modal
+  showAudioSettings,
+  onCloseAudioSettings,
+  audioButtonRef,
+  volume,
+  onVolumeChange,
+  isLoadingVolume,
 }) {
   return (
     <>
@@ -105,6 +113,16 @@ function DashboardModals({
         shoppingList={shoppingList}
         cartItemsMap={cartItemsMap}
         skippedItems={skippedItems}
+      />
+
+      {/* Audio Settings Modal */}
+      <AudioSettingsModal
+        isOpen={showAudioSettings}
+        onClose={onCloseAudioSettings}
+        anchorRef={audioButtonRef}
+        volume={volume}
+        onVolumeChange={onVolumeChange}
+        isLoading={isLoadingVolume}
       />
     </>
   );

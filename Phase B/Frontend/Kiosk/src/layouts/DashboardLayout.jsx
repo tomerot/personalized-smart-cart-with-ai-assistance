@@ -10,7 +10,7 @@ import { useVoiceAssistant } from "@/context/VoiceAssistantContext";
 import { NAV_VIEWS, VIEW_CONFIG, useViewTransition, DashboardNavRail } from "@/features/navigation";
 import { CompanionView } from "@/features/smart-companion";
 import { GroceryListView, useShoppingList } from "@/features/grocery-list";
-import { DashboardModals, useCheckout, useLeaveSession, useShoppingRoute, useProfile } from "@/features/dashboard";
+import { DashboardModals, useCheckout, useLeaveSession, useShoppingRoute, useProfile, useAudioSettings } from "@/features/dashboard";
 import ProfileModal from "@/components/modal/ProfileModal";
 import { cartAutoSaveService } from "@/services/cartAutoSaveService";
 
@@ -135,6 +135,9 @@ function DashboardLayout() {
   // Profile modal hook
   const { showProfileModal, handleProfileClick, handleCloseProfile } = useProfile();
 
+  // Audio settings modal hook
+  const audioSettings = useAudioSettings();
+
   // Barcode scanner integration
   const { manualScan } = useBarcodeScanner({
     autoConnect: true,
@@ -158,7 +161,6 @@ function DashboardLayout() {
 
   // Handlers for stub features
   const handleHelpClick = () => console.log("Help clicked - will open modal");
-  const handleAudioSettings = () => console.log("Audio Settings clicked");
   
   // Checkout complete reuses session cleanup
   const handleCheckoutComplete = () => {
@@ -230,13 +232,28 @@ function DashboardLayout() {
           )}
           
           {displayView === NAV_VIEWS.COMPANION && viewInfo.actionButton && (
-            <button 
-              className={`flex items-center gap-3 px-3 py-1 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-semibold rounded-xl transition-colors duration-150 ${fadeClass}`}
-              onClick={handleAudioSettings}
-            >
-              <Icon name={viewInfo.actionButton.icon} size={20} weight={500} style={{ color: "white" }} />
-              <span className="font-[Montserrat] pr-1">{viewInfo.actionButton.label}</span>
-            </button>
+            <div className="relative">
+              <button 
+                ref={audioSettings.audioButtonRef}
+                disabled={!audioSettings.isVolumeControlAvailable}
+                className={`flex items-center gap-3 px-3 py-1 font-semibold rounded-xl transition-colors duration-150 ${
+                  !audioSettings.isVolumeControlAvailable
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : audioSettings.showAudioSettings 
+                      ? 'bg-green-700 text-white' 
+                      : 'bg-green-600 hover:bg-green-700 active:bg-green-800 text-white'
+                } ${fadeClass}`}
+                onClick={audioSettings.handleAudioSettingsClick}
+              >
+                <Icon 
+                  name={viewInfo.actionButton.icon} 
+                  size={20} 
+                  weight={500} 
+                  style={{ color: !audioSettings.isVolumeControlAvailable ? "#6b7280" : "white" }} 
+                />
+                <span className="font-[Montserrat] pr-1">{viewInfo.actionButton.label}</span>
+              </button>
+            </div>
           )}
         </div>
 
@@ -284,6 +301,12 @@ function DashboardLayout() {
         shoppingList={shoppingList}
         cartItemsMap={cartItemsMap}
         skippedItems={skippedItems}
+        showAudioSettings={audioSettings.showAudioSettings}
+        onCloseAudioSettings={audioSettings.handleCloseAudioSettings}
+        audioButtonRef={audioSettings.audioButtonRef}
+        volume={audioSettings.volume}
+        onVolumeChange={audioSettings.handleVolumeChange}
+        isLoadingVolume={audioSettings.isLoading}
       />
 
       {/* Profile Modal */}

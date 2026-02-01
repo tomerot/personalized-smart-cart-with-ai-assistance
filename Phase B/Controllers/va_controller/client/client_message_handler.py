@@ -11,7 +11,9 @@ class ClientMessageHandler:
             "start-call": StartCallCommand,
             "stop-call": StopCallCommand,
             "end-session": EndSessionCommand,
-            "play-alert": PlayAlertCommand
+            "play-audio": PlayAudioCommand,
+            "set-volume": SetVolumeCommand,
+            "get-volume": GetVolumeCommand
         }
 
     def handle(self, message: str) -> Command:

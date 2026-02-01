@@ -19,7 +19,9 @@ export const VOICE_COMMANDS = {
   START_CALL: 'start-call',
   STOP_CALL: 'stop-call',
   END_SESSION: 'end-session',
-  PLAY_ALERT: 'play-alert',
+  PLAY_AUDIO: 'play-audio',
+  SET_VOLUME: 'set-volume',
+  GET_VOLUME: 'get-volume',
 };
 
 // Event Types - matches va_controller/vapi/events.py
@@ -222,14 +224,39 @@ class VoiceControllerService {
 
   /**
    * Play a pre-made audio alert
-   * @param {string} alertName - Name of the alert audio file (without extension)
+   * @param {string} audioName - Name of the audio file (without extension)
    * @returns {boolean} Success status
    */
-  playAlert(alertName) {
-    console.log(`Playing alert: ${alertName}`);
+  playAudio(audioName) {
+    console.log(`Playing audio: ${audioName}`);
     return this._sendCommand({
-      cmd_type: VOICE_COMMANDS.PLAY_ALERT,
-      alert_name: alertName,
+      cmd_type: VOICE_COMMANDS.PLAY_AUDIO,
+      audio_name: audioName,
+    });
+  }
+
+  /**
+   * Set system volume level
+   * @param {number} level - Volume level (0-100)
+   * @returns {boolean} Success status
+   */
+  setVolume(level) {
+    console.log(`Setting volume to: ${level}%`);
+    return this._sendCommand({
+      cmd_type: VOICE_COMMANDS.SET_VOLUME,
+      level: level,
+    });
+  }
+
+  /**
+   * Request current volume level
+   * Response will be received via event listener with event_type: 'volume-level'
+   * @returns {boolean} Success status
+   */
+  getVolume() {
+    console.log('Requesting current volume level...');
+    return this._sendCommand({
+      cmd_type: VOICE_COMMANDS.GET_VOLUME,
     });
   }
 
