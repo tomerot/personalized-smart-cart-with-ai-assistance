@@ -1,28 +1,27 @@
 from models import ProductPurchaseTracking, CartSession, Product, User
 from typing import List, Dict, Any, Optional
 from datetime import datetime
-from statistics import median
 
 # Configuration constants for abandonment detection and freeze logic
 
-# If user shopped within last 14 days → they are "actively shopping"
-# Used to detect: "Is user still shopping regularly, but ignoring THIS product?"
-ACTIVE_SHOPPER_THRESHOLD_DAYS = 14
+# Threshold for user activity:
+# - < 30 days since last shop: User is ACTIVE → check for product abandonment, update averages
+# - ≥ 30 days since last shop: User is INACTIVE/AWAY → freeze data when they return, no abandonment check
+INACTIVITY_THRESHOLD_DAYS = 30
 
-# If user hasn't shopped for 30+ days → they are "inactive/away" (vacation, illness, etc.)
-# Used in 2 places:
-#   1. FREEZE: If inactive for 30+ days, don't update averages on next purchase (preserve pattern)
-#   2. SUGGESTIONS: Don't return suggestions if user inactive for 30+ days (don't spam)
-INACTIVITY_THRESHOLD_DAYS = 30  # User hasn't shopped in 30+ days = inactive/away (ex. vacation) - we dont track the last purchase interval
-
-# Used together to detect abandoned products:
-# Threshold = max(60 days, average_interval * 2.5)
-# If user is ACTIVE (shopped within 14 days) BUT specific product overdue by threshold → DELETE tracking
+# Abandonment detection for products:
+# Threshold = max(30 days, average_interval * 1.5)
+# If user is ACTIVE but specific product overdue by threshold → DELETE tracking
 # Examples:
-#   - Milk (7-day avg): threshold = max(60, 7×2.5) = 60 days
-#   - Shampoo (30-day avg): threshold = max(60, 30×2.5) = 75 days
-ABANDONMENT_MULTIPLIER = 2.5
-ABANDONMENT_THRESHOLD_DAYS = 60
+#   - Milk (7-day avg): threshold = max(30, 7×1.5) = 30 days
+#   - Bi-weekly (14-day avg): threshold = max(30, 14×1.5) = 30 days
+#   - Monthly (30-day avg): threshold = max(30, 30×1.5) = 45 days
+ABANDONMENT_MULTIPLIER = 1.5
+ABANDONMENT_THRESHOLD_DAYS = 30
+
+# Only track frequently-bought products (avg interval ≤ 30 days)
+# Products with longer intervals are deleted from tracking
+MAX_TRACKING_INTERVAL_DAYS = 30
 
 
 async def checkout_cart(phone: str) -> Dict[str, Any]:
@@ -91,13 +90,14 @@ async def track_product_purchase(
 
     Handles:
     1. Abandonment Detection: Delete tracking if user is active but ignoring product
-    2. Freeze Logic: Don't update average if user was inactive (long absence)
-    3. Outlier Protection: Use median-based averaging to handle anomalies
+    2. Freeze Logic: Don't update average if user was inactive (≥30 days absence)
+    3. Frequency Filter: Delete tracking if product avg interval exceeds 30 days
 
-    Automatically calculates and updates:
-    - purchase_count
-    - last_purchase_date
-    - average_interval_days (if >= 2 purchases)
+    Uses incremental average calculation for purchase intervals:
+    - If k = number of purchases BEFORE this one, then:
+      - Number of old intervals = k - 1
+      - Number of new intervals = k (after adding current interval)
+    - Formula: new_avg = (old_avg * (k - 1) + new_interval) / k
 
     Args:
         phone: User's phone number
@@ -120,7 +120,6 @@ async def track_product_purchase(
         tracking = ProductPurchaseTracking(
             phone=phone,
             barcode=barcode,
-            purchase_dates=[purchase_date],
             purchase_count=1,
             last_purchase_date=purchase_date,
             average_interval_days=None,  # Can't calculate with only 1 purchase
@@ -136,14 +135,14 @@ async def track_product_purchase(
             days_since_last_shop = (purchase_date - user.last_checkout_date).days
 
         # ABANDONMENT DETECTION
-        # User is active shopper but this product is way overdue
+        # User is active (shopped within 30 days) but this product is way overdue
         if (
             days_since_last_shop is not None
-            and days_since_last_shop < ACTIVE_SHOPPER_THRESHOLD_DAYS
+            and days_since_last_shop < INACTIVITY_THRESHOLD_DAYS
         ):
             # User is actively shopping
             if tracking.average_interval_days:
-                # Calculate abandonment threshold
+                # Calculate abandonment threshold: max(30, avg × 1.5)
                 abandonment_threshold = max(
                     ABANDONMENT_THRESHOLD_DAYS,
                     tracking.average_interval_days * ABANDONMENT_MULTIPLIER,
@@ -156,49 +155,54 @@ async def track_product_purchase(
                         f"🗑️ ABANDONMENT DETECTED: {phone} - {barcode}\n"
                         f"   Last shopped: {days_since_last_shop} days ago (ACTIVE)\n"
                         f"   Last bought this: {days_since_last_purchase} days ago (OVERDUE)\n"
-                        f"   Threshold: {abandonment_threshold} days\n"
+                        f"   Threshold: {abandonment_threshold:.1f} days\n"
                         f"   → Deleting product tracking"
                     )
                     await tracking.delete()
                     return
 
         # FREEZE LOGIC (Long Absence)
-        # User hasn't shopped at all for a long time
+        # User hasn't shopped at all for 30+ days → don't update average
         freeze_data = False
         if user.last_checkout_date:
             days_inactive = (purchase_date - user.last_checkout_date).days
-            if days_inactive > INACTIVITY_THRESHOLD_DAYS:
+            if days_inactive >= INACTIVITY_THRESHOLD_DAYS:
                 freeze_data = True
                 print(
                     f"❄️ FREEZE MODE: {phone} - {barcode}\n"
                     f"   User inactive for {days_inactive} days\n"
-                    f"   → Keeping old average, just updating date"
+                    f"   → Keeping old average, just updating date and count"
                 )
 
-        # Add new purchase date
-        tracking.purchase_dates.append(purchase_date)
+        # Update purchase count and date
         tracking.purchase_count += 1
         tracking.last_purchase_date = purchase_date
 
-        # Recalculate average interval if we have 2+ purchases
-        if len(tracking.purchase_dates) >= 2:
+        # Calculate/update average interval if we have 2+ purchases
+        if tracking.purchase_count >= 2:
             if freeze_data:
                 # FREEZE: Don't recalculate average (long absence)
                 # Keep the old average_interval_days
-                print(
-                    f"   Keeping frozen average: {tracking.average_interval_days:.1f} days"
-                )
+                if tracking.average_interval_days:
+                    print(
+                        f"   Keeping frozen average: {tracking.average_interval_days:.1f} days"
+                    )
             else:
-                # NORMAL: Recalculate average with outlier protection
-                sorted_dates = sorted(tracking.purchase_dates)
-                intervals = [
-                    (sorted_dates[i] - sorted_dates[i - 1]).days
-                    for i in range(1, len(sorted_dates))
-                ]
+                # NORMAL: Calculate average incrementally
+                new_interval = days_since_last_purchase
 
-                tracking.average_interval_days = calculate_robust_average_interval(
-                    intervals
-                )
+                if tracking.average_interval_days is None:
+                    # Second purchase - first interval
+                    tracking.average_interval_days = max(float(new_interval), 1.0)
+                else:
+                    # Incremental average: new_avg = (old_avg * (count-1) + new_interval) / count
+                    old_count = tracking.purchase_count - 1
+                    tracking.average_interval_days = (
+                        tracking.average_interval_days * (old_count - 1) + new_interval
+                    ) / old_count
+                    tracking.average_interval_days = max(
+                        tracking.average_interval_days, 1.0
+                    )  # Minimum 1 day
 
                 print(
                     f"Updated tracking for {phone} - {barcode}: "
@@ -206,47 +210,18 @@ async def track_product_purchase(
                     f"avg interval: {tracking.average_interval_days:.1f} days"
                 )
 
+                # FREQUENCY FILTER: Delete if product is not frequently bought
+                if tracking.average_interval_days > MAX_TRACKING_INTERVAL_DAYS:
+                    print(
+                        f"🗑️ INFREQUENT PRODUCT: {phone} - {barcode}\n"
+                        f"   Average interval: {tracking.average_interval_days:.1f} days\n"
+                        f"   Max allowed: {MAX_TRACKING_INTERVAL_DAYS} days\n"
+                        f"   → Deleting product tracking"
+                    )
+                    await tracking.delete()
+                    return
+
     await tracking.save()
-
-
-def calculate_robust_average_interval(intervals: List[float]) -> float:
-    """
-    Calculate average interval with outlier handling using median.
-
-    Strategy:
-    1. If < 3 purchases, use mean (not enough data for outlier detection)
-    2. If >= 3 purchases, use median (robust to outliers)
-    3. Remove extreme outliers (>3x median) before calculating
-    4. Minimum return value is 1 day (prevents division by zero)
-
-    Args:
-        intervals: List of days between purchases
-
-    Returns:
-        Average interval in days (median-based for robustness, minimum 1 day)
-    """
-    if not intervals:
-        return 1  # Minimum 1 day interval
-
-    if len(intervals) < 3:
-        # Not enough data for robust statistics, use simple mean
-        result = sum(intervals) / len(intervals)
-        return max(result, 1)  # Ensure at least 1 day
-
-    # Use median (robust to outliers)
-    median_val = median(intervals)
-
-    # Remove extreme outliers (>3x median)
-    # Example: [7, 7, 8, 50] -> median=7.5, remove 50 (>22.5)
-    filtered = [interval for interval in intervals if interval <= median_val * 3]
-
-    # If we filtered everything out (rare edge case), use original
-    if not filtered:
-        filtered = intervals
-
-    # Return median of filtered data (most robust approach)
-    result = median(filtered)
-    return max(result, 1)  # Ensure at least 1 day (prevents division by zero)
 
 
 async def get_replenishment_suggestions(
@@ -255,18 +230,19 @@ async def get_replenishment_suggestions(
     """
     Get ALL products that are due for repurchase based on their buying intervals.
 
-    NEW: Returns empty if user is inactive (hasn't shopped in 30+ days) to avoid
-    suggesting items during long absences (vacation, illness, etc.)
-
     A product is "due" if:
-    - User has bought it at least 2 times (can calculate average interval)
-    - Days since last purchase is between (avg_interval - 1) and (avg_interval * 1.5)
+    - User has bought it at least 3 times (reliable average interval)
+    - Days since last purchase is between (avg_interval - 3) and (avg_interval * 1.5)
 
     Example:
         - Product bought every 20 days (average_interval_days = 20)
-        - Due window: 19 days to 30 days
+        - Due window: 17 days to 30 days
         - If last bought 22 days ago → SUGGEST (overdue)
         - If last bought 10 days ago → DON'T SUGGEST (too early)
+
+    Special case - Returning users (inactive ≥30 days):
+        Upper bound is removed, so ALL frequently-bought products (3+ purchases)
+        are suggested. When someone returns after being away, they need to restock.
 
     Args:
         phone: User's phone number
@@ -275,37 +251,37 @@ async def get_replenishment_suggestions(
     Returns:
         List of due products with details, sorted by most overdue first.
         Returns empty list if:
-        - User is inactive (hasn't shopped in 30+ days)
         - No products are due
-        - User has insufficient purchase history
+        - User has insufficient purchase history (less than 3 purchases)
     """
     try:
-        # Check if user is active
+        # Check if user exists
         user = await User.find_one(User.phone == phone)
         if not user:
             print(f"User {phone} not found")
             return []
 
-        # If user is inactive, don't suggest anything (they're away)
+        # Check if user is returning from inactivity (≥30 days since last shop)
+        is_returning_from_inactivity = False
         if user.last_checkout_date:
-            days_inactive = (datetime.utcnow() - user.last_checkout_date).days
-            if days_inactive > INACTIVITY_THRESHOLD_DAYS:
+            days_since_last_shop = (datetime.utcnow() - user.last_checkout_date).days
+            if days_since_last_shop >= INACTIVITY_THRESHOLD_DAYS:
+                is_returning_from_inactivity = True
                 print(
-                    f"⏸️ USER INACTIVE: {phone}\n"
-                    f"   Last shopped: {days_inactive} days ago\n"
-                    f"   → Returning no suggestions (user is away)"
+                    f"🔄 RETURNING USER: {phone}\n"
+                    f"   Last shopped: {days_since_last_shop} days ago\n"
+                    f"   → Suggesting all frequently-bought products"
                 )
-                return []
 
-        # Get all tracked products for this user with 2+ purchases
+        # Get all tracked products for this user with 3+ purchases (reliable average)
         tracked = await ProductPurchaseTracking.find(
             ProductPurchaseTracking.phone == phone,
-            ProductPurchaseTracking.purchase_count >= 2,
+            ProductPurchaseTracking.purchase_count >= 3,
             ProductPurchaseTracking.average_interval_days != None,
         ).to_list()
 
         if not tracked:
-            print(f"No tracking data with 2+ purchases found for {phone}")
+            print(f"No tracking data with 3+ purchases found for {phone}")
             return []
 
         now = datetime.utcnow()
@@ -326,9 +302,14 @@ async def get_replenishment_suggestions(
                     f"⚠️ WARNING: {item.barcode} has avg_interval <= 0, setting to 1 day"
                 )
 
-            # Calculate due window: (avg - 1 day) to (avg * 1.5)
-            lower_bound = avg_interval - 1
-            upper_bound = avg_interval * 1.5
+            # Calculate due window
+            lower_bound = avg_interval - 3
+            if is_returning_from_inactivity:
+                # Returning user: no upper bound, suggest all frequent products
+                upper_bound = float("inf")
+            else:
+                # Normal user: (avg - 3 days) to (avg * 1.5)
+                upper_bound = avg_interval * 1.5
 
             # Check if item is within the due window
             if lower_bound <= days_since_last <= upper_bound:
