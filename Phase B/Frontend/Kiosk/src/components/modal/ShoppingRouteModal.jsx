@@ -154,28 +154,67 @@ const ShoppingRouteModal = ({
     // Find first incomplete category (current stop)
     const currentStopIndex = categoryStatus.findIndex(s => !s.complete);
 
-    // Build markers with appropriate colors
-    const markers = shoppingList.routeCoordinates.map((coord, index) => {
-      const status = categoryStatus[index];
-      let color;
+    // Group coordinates by location and assign continuous stop numbers
+    const coordGroups = new Map(); // key: "x,y", value: { indices: [], x, y, stopNumber }
+    let stopNumber = 1;
+    
+    shoppingList.routeCoordinates.forEach((coord, index) => {
+      const key = `${coord.x},${coord.y}`;
+      if (!coordGroups.has(key)) {
+        coordGroups.set(key, { 
+          indices: [], 
+          x: coord.x, 
+          y: coord.y, 
+          stopNumber: stopNumber 
+        });
+        stopNumber++; // Increment only when we encounter a new location
+      }
+      coordGroups.get(key).indices.push(index);
+    });
+
+    // Build markers with deduplicated coordinates
+    const markers = [];
+    coordGroups.forEach(group => {
+      const { indices, x, y, stopNumber } = group;
       
-      if (status?.complete) {
-        color = '#1f2937'; // Black - completed
-      } else if (index === currentStopIndex) {
+      // Determine status for this location
+      let isCurrent = false;
+      let allComplete = true;
+      
+      indices.forEach(index => {
+        const status = categoryStatus[index];
+        // Check if this specific category index is the current stop
+        if (index === currentStopIndex) {
+          isCurrent = true;
+        }
+        // Check if any category at this location is incomplete
+        if (!status?.complete) {
+          allComplete = false;
+        }
+      });
+      
+      // Choose color based on status
+      let color;
+      if (isCurrent) {
+        // Orange only if this location contains the current (first incomplete) category
         color = '#f97316'; // Orange - current/next
+      } else if (allComplete) {
+        // Black if all categories at this location are complete
+        color = '#1f2937'; // Black - completed
       } else {
+        // Green for future stops (incomplete but not current)
         color = '#16a34a'; // Green - future
       }
-
-      return {
-        x: coord.x,
-        y: coord.y,
+      
+      markers.push({
+        x,
+        y,
         type: 'numbered',
-        label: String(index + 1),
+        label: String(stopNumber), // Use the deduplicated stop number
         color,
-        isComplete: status?.complete || false,
-        isCurrent: index === currentStopIndex,
-      };
+        isComplete: allComplete,
+        isCurrent: isCurrent,
+      });
     });
 
     return { 
