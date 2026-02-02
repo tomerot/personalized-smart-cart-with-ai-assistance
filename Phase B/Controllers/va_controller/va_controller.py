@@ -1,17 +1,27 @@
 import asyncio
-from alert_audio_player import AlertAudioPlayer
+import platform
+from utils.audio.audio_player import AudioPlayer
+from utils.volume.volume_handler import VolumeHandler
 from client.client_handler import ClientHandler
 from vapi.vapi_handler import VapiHandler
 from client.commands import *
 from logger import logger
 
 class VoiceAssistantController:
-    """Main controller that orchestrates communication between client handler and VAPI handler."""
+    """
+    Main controller that orchestrates communication between client handler, VAPI handler,
+    and system audio components.
+    """
     
     def __init__(self):
         self.client_handler = ClientHandler(self.__on_command)
         self.vapi_handler = VapiHandler(self.__on_event)
-        self.alert_player = AlertAudioPlayer()
+        self.audio_player = AudioPlayer()
+        self.volume_handler = None
+        
+        # Volume handler is only available on the production environment (Linux)
+        if platform.system() == "Linux":
+            self.volume_handler = VolumeHandler()
     
     async def start(self):
         """Starts the controller."""
@@ -29,20 +39,32 @@ class VoiceAssistantController:
                 await self.vapi_handler.end_call(notify_vapi = True)
             return
 
-        command_actions = {
+        # Async command handlers
+        async_actions = {
             StartCallCommand: lambda cmd: self.vapi_handler.start_call(cmd.variables, cmd.messages),
             StopCallCommand:  lambda cmd: self.vapi_handler.end_call(notify_vapi = True),
-            PlayAlertCommand: lambda cmd: self.__play_alert(cmd.alert_name)
         }
 
-        action = command_actions.get(type(command))
-        if action:
-            await action(command)
+        # Sync command handlers
+        sync_actions = {
+            PlayAudioCommand: lambda cmd: self.audio_player.play_audio(cmd.audio_name),
+            SetVolumeCommand: lambda cmd: self.volume_handler.set_volume(cmd.level) if self.volume_handler else None,
+            GetVolumeCommand: lambda cmd: self.client_handler.send_queue.put_nowait({
+                "event_type": "volume-level",
+                "available": self.volume_handler is not None,
+                "level": self.volume_handler.get_volume() if self.volume_handler else None
+            }),
+        }
 
-    async def __play_alert(self, alert_name: str):
-        """Play an audio alert (runs synchronously but called as async)."""
-        self.alert_player.play_alert(alert_name)
-    
+        async_action = async_actions.get(type(command))
+        if async_action:
+            await async_action(command)
+            return
+
+        sync_action = sync_actions.get(type(command))
+        if sync_action:
+            sync_action(command)
+
     async def __on_event(self, event):
         """
         Handle events received from VAPI handler.

@@ -26,6 +26,7 @@ const Cart = ({
 }) => {
   const { cartItems, totalPrice, increaseQuantity, decreaseQuantity, deleteProduct } = useCart();
   const scrollContainerRef = useRef(null);
+  const barcodeButtonRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startY, setStartY] = useState(0);
   const [scrollTop, setScrollTop] = useState(0);
@@ -95,8 +96,9 @@ const Cart = ({
         </div>
         
         <button
-          className="flex items-center gap-3 px-4 py-1 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-semibold rounded-xl transition-colors duration-150"
-          onClick={() => setShowBarcodeModal(true)}
+          ref={barcodeButtonRef}
+          className="flex items-center gap-3 px-4 py-1 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-semibold rounded-xl transition-colors duration-150 relative z-50"
+          onClick={() => setShowBarcodeModal(!showBarcodeModal)}
         >
           <Icon 
             name={ICONS.BARCODE} 
@@ -109,7 +111,10 @@ const Cart = ({
       </div>
 
       {/* White box container */}
-      <div className="flex-1 flex flex-col rounded-2xl border border-gray-200 overflow-hidden p-4" style={{ backgroundColor: '#f7fef9' }}>
+      <div 
+        className="flex-1 flex flex-col rounded-2xl border border-gray-200 overflow-hidden p-4" 
+        style={{ backgroundColor: '#f7fef9' }}
+      >
         {/* Hide webkit scrollbar */}
         <style>
           {`
@@ -166,6 +171,8 @@ const Cart = ({
               <ProductCard
                 key={product.id || index}
                 productName={product.name}
+                company={product.company}
+                size={product.size}
                 imageUrl={product.imageUrl}
                 quantity={product.quantity}
                 currentPrice={product.currentPrice}
@@ -184,6 +191,7 @@ const Cart = ({
           <CheckoutBar
             totalPrice={totalPrice}
             onCheckout={onCheckout}
+            disabled={cartItems.length === 0}
           />
         </div>
       </div>
@@ -198,6 +206,7 @@ const Cart = ({
             onManualBarcodeSubmit(barcode);
           }
         }}
+        anchorRef={barcodeButtonRef}
       />
     </div>
   );

@@ -1,8 +1,31 @@
 import { useCallback } from "react";
 import Chat from "@/components/chat/Chat";
+import ChatBar from "@/components/chat/ChatBar";
+import Icon from "@/components/icons/Icon";
+import { ICONS } from "@/components/icons/icons.config";
 import { useVoiceAssistant } from "@/context/VoiceAssistantContext";
 import { useCart } from "@/context/CartContext";
 import { productService } from "@/services/productService";
+
+/**
+ * Empty state component - before conversation starts
+ */
+function EmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center h-full text-gray-400 px-4 -mt-4">
+      <Icon 
+        name={ICONS.NO_CHAT} 
+        size={64} 
+        weight={350}
+        style={{ color: "#9ca3af", marginBottom: "16px" }}
+      />
+      <p className="font-bold text-lg mb-3">Smart Companion is Ready to Help</p>
+      <p className="text-center text-sm">
+        Tap <span className="font-semibold">"Start Conversation"</span> and speak when prompted
+      </p>
+    </div>
+  );
+}
 
 /**
  * CompanionView Component
@@ -16,6 +39,7 @@ export default function CompanionView() {
     messages,
     toggleConversation,
     highlightedProductId,
+    isVoiceControllerConnected,
   } = useVoiceAssistant();
 
   const { cartItems, deleteProduct, addProduct } = useCart();
@@ -43,15 +67,31 @@ export default function CompanionView() {
   }, [highlightedProductId, deleteProduct, addProduct]);
 
   return (
-    <Chat
-      isConversationActive={isConversationActive}
-      onStartStop={toggleConversation}
-      status={chatStatus}
-      timerProgress={timerProgress}
-      messages={messages}
-      onReplaceProduct={handleReplaceProduct}
-      cartItems={cartItems}
-    />
+    <div className="flex flex-col h-full">
+      {/* Empty state or Chat messages - with bottom padding for ChatBar */}
+      <div className="flex-1 overflow-hidden mb-4">
+        {messages.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <Chat
+            messages={messages}
+            onReplaceProduct={handleReplaceProduct}
+            cartItems={cartItems}
+          />
+        )}
+      </div>
+
+      {/* Chat Bar - Fixed at bottom */}
+      <div className="shrink-0">
+        <ChatBar
+          isConversationActive={isConversationActive}
+          onStartStop={toggleConversation}
+          status={chatStatus}
+          timerProgress={timerProgress}
+          disabled={!isVoiceControllerConnected}
+        />
+      </div>
+    </div>
   );
 }
 

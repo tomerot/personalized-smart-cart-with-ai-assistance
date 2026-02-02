@@ -9,12 +9,10 @@ import { ICONS } from "@/components/icons/icons.config";
  *
  * @param {boolean} isOpen - Controls modal visibility
  * @param {function} onClose - Callback when modal is closed (returns to landing)
- * @param {number} itemsTracked - Number of items that were checked out
  */
 const CheckoutSuccessModal = ({
   isOpen,
   onClose,
-  itemsTracked = 0,
 }) => {
   // Prevent body scrolling when modal is open
   useEffect(() => {
@@ -65,35 +63,14 @@ const CheckoutSuccessModal = ({
         </div>
 
         {/* Title */}
-        <h2 className="text-2xl font-semibold text-gray-800 mb-2 text-center">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-3 text-center">
           Thank You!
         </h2>
 
         {/* Message */}
-        <p className="text-gray-600 text-center mb-2">
-          Your purchase has been completed successfully.
+        <p className="text-gray-600 text-center">
+          Payment approved successfully
         </p>
-
-        {itemsTracked > 0 && (
-          <p className="text-sm text-gray-500 text-center mb-6">
-            {itemsTracked} item{itemsTracked !== 1 ? 's' : ''} tracked for smart suggestions.
-          </p>
-        )}
-
-        {/* Subtext */}
-        <p className="text-xs text-gray-400 text-center mb-6">
-          Returning to home screen...
-        </p>
-
-        {/* Done Button */}
-        <button
-          onClick={onClose}
-          className="w-full px-6 py-3 rounded-xl font-semibold
-                     bg-green-600 hover:bg-green-700 active:bg-green-800
-                     text-white transition-colors duration-150"
-        >
-          Done
-        </button>
       </div>
     </div>
   );

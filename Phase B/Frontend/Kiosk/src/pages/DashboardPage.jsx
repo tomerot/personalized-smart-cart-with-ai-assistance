@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
 import { UI_CONFIG } from "@/data/uiConfig";
 import DashboardLayout from "@/layouts/DashboardLayout";
+import { controllerService } from "@/services/controllerService";
 
 function DashboardPage() {
   const navigate = useNavigate();
@@ -24,6 +25,17 @@ function DashboardPage() {
 
     return () => clearTimeout(timer);
   }, [user, navigate]);
+
+  // Enable continuous reconnection when dashboard mounts, disable when unmounting
+  useEffect(() => {
+    console.log('📱 Dashboard mounted - enabling continuous controller reconnection');
+    controllerService.enableContinuousReconnect();
+
+    return () => {
+      console.log('📱 Dashboard unmounted - disabling continuous controller reconnection');
+      controllerService.disableContinuousReconnect();
+    };
+  }, []);
 
   return (
     <div className="relative w-full h-full overflow-hidden">

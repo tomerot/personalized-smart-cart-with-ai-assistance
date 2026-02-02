@@ -53,19 +53,20 @@ export const productService = {
 
   /**
    * Format product name for display in cart
-   * Pattern: "company name (size)" - e.g., "Tnuva Fresh Milk 3% (1L)"
+   * Returns the product name with size if available
+   * Pattern: "name (size)" - e.g., "Fresh Milk 3% (1L)"
    * @param {object} product - Product data from API
    * @returns {string} Formatted product name
    */
   formatProductName: (product) => {
-    const { company, name, size } = product;
+    const { name, size } = product;
     
     if (size) {
-      return `${company} ${name} (${size})`;
+      return `${name} (${size})`;
     }
     
-    // If no size, just return company + name
-    return `${company} ${name}`;
+    // If no size, just return name
+    return name;
   },
 
   /**
@@ -77,6 +78,8 @@ export const productService = {
     return {
       id: product.barcode, // Use barcode as unique ID
       name: productService.formatProductName(product),
+      company: product.company,
+      size: product.size,
       imageUrl: product.image_url,
       pricePerUnit: product.price,
       quantity: 1,

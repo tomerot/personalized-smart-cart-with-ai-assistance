@@ -7,7 +7,7 @@ export const ICONS = {
   DISCOUNT: "percent_discount",
   HELP: "help",
   LEAVE: "logout",
-  SETTINGS: "settings",
+  PROFILE: "account_circle",
   START: "start",
   BACKSPACE: "backspace",
   CLOSE: "close",
@@ -17,8 +17,10 @@ export const ICONS = {
   REDUCE: "keyboard_arrow_down",
   BARCODE: "barcode",
   LOAD_LIST: "file_save",
+  LOAD_LIST_DISABLED: "file_save_off",
   AUDIO: "volume_up",
   CONFLICT: "health_and_safety",
+  NUTRITION: "nutrition",
   PERSON: "person",
   COMPANION: "network_intelligence",
   START_CONVERSATION: "voice_selection",
@@ -31,4 +33,8 @@ export const ICONS = {
   MAP: "map",
   CHECK: "check",
   CANCEL: "close",
+  CHECKOUT: "credit_card",
+  NO_CHAT: "voice_chat_off",
+  PHONE: "call",
+  NOT_FOUND: "search_off"
 };

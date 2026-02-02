@@ -69,10 +69,10 @@ const MessageModal = ({
         style={{ backgroundColor }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close button - top left */}
+        {/* Close button - top right */}
         <button
           onClick={onClose}
-          className="absolute top-[clamp(1rem,2vw,1.5rem)] left-[clamp(1rem,2vw,1.5rem)]
+          className="absolute top-[clamp(1rem,2vw,1.5rem)] right-[clamp(1rem,2vw,1.5rem)]
                      hover:opacity-70 active:opacity-50 transition-opacity
                      cursor-pointer"
           aria-label="Close modal"

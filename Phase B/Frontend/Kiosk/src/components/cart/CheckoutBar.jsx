@@ -1,3 +1,6 @@
+import Icon from "@/components/icons/ICON";
+import { ICONS } from "@/components/icons/icons.config";
+
 /**
  * CheckoutBar Component
  *
@@ -6,11 +9,13 @@
  *
  * @param {number} totalPrice - The total price of all items in the cart
  * @param {function} onCheckout - Callback when checkout button is clicked
+ * @param {boolean} disabled - Whether the checkout button is disabled
  * @param {string} className - Additional CSS classes
  */
 const CheckoutBar = ({
   totalPrice = 0,
   onCheckout,
+  disabled = false,
   className = "",
 }) => {
   const handleCheckout = () => {
@@ -37,21 +42,31 @@ const CheckoutBar = ({
       {/* Right Section: Checkout Button - Fixed width */}
       <button
         onClick={handleCheckout}
+        disabled={disabled}
         className="
+          flex items-center gap-3
           bg-green-600
           hover:bg-green-700
           active:bg-green-800
+          disabled:bg-gray-300
+          disabled:cursor-not-allowed
           text-white
           font-semibold
           text-lg
-          px-20 py-4
+          px-16 py-4
           rounded-xl
           transition-colors duration-150
           cursor-pointer
           shrink-0
         "
       >
-        Checkout
+        <Icon 
+          name={ICONS.CHECKOUT} 
+          size={24} 
+          weight={500}
+          style={{ color: "white" }}
+        />
+        <span>Checkout</span>
       </button>
     </div>
   );

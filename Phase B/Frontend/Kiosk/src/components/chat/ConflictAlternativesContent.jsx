@@ -1,4 +1,5 @@
 import ProductAlternatives from "./ProductAlternatives";
+import { formatAllergyNames, formatDietaryNeedNames } from "@/utils/formatters";
 
 /**
  * ConflictAlternativesContent Component
@@ -24,10 +25,13 @@ const ConflictAlternativesContent = ({
   onReplace,
   disabled = false,
 }) => {
-  // Combine all conflict tags
+  // Combine all conflict tags with formatted display names
+  const formattedAllergenConflicts = formatAllergyNames(allergenConflicts);
+  const formattedDietaryConflicts = formatDietaryNeedNames(dietaryConflicts);
+  
   const allConflicts = [
-    ...allergenConflicts.map(allergen => ({ type: 'allergen', name: allergen })),
-    ...dietaryConflicts.map(dietary => ({ type: 'dietary', name: dietary })),
+    ...formattedAllergenConflicts.map((name, index) => ({ type: 'allergen', name, originalKey: allergenConflicts[index] })),
+    ...formattedDietaryConflicts.map((name, index) => ({ type: 'dietary', name, originalKey: dietaryConflicts[index] })),
   ];
 
   // Transform alternatives to the format expected by ProductAlternatives

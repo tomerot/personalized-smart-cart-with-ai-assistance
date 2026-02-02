@@ -49,6 +49,26 @@ class ControllerService {
   }
 
   /**
+   * Enable continuous reconnection for both controllers
+   * Call this when user enters the dashboard
+   */
+  enableContinuousReconnect() {
+    console.log('Enabling continuous reconnection for all controllers (dashboard active)');
+    barcodeControllerService.enableContinuousReconnect();
+    voiceControllerService.enableContinuousReconnect();
+  }
+
+  /**
+   * Disable continuous reconnection for both controllers
+   * Call this when user leaves the dashboard
+   */
+  disableContinuousReconnect() {
+    console.log('Disabling continuous reconnection for all controllers (leaving dashboard)');
+    barcodeControllerService.disableContinuousReconnect();
+    voiceControllerService.disableContinuousReconnect();
+  }
+
+  /**
    * Notify connection status listeners
    * @param {string} type - 'barcode' or 'voice'
    * @param {boolean} connected - Connection status

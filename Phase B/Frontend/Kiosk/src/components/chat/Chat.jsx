@@ -1,5 +1,4 @@
 import { useRef, useState, useCallback, useEffect } from "react";
-import ChatBar from "./ChatBar";
 import ChatBubble from "./ChatBubble";
 import ProductLocationContent from "./ProductLocationContent";
 import ConflictAlternativesContent from "./ConflictAlternativesContent";
@@ -11,24 +10,15 @@ import { ICONS } from "@/components/icons/icons.config";
  * Chat Component
  * 
  * A chat interface component with touch/drag scrolling functionality.
- * - ChatBar at the bottom for conversation control
- * - Chat bubbles at the top showing conversation history
+ * Displays chat bubbles showing conversation history.
  * - Inverted touch scrolling: drag up to scroll down, drag down to scroll up
  * 
- * @param {boolean} isConversationActive - Whether conversation is active
- * @param {function} onStartStop - Callback when start/stop button is clicked
- * @param {string} status - Current status: 'idle', 'connecting', 'assistant', 'user'
- * @param {number} timerProgress - Progress of inactivity timer (0-100)
  * @param {Array} messages - Array of message objects: { type: 'user' | 'assistant', content: ReactNode, showConflict: boolean }
  * @param {function} onReplaceProduct - Callback when "Replace" button is clicked on an alternative
  * @param {Array} cartItems - Current cart items (for checking if product is still in cart)
  * @param {string} className - Additional CSS classes
  */
 const Chat = ({
-  isConversationActive = false,
-  onStartStop,
-  status = 'idle',
-  timerProgress = 0,
   messages = [],
   onReplaceProduct,
   cartItems = [],
@@ -93,7 +83,7 @@ const Chat = ({
   }, []);
 
   return (
-    <div className={`flex flex-col h-full ${className}`}>
+    <div className={`h-full ${className}`}>
       {/* Hide webkit scrollbar */}
       <style>
         {`
@@ -108,10 +98,10 @@ const Chat = ({
         ref={scrollContainerRef}
         className={`
           chat-scroll-container
-          flex-1 
+          h-full
           overflow-y-auto 
           overflow-x-hidden
-          mb-4 
+          pb-4
           space-y-4
           select-none
           ${isDragging ? "cursor-grabbing" : "cursor-grab"}
@@ -129,14 +119,7 @@ const Chat = ({
         onTouchMove={handleDragMove}
         onTouchEnd={handleDragEnd}
       >
-        {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400">
-            <p className="text-center text-lg font-[Montserrat]">
-              Start a conversation with your Smart Companion
-            </p>
-          </div>
-        ) : (
-          messages.map((message, index) => {
+        {messages.map((message, index) => {
             // Determine what content to render
             let content;
             
@@ -233,18 +216,7 @@ const Chat = ({
                 {content}
               </ChatBubble>
             );
-          })
-        )}
-      </div>
-
-      {/* Chat Bar - Fixed at bottom */}
-      <div className="shrink-0">
-        <ChatBar
-          isConversationActive={isConversationActive}
-          onStartStop={onStartStop}
-          status={status}
-          timerProgress={timerProgress}
-        />
+          })}
       </div>
     </div>
   );

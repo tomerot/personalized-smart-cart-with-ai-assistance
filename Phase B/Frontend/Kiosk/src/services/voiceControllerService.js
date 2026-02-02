@@ -10,8 +10,9 @@ const WS_CONFIG = {
   get URL() {
     return `ws://${this.HOST}:${this.PORT}`;
   },
-  RECONNECT_DELAY: 3000, // 3 seconds
-  MAX_RECONNECT_ATTEMPTS: 5,
+  INITIAL_RECONNECT_DELAY: 3000, // 3 seconds for first 5 attempts
+  CONTINUOUS_RECONNECT_DELAY: 30000, // 30 seconds for continuous retries
+  MAX_FAST_RECONNECT_ATTEMPTS: 5, // Number of fast reconnect attempts before switching to slower interval
 };
 
 // Command Types - matches va_controller/client/commands.py
@@ -19,7 +20,9 @@ export const VOICE_COMMANDS = {
   START_CALL: 'start-call',
   STOP_CALL: 'stop-call',
   END_SESSION: 'end-session',
-  PLAY_ALERT: 'play-alert',
+  PLAY_AUDIO: 'play-audio',
+  SET_VOLUME: 'set-volume',
+  GET_VOLUME: 'get-volume',
 };
 
 // Event Types - matches va_controller/vapi/events.py
@@ -46,6 +49,10 @@ class VoiceControllerService {
     this.reconnectAttempts = 0;
     this.isConnecting = false; // Prevent multiple simultaneous connection attempts
     this.reconnectTimer = null;
+    
+    // Dashboard-aware reconnection
+    this.shouldReconnect = false; // Set to true when on dashboard, false when leaving
+    this.manualDisconnect = false; // Track if disconnect was intentional
 
     // Event listeners
     this.eventListeners = [];
@@ -80,7 +87,7 @@ class VoiceControllerService {
           console.log('✓ Connected to Voice Assistant Controller');
           this.connected = true;
           this.isConnecting = false;
-          this.reconnectAttempts = 0;
+          this.reconnectAttempts = 0; // Reset counter on successful connection
           this._notifyConnectionListeners(true);
           resolve(true);
         };
@@ -105,16 +112,9 @@ class VoiceControllerService {
             this.reconnectTimer = null;
           }
           
-          // Attempt to reconnect only if not manually disconnected
-          if (this.reconnectAttempts < WS_CONFIG.MAX_RECONNECT_ATTEMPTS) {
-            this.reconnectAttempts++;
-            console.log(`Attempting to reconnect to Voice Assistant (${this.reconnectAttempts}/${WS_CONFIG.MAX_RECONNECT_ATTEMPTS})...`);
-            this.reconnectTimer = setTimeout(() => {
-              this.reconnectTimer = null;
-              this.connect();
-            }, WS_CONFIG.RECONNECT_DELAY);
-          } else {
-            console.error('Max reconnection attempts reached');
+          // Attempt to reconnect if we should be connected (on dashboard) and not manually disconnected
+          if (this.shouldReconnect && !this.manualDisconnect) {
+            this._scheduleReconnect();
           }
           
           resolve(false);
@@ -136,6 +136,31 @@ class VoiceControllerService {
         resolve(false);
       }
     });
+  }
+
+  /**
+   * Schedule a reconnection attempt with appropriate delay
+   * Uses fast retry for first few attempts, then switches to slower continuous retry
+   * @private
+   */
+  _scheduleReconnect() {
+    // Determine delay based on attempt count
+    const delay = this.reconnectAttempts < WS_CONFIG.MAX_FAST_RECONNECT_ATTEMPTS
+      ? WS_CONFIG.INITIAL_RECONNECT_DELAY
+      : WS_CONFIG.CONTINUOUS_RECONNECT_DELAY;
+    
+    this.reconnectAttempts++;
+    
+    if (this.reconnectAttempts <= WS_CONFIG.MAX_FAST_RECONNECT_ATTEMPTS) {
+      console.log(`Attempting to reconnect to Voice Assistant (${this.reconnectAttempts}/${WS_CONFIG.MAX_FAST_RECONNECT_ATTEMPTS} fast attempts)...`);
+    } else {
+      console.log(`Attempting to reconnect to Voice Assistant (continuous retry, attempt #${this.reconnectAttempts})...`);
+    }
+    
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null;
+      this.connect();
+    }, delay);
   }
 
   /**
@@ -222,14 +247,39 @@ class VoiceControllerService {
 
   /**
    * Play a pre-made audio alert
-   * @param {string} alertName - Name of the alert audio file (without extension)
+   * @param {string} audioName - Name of the audio file (without extension)
    * @returns {boolean} Success status
    */
-  playAlert(alertName) {
-    console.log(`Playing alert: ${alertName}`);
+  playAudio(audioName) {
+    console.log(`Playing audio: ${audioName}`);
     return this._sendCommand({
-      cmd_type: VOICE_COMMANDS.PLAY_ALERT,
-      alert_name: alertName,
+      cmd_type: VOICE_COMMANDS.PLAY_AUDIO,
+      audio_name: audioName,
+    });
+  }
+
+  /**
+   * Set system volume level
+   * @param {number} level - Volume level (0-100)
+   * @returns {boolean} Success status
+   */
+  setVolume(level) {
+    console.log(`Setting volume to: ${level}%`);
+    return this._sendCommand({
+      cmd_type: VOICE_COMMANDS.SET_VOLUME,
+      level: level,
+    });
+  }
+
+  /**
+   * Request current volume level
+   * Response will be received via event listener with event_type: 'volume-level'
+   * @returns {boolean} Success status
+   */
+  getVolume() {
+    console.log('Requesting current volume level...');
+    return this._sendCommand({
+      cmd_type: VOICE_COMMANDS.GET_VOLUME,
     });
   }
 
@@ -272,19 +322,52 @@ class VoiceControllerService {
   }
 
   /**
+   * Enable continuous reconnection (call when entering dashboard)
+   * This starts the connection process and enables automatic reconnection
+   */
+  enableContinuousReconnect() {
+    console.log('Voice Assistant: Enabling continuous reconnection (dashboard active)');
+    this.shouldReconnect = true;
+    this.manualDisconnect = false;
+    
+    // If not connected, start connecting
+    if (!this.connected && !this.isConnecting) {
+      this.reconnectAttempts = 0; // Reset counter for fresh start
+      this.connect();
+    }
+  }
+
+  /**
+   * Disable continuous reconnection (call when leaving dashboard)
+   * This stops any reconnection attempts but doesn't disconnect if already connected
+   */
+  disableContinuousReconnect() {
+    console.log('Voice Assistant: Disabling continuous reconnection (leaving dashboard)');
+    this.shouldReconnect = false;
+    
+    // Clear any pending reconnection attempts
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+  }
+
+  /**
    * Disconnect from the controller
+   * This is an intentional disconnect (e.g., user logout)
    */
   disconnect() {
     console.log('Disconnecting from Voice Assistant controller...');
+
+    // Mark as manual disconnect to prevent auto-reconnect
+    this.manualDisconnect = true;
+    this.shouldReconnect = false;
 
     // Clear any pending reconnection attempts
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
-
-    // Stop reconnection attempts
-    this.reconnectAttempts = WS_CONFIG.MAX_RECONNECT_ATTEMPTS;
 
     // Send end session command before closing
     if (this.connected) {

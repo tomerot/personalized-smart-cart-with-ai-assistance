@@ -3,7 +3,7 @@
  * Manages shopping cart state across the application
  */
 
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useRef } from 'react';
 
 const CartContext = createContext(null);
 
@@ -13,6 +13,14 @@ const CartContext = createContext(null);
  */
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
+  const hasChangedRef = useRef(false);
+  
+  /**
+   * Mark cart as changed (for auto-save)
+   */
+  const markAsChanged = useCallback(() => {
+    hasChangedRef.current = true;
+  }, []);
 
   /**
    * Calculate total price of all items in cart
@@ -63,7 +71,8 @@ export function CartProvider({ children }) {
         return [newProduct, ...prevItems];
       }
     });
-  }, []);
+    markAsChanged();
+  }, [markAsChanged]);
 
   /**
    * Increase quantity of a product
@@ -83,7 +92,8 @@ export function CartProvider({ children }) {
         return item;
       })
     );
-  }, []);
+    markAsChanged();
+  }, [markAsChanged]);
 
   /**
    * Decrease quantity of a product
@@ -114,7 +124,8 @@ export function CartProvider({ children }) {
         return i;
       });
     });
-  }, []);
+    markAsChanged();
+  }, [markAsChanged]);
 
   /**
    * Delete a product from cart
@@ -122,14 +133,16 @@ export function CartProvider({ children }) {
    */
   const deleteProduct = useCallback((productId) => {
     setCartItems(prevItems => prevItems.filter(item => item.id !== productId));
-  }, []);
+    markAsChanged();
+  }, [markAsChanged]);
 
   /**
    * Clear all items from cart
    */
   const clearCart = useCallback(() => {
     setCartItems([]);
-  }, []);
+    markAsChanged();
+  }, [markAsChanged]);
 
   /**
    * Load cart from saved data (e.g., crash recovery)
@@ -137,6 +150,25 @@ export function CartProvider({ children }) {
    */
   const loadCart = useCallback((items) => {
     setCartItems(items);
+    // Don't mark as changed when loading from backup
+  }, []);
+
+  /**
+   * Check if cart has changed since last save
+   * Stable function reference using ref
+   * @returns {boolean}
+   */
+  const getHasChanged = useCallback(() => {
+    return hasChangedRef.current;
+  }, []);
+
+  /**
+   * Reset the cart changed flag (after successful save)
+   * Stable function reference
+   */
+  const resetChangedFlag = useCallback(() => {
+    hasChangedRef.current = false;
+    console.log('🔄 Cart changed flag reset');
   }, []);
 
   const value = {
@@ -149,6 +181,8 @@ export function CartProvider({ children }) {
     deleteProduct,
     clearCart,
     loadCart,
+    getHasChanged,
+    resetChangedFlag,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
