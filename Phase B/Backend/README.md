@@ -44,7 +44,8 @@ Backend/
 │   ├── shopping_list.py
 │   ├── checkout.py
 │   ├── cart_session.py        # Cart sync/recovery
-│   └── otp.py                 # SMS authentication
+│   ├── otp.py                 # SMS authentication
+│   └── vapi_webhook.py        # VAPI voice assistant webhook
 │
 └── maintenance/               # Maintenance scripts (run manually)
     └── calculate_grid_distances.py  # Generate grid distance matrix
