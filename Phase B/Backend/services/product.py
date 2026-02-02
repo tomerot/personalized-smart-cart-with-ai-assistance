@@ -222,13 +222,13 @@ async def get_ai_recommended_alternatives(
     1. Finds all alternatives in the same category as the original product
     2. Filters by availability and user restrictions (allergies/dietary needs)
     3. Sends filtered alternatives to Gemini AI with user's requirement
-    4. Returns top 3 AI-recommended alternatives with explanations
+    4. Returns up to 3 AI-recommended alternatives with explanation
 
     Args:
         barcode: Original product barcode
         allergies: List of user's allergies
         dietary_needs: List of user's dietary needs
-        requirement: User's specific requirement (e.g., "less sugar", "cheaper")
+        requirement: User's specific requirement (e.g., "less sugar", "high protein")
 
     Returns:
         Dict with:
@@ -311,7 +311,10 @@ async def get_ai_recommended_alternatives(
         # 6. Create prompt for Gemini
         prompt = f"""
 You are a helpful shopping assistant talking directly to a customer. Given the following list of alternative products and their requirement,
-select the TOP {num_alternatives} BEST product(s) that match what they're looking for.
+select UP TO {num_alternatives} BEST product(s) that match what they're looking for.
+
+IMPORTANT: Only recommend products that ACTUALLY meet their requirement. If only 1 or 2 products fit well, recommend only those. 
+Quality over quantity - don't force recommendations just to reach {num_alternatives} products.
 
 What they want: "{requirement}"
 
@@ -328,19 +331,26 @@ Available Alternatives (all safe for their dietary restrictions):
 
 Your task:
 1. Analyze each alternative product based on what they asked for
-2. Select the TOP {num_alternatives} product(s) that best match their needs
+2. Select UP TO {num_alternatives} product(s) that GENUINELY match their needs (can be fewer if others don't fit)
 3. Provide ONE overall explanation (max 20 words) speaking DIRECTLY to them (use "you" and "your")
 4. IMPORTANT: Each product must be UNIQUE - do NOT repeat the same barcode
+5. If NO products truly match the requirement better than the original, return an empty barcodes array with explanation: "Couldn't find any alternatives that match your dietary restrictions"
 
 Example explanations:
 - "These have 50% less sugar than your original choice"
 - "Perfect for your vegan diet with high protein content"
 - "Lower in calories and sodium to match your health goals"
 
-IMPORTANT: Return your response ONLY as a valid JSON object with exactly {num_alternatives} product(s) in this format:
+IMPORTANT: Return your response ONLY as a valid JSON object with 0 to {num_alternatives} product(s) in this format:
 {{
-  "barcodes": ["barcode1", "barcode2", "barcode3"],
+  "barcodes": ["barcode1", "barcode2"],
   "explanation": "Brief overall explanation for all alternatives speaking directly to the customer (max 20 words)"
+}}
+
+If no products match, return:
+{{
+  "barcodes": [],
+  "explanation": "Couldn't find any alternatives that match your dietary restrictions"
 }}
 
 Do not include any other text, markdown formatting, or code blocks. Return ONLY the JSON object.
