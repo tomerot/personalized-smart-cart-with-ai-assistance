@@ -19,52 +19,116 @@ const HELP_PAGES = [
     title: "Add Products to Your Cart",
     explanation: (
       <>
-        You can add products to your cart in two ways:
-        <br /><br />
-        • Point the product's barcode toward the scanner and press its button
+        You can add products to your cart by pointing the product's barcode toward
         <br />
-        • Enter the barcode manually by tapping "Type Barcode", entering the
+        the scanner and pressing its button, or by entering the barcode manually by
         <br />
-        &nbsp;&nbsp;number, and pressing OK
-        <br /><br />
-        Use manual entry if the barcode cannot be scanned.
+        tapping "Type Barcode", typing the number, and pressing OK. Manual entry is
+        <br />
+        useful if the barcode cannot be scanned.
       </>
     ),
   },
   {
     image: helpImg2,
-    title: "Title",
-    explanation: "Explanation",
+    title: "Follow Your Shopping List",
+    explanation: (
+      <>
+        You can create a shopping list in advance using the app and load it when you
+        <br />
+        arrive at the store. After loading your list, products added to your cart are
+        <br />
+        automatically marked as completed, products you decide to skip can be marked
+        <br />
+        as not needed, and the Next Stop highlights the next products to pick up,
+        <br />
+        helping you easily track the progress.
+      </>
+    ),
   },
   {
     image: helpImg3,
-    title: "Title",
-    explanation: "Explanation",
+    title: "Shopping Route",
+    explanation: (
+      <>
+        Based on your shopping list, the cart shows a recommended route through the
+        <br />
+        store and updates it as you collect products.
+      </>
+    ),
   },
   {
     image: helpImg4,
-    title: "Title",
-    explanation: "Explanation",
+    title: "Smart Companion: Ask About Products",
+    explanation: (
+      <>
+        You can ask questions about the product currently highlighted in your cart.
+        <br />
+        The Smart Companion can provide information such as nutritional values or
+        <br />
+        ingredient details to help you make informed choices.
+      </>
+    ),
   },
   {
     image: helpImg5,
-    title: "Title",
-    explanation: "Explanation",
+    title: "Smart Companion: Find Product Alternatives",
+    explanation: (
+      <>
+        You can ask the Smart Companion to suggest alternatives for the product
+        <br />
+        currently highlighted in your cart. The alternatives are provided based on the
+        <br />
+        requirements you mention, as well as your allergies, dietary needs, and
+        <br />
+        product availability.
+      </>
+    ),
   },
   {
     image: helpImg6,
-    title: "Title",
-    explanation: "Explanation",
+    title: "Smart Companion: Find Product Location",
+    explanation: (
+      <>
+        You can ask the Smart Companion to show you where a product is located in
+        <br />
+        the store. If the product is not currently available, the Smart Companion will
+        <br />
+        let you know instead of showing a location.
+      </>
+    ),
   },
   {
     image: helpImg7,
-    title: "Title",
-    explanation: "Explanation",
+    title: "Smart Companion: Allergy & Dietary Alerts",
+    explanation: (
+      <>
+        You can ask the Smart Companion to automatically alert you when a product
+        <br />
+        you add to your cart conflicts with specific allergies or dietary needs you have.
+        <br />
+        If suitable alternatives are available, matching products are suggested
+        <br />
+        automatically. You can ask the Smart Companion to stop these alerts at any
+        <br />
+        time. Your current allergies and dietary needs can always be reviewed under
+        <br />
+        the Profile section.
+      </>
+    ),
   },
   {
     image: helpImg8,
-    title: "Title",
-    explanation: "Explanation",
+    title: "Frequently Bought Product Suggestions",
+    explanation: (
+      <>
+        Based on your past shopping behavior, the system predicts products you may
+        <br />
+        need but have not added to your cart. These products are suggested before
+        <br />
+        checkout to help you avoid forgetting them.
+      </>
+    ),
   },
 ];
 
@@ -98,12 +162,19 @@ const HelpModal = ({ isOpen, onClose }) => {
   }, [isOpen]);
 
   const handlePrevPage = () => {
-    setCurrentPage((prev) => (prev > 0 ? prev - 1 : HELP_PAGES.length - 1));
+    if (currentPage > 0) {
+      setCurrentPage((prev) => prev - 1);
+    }
   };
 
   const handleNextPage = () => {
-    setCurrentPage((prev) => (prev < HELP_PAGES.length - 1 ? prev + 1 : 0));
+    if (currentPage < HELP_PAGES.length - 1) {
+      setCurrentPage((prev) => prev + 1);
+    }
   };
+
+  const isFirstPage = currentPage === 0;
+  const isLastPage = currentPage === HELP_PAGES.length - 1;
 
   if (!isOpen) return null;
 
@@ -125,11 +196,14 @@ const HelpModal = ({ isOpen, onClose }) => {
             e.stopPropagation();
             handlePrevPage();
           }}
-          className="flex items-center justify-center
+          disabled={isFirstPage}
+          className={`flex items-center justify-center
                      w-14 h-14 rounded-full
-                     bg-black hover:bg-gray-800 active:bg-gray-900
                      transition-colors duration-150
-                     cursor-pointer shrink-0 z-10"
+                     shrink-0 z-10
+                     ${isFirstPage 
+                       ? 'bg-gray-400 cursor-not-allowed' 
+                       : 'bg-black hover:bg-gray-800 active:bg-gray-900 cursor-pointer'}`}
           aria-label="Previous page"
         >
           <Icon
@@ -143,7 +217,7 @@ const HelpModal = ({ isOpen, onClose }) => {
         {/* Modal container */}
         <div
           className="relative flex flex-col
-                     w-[min(650px,85vw)] max-h-[85vh]
+                     w-[min(750px,85vw)] max-h-[85vh]
                      rounded-3xl shadow-2xl bg-white overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
@@ -167,7 +241,7 @@ const HelpModal = ({ isOpen, onClose }) => {
           </button>
 
           {/* Image section - top of modal */}
-          <div className="w-full bg-gray-100 overflow-hidden">
+          <div className="w-full overflow-hidden">
             <img
               src={currentHelpPage.image}
               alt={`Help page ${currentPage + 1}`}
@@ -179,14 +253,19 @@ const HelpModal = ({ isOpen, onClose }) => {
           <div className="w-full border-t border-gray-200" />
 
           {/* Content section - bottom of modal */}
-          <div className="flex flex-col items-center p-6">
+          <div 
+            className="flex flex-col items-center p-6"
+            style={{
+              background: 'linear-gradient(to top, #e4fcec, white)'
+            }}
+          >
             {/* Title */}
             <h2 className="text-lg font-semibold text-gray-800 mb-2 text-center">
               {currentHelpPage.title}
             </h2>
 
             {/* Explanation */}
-            <div className="text-base text-gray-600 text-left leading-relaxed w-full">
+            <div className="text-base text-gray-600 text-center leading-relaxed w-full">
               {currentHelpPage.explanation}
             </div>
           </div>
@@ -198,11 +277,14 @@ const HelpModal = ({ isOpen, onClose }) => {
             e.stopPropagation();
             handleNextPage();
           }}
-          className="flex items-center justify-center
+          disabled={isLastPage}
+          className={`flex items-center justify-center
                      w-14 h-14 rounded-full
-                     bg-black hover:bg-gray-800 active:bg-gray-900
                      transition-colors duration-150
-                     cursor-pointer shrink-0 z-10"
+                     shrink-0 z-10
+                     ${isLastPage 
+                       ? 'bg-gray-400 cursor-not-allowed' 
+                       : 'bg-black hover:bg-gray-800 active:bg-gray-900 cursor-pointer'}`}
           aria-label="Next page"
         >
           <Icon
