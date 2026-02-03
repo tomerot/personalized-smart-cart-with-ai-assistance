@@ -5,6 +5,7 @@ import ForgotItemsModal from "@/components/modal/ForgotItemsModal";
 import CheckoutSuccessModal from "@/components/modal/CheckoutSuccessModal";
 import ShoppingRouteModal from "@/components/modal/ShoppingRouteModal";
 import AudioSettingsModal from "@/components/modal/AudioSettingsModal";
+import HelpModal from "@/components/modal/HelpModal";
 
 /**
  * DashboardModals - Container for all dashboard modal dialogs
@@ -45,6 +46,9 @@ function DashboardModals({
   volume,
   onVolumeChange,
   isLoadingVolume,
+  // Help modal
+  showHelpModal,
+  onCloseHelp,
 }) {
   return (
     <>
@@ -124,6 +128,12 @@ function DashboardModals({
         volume={volume}
         onVolumeChange={onVolumeChange}
         isLoading={isLoadingVolume}
+      />
+
+      {/* Help Modal */}
+      <HelpModal
+        isOpen={showHelpModal}
+        onClose={onCloseHelp}
       />
     </>
   );

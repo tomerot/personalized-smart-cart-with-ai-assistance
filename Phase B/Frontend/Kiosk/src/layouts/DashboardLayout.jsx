@@ -10,7 +10,7 @@ import { useVoiceAssistant } from "@/context/VoiceAssistantContext";
 import { NAV_VIEWS, VIEW_CONFIG, useViewTransition, DashboardNavRail } from "@/features/navigation";
 import { CompanionView } from "@/features/smart-companion";
 import { GroceryListView, useShoppingList } from "@/features/grocery-list";
-import { DashboardModals, useCheckout, useLeaveSession, useShoppingRoute, useProfile, useAudioSettings } from "@/features/dashboard";
+import { DashboardModals, useCheckout, useLeaveSession, useShoppingRoute, useProfile, useAudioSettings, useHelp } from "@/features/dashboard";
 import ProfileModal from "@/components/modal/ProfileModal";
 import { cartAutoSaveService } from "@/services/cartAutoSaveService";
 
@@ -138,6 +138,9 @@ function DashboardLayout() {
   // Audio settings modal hook
   const audioSettings = useAudioSettings();
 
+  // Help modal hook
+  const help = useHelp();
+
   // Barcode scanner integration
   const { manualScan } = useBarcodeScanner({
     autoConnect: true,
@@ -160,8 +163,6 @@ function DashboardLayout() {
     },
   });
 
-  // Handlers for stub features
-  const handleHelpClick = () => console.log("Help clicked - will open modal");
   
   // Checkout complete reuses session cleanup
   const handleCheckoutComplete = () => {
@@ -181,7 +182,7 @@ function DashboardLayout() {
         onViewChange={setActiveView}
         onLeaveClick={leave.handleLeaveClick}
         onProfileClick={handleProfileClick}
-        onHelpClick={handleHelpClick}
+        onHelpClick={help.handleHelpClick}
       />
 
       {/* Main content area wrapper */}
@@ -308,6 +309,8 @@ function DashboardLayout() {
         volume={audioSettings.volume}
         onVolumeChange={audioSettings.handleVolumeChange}
         isLoadingVolume={audioSettings.isLoading}
+        showHelpModal={help.showHelpModal}
+        onCloseHelp={help.handleCloseHelp}
       />
 
       {/* Profile Modal */}
