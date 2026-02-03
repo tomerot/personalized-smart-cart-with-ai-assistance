@@ -312,6 +312,23 @@ export function VoiceAssistantProvider({ children }) {
         } else {
           // Assistant stopped speaking, user can now speak
           setChatStatus('user');
+          
+          // Check if there's any remaining pending output that arrived after speaking started
+          if (pendingAssistantOutputRef.current) {
+            const remainingContent = pendingAssistantOutputRef.current;
+            pendingAssistantOutputRef.current = '';
+            
+            setMessages(prev => {
+              if (prev.length > 0 && prev[prev.length - 1].type === 'assistant') {
+                const lastMessage = prev[prev.length - 1];
+                return [
+                  ...prev.slice(0, -1),
+                  { ...lastMessage, content: lastMessage.content + remainingContent }
+                ];
+              }
+              return prev;
+            });
+          }
         }
         break;
         
