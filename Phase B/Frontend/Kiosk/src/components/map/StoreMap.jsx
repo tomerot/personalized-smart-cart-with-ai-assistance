@@ -1,6 +1,6 @@
 import React from 'react';
 import storeLayout from '../../data/storeLayout.json';
-import '../../assets/StoreMap.css';
+import './StoreMap.css';
 
 /**
  * StoreMap Component

@@ -8,8 +8,8 @@ import MessageModal from "@/components/modal/MessageModal";
 import { ICONS } from "@/components/icons/icons.config";
 import { formatPhoneForDisplay, formatTime } from "@/utils/formatters";
 import { authService } from "@/services/authService";
-import { AUTH_CONFIG } from "@/data/authConfig";
-import { UI_CONFIG } from "@/data/uiConfig";
+import { AUTH_CONFIG } from "@/config/auth.config";
+import { UI_CONFIG } from "@/config/ui.config";
 
 function OtpInputPage() {
   const location = useLocation();

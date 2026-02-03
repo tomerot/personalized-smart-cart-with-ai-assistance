@@ -4,7 +4,7 @@ import AuthLayout from "@/layouts/AuthLayout";
 import Numpad from "@/components/numpad/Numpad";
 import DigitInputRow from "@/components/digitInput/DigitInputRow";
 import { authService } from "@/services/authService";
-import { AUTH_CONFIG } from "@/data/authConfig";
+import { AUTH_CONFIG } from "@/config/auth.config";
 
 function PhoneInputPage() {
   const navigate = useNavigate();

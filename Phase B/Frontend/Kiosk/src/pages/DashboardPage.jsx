@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
-import { UI_CONFIG } from "@/data/uiConfig";
+import { UI_CONFIG } from "@/config/ui.config";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import { controllerService } from "@/services/controllerService";
 

@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
 import { userStatusService } from "@/services/userStatusService";
 import { controllerService } from "@/services/controllerService";
-import { UI_CONFIG } from "@/data/uiConfig";
+import { UI_CONFIG } from "@/config/ui.config";
 
 function DashboardLoadingPage() {
   const navigate = useNavigate();

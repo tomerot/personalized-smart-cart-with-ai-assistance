@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import LandingLayout from "@/layouts/LandingLayout";
-import { UI_CONFIG } from "@/data/uiConfig";
+import { UI_CONFIG } from "@/config/ui.config";
 
 function LandingPage() {
   const [isFadingOut, setIsFadingOut] = useState(false);
