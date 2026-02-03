@@ -49,6 +49,11 @@ function DashboardModals({
   // Help modal
   showHelpModal,
   onCloseHelp,
+  // Voice assistant error modals
+  showPolicyViolationModal,
+  onClosePolicyViolation,
+  showUnexpectedEndModal,
+  onCloseUnexpectedEnd,
 }) {
   return (
     <>
@@ -134,6 +139,32 @@ function DashboardModals({
       <HelpModal
         isOpen={showHelpModal}
         onClose={onCloseHelp}
+      />
+
+      {/* Policy Violation Modal */}
+      <MessageModal
+        isOpen={showPolicyViolationModal}
+        onClose={onClosePolicyViolation}
+        icon={ICONS.POLICY_VIOLATION}
+        message={
+          <>
+            You Can Only Ask
+            <br />
+            Shopping-Related Questions
+          </>
+        }
+        iconColor="black"
+        textColor="black"
+      />
+
+      {/* Unexpected Call End Modal */}
+      <MessageModal
+        isOpen={showUnexpectedEndModal}
+        onClose={onCloseUnexpectedEnd}
+        icon={ICONS.ERROR}
+        message="The Conversation was Closed Unexpectedly"
+        iconColor="black"
+        textColor="black"
       />
     </>
   );

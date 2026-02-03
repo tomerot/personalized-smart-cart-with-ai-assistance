@@ -77,6 +77,10 @@ export function VoiceAssistantProvider({ children }) {
   // Once detected, timer stops for the rest of this turn
   const [activityDetectedInTurn, setActivityDetectedInTurn] = useState(false);
 
+  // Error modals state
+  const [showPolicyViolationModal, setShowPolicyViolationModal] = useState(false);
+  const [showUnexpectedEndModal, setShowUnexpectedEndModal] = useState(false);
+
   // Timer configuration (in milliseconds) - matches vapi_handler.py silence timeout
   const INACTIVITY_TIMEOUT = 5000; // 5 seconds to fill the bar (same as backend)
   const TIMER_INTERVAL = 100; // Update every 100ms for smooth animation
@@ -182,7 +186,6 @@ export function VoiceAssistantProvider({ children }) {
       case VOICE_EVENT_TYPES.END_CALL:
         // Handle POLICY_VIOLATION: remove last user message as it caused the violation
         if (event.reason === 'POLICY_VIOLATION') {
-          console.warn('Call ended due to policy violation, removing last user message');
           setMessages(prev => {
             // Find and remove the last user message
             const lastUserIndex = [...prev].reverse().findIndex(msg => msg.type === 'user');
@@ -199,10 +202,9 @@ export function VoiceAssistantProvider({ children }) {
             }
             return prev;
           });
-          // TODO: Show error modal to user about policy violation
+          setShowPolicyViolationModal(true);
         } else if (!event.expected) {
-          // TODO: Show error modal to user about unexpected end
-          console.warn('Call ended unexpectedly:', event.reason);
+          setShowUnexpectedEndModal(true);
         }
         
         setIsConversationActive(false);
@@ -667,6 +669,8 @@ export function VoiceAssistantProvider({ children }) {
     messages,
     highlightedProductId,
     isVoiceControllerConnected,
+    showPolicyViolationModal,
+    showUnexpectedEndModal,
     
     // Actions
     toggleConversation,
@@ -676,6 +680,8 @@ export function VoiceAssistantProvider({ children }) {
     addMessage,
     addConflictMessage,
     playAudio,
+    setShowPolicyViolationModal,
+    setShowUnexpectedEndModal,
     
     // Setters for external control
     setChatStatus,

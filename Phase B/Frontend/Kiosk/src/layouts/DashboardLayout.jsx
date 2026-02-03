@@ -27,7 +27,16 @@ function DashboardLayout() {
   const { user, hasShoppingList, logout, savedCart, clearSavedCart } = useUser();
   const { cartItems, clearCart, addProduct, loadCart, getHasChanged, resetChangedFlag } = useCart();
   const { activeView, setActiveView, isTransitioning, displayView } = useViewTransition(NAV_VIEWS.GROCERY_LIST);
-  const { highlightedProductId, addConflictMessage, stopConversation, clearMessages } = useVoiceAssistant();
+  const { 
+    highlightedProductId, 
+    addConflictMessage, 
+    stopConversation, 
+    clearMessages,
+    showPolicyViolationModal,
+    setShowPolicyViolationModal,
+    showUnexpectedEndModal,
+    setShowUnexpectedEndModal,
+  } = useVoiceAssistant();
 
   // Ref to always access current cart items (avoids stale closure in auto-save service)
   const cartItemsRef = useRef(cartItems);
@@ -299,6 +308,10 @@ function DashboardLayout() {
         isLoadingVolume={audioSettings.isLoading}
         showHelpModal={help.showHelpModal}
         onCloseHelp={help.handleCloseHelp}
+        showPolicyViolationModal={showPolicyViolationModal}
+        onClosePolicyViolation={() => setShowPolicyViolationModal(false)}
+        showUnexpectedEndModal={showUnexpectedEndModal}
+        onCloseUnexpectedEnd={() => setShowUnexpectedEndModal(false)}
       />
 
       {/* Profile Modal */}

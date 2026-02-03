@@ -38,5 +38,7 @@ export const ICONS = {
   PHONE: "call",
   NOT_FOUND: "search_off",
   LEFT: "chevron_left",
-  RIGHT: "chevron_right"
+  RIGHT: "chevron_right",
+  POLICY_VIOLATION: "shield",
+  ERROR: "error"
 };
