@@ -332,6 +332,10 @@ export function VoiceAssistantProvider({ children }) {
         if (event.text && event.text.trim()) {
           const userText = event.text.trim();
           
+          // Clear any pending assistant output from a previous (interrupted) response
+          // This prevents concatenation of old partial responses with new ones
+          pendingAssistantOutputRef.current = '';
+          
           setMessages(prev => {
             // Only concatenate if:
             // 1. The last speaker was the user (same turn)
