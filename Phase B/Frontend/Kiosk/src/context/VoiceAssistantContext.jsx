@@ -549,11 +549,25 @@ export function VoiceAssistantProvider({ children }) {
     };
 
     // Prepare messages for context (convert to VAPI format)
+    // Only send last 5 messages to keep context manageable
     const formattedMessages = messages.length > 0 
-      ? messages.map(msg => ({
-          role: msg.type, // 'user' or 'assistant'
-          content: msg.content,
-        }))
+      ? messages.slice(-5).map(msg => {
+          let content = msg.content;
+          
+          // If this message includes tool call data, append it to the content
+          if (msg.toolCallData) {
+            if (msg.toolCallData.name === 'get_product_location') {
+              content += `\n[Tool: get_product_location, Result: ${JSON.stringify(msg.toolCallData.productLocation)}]`;
+            } else if (msg.toolCallData.name === 'get_ai_alternatives') {
+              content += `\n[Tool: get_ai_alternatives, Alternatives: ${JSON.stringify(msg.toolCallData.alternatives)}, Explanation: ${msg.toolCallData.explanation}]`;
+            }
+          }
+          
+          return {
+            role: msg.type, // 'user' or 'assistant'
+            content: content,
+          };
+        })
       : [];
 
     // Start the call with variables and previous messages
