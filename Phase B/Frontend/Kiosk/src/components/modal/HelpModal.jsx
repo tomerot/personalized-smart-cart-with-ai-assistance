@@ -199,11 +199,11 @@ const HelpModal = ({ isOpen, onClose }) => {
           disabled={isFirstPage}
           className={`flex items-center justify-center
                      w-14 h-14 rounded-full
-                     transition-colors duration-150
+                     transition-all duration-150
                      shrink-0 z-10
                      ${isFirstPage 
-                       ? 'bg-gray-400 cursor-not-allowed' 
-                       : 'bg-black hover:bg-gray-800 active:bg-gray-900 cursor-pointer'}`}
+                       ? 'bg-black opacity-30 cursor-not-allowed' 
+                       : 'bg-black hover:bg-gray-800 active:bg-gray-900 cursor-pointer opacity-100'}`}
           aria-label="Previous page"
         >
           <Icon
@@ -280,11 +280,11 @@ const HelpModal = ({ isOpen, onClose }) => {
           disabled={isLastPage}
           className={`flex items-center justify-center
                      w-14 h-14 rounded-full
-                     transition-colors duration-150
+                     transition-all duration-150
                      shrink-0 z-10
                      ${isLastPage 
-                       ? 'bg-gray-400 cursor-not-allowed' 
-                       : 'bg-black hover:bg-gray-800 active:bg-gray-900 cursor-pointer'}`}
+                       ? 'bg-black opacity-30 cursor-not-allowed' 
+                       : 'bg-black hover:bg-gray-800 active:bg-gray-900 cursor-pointer opacity-100'}`}
           aria-label="Next page"
         >
           <Icon
