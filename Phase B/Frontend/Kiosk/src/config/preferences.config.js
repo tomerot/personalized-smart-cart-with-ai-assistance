@@ -29,8 +29,6 @@ export const DIETARY_NEEDS_DISPLAY_NAMES = {
   'vegetarian': 'Vegetarian',
   'gluten-free': 'Gluten Free',
   'lactose-free': 'Lactose Free',
-  'sugar-free': 'Sugar Free',
-  'low-sodium': 'Low Sodium',
-  'low-carb': 'Low Carb'
+  'sugar-free': 'Sugar Free'
 };
 
