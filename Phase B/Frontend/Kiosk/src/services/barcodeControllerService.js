@@ -76,7 +76,7 @@ class BarcodeControllerService {
         this.ws = new WebSocket(WS_CONFIG.URL);
 
         this.ws.onopen = () => {
-          console.log('✓ Connected to Barcode Scanner Controller');
+          console.log('Connected to Barcode Scanner Controller');
           this.connected = true;
           this.isConnecting = false;
           this.reconnectAttempts = 0; // Reset counter on successful connection

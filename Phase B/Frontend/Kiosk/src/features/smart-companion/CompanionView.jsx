@@ -49,8 +49,6 @@ export default function CompanionView() {
    * Removes the original product from cart and adds the alternative
    */
   const handleReplaceProduct = useCallback((alternative) => {
-    console.log("Replacing product with alternative:", alternative);
-    
     // The highlighted product is the one that caused the conflict
     if (highlightedProductId) {
       // Remove the original product
@@ -62,8 +60,6 @@ export default function CompanionView() {
     const productData = alternative.originalProduct || alternative;
     const cartItem = productService.transformToCartItem(productData);
     addProduct(cartItem);
-    
-    console.log("Product replaced successfully:", cartItem.name);
   }, [highlightedProductId, deleteProduct, addProduct]);
 
   return (

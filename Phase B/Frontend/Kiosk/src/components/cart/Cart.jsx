@@ -32,9 +32,6 @@ const Cart = ({
   const [scrollTop, setScrollTop] = useState(0);
   const [showBarcodeModal, setShowBarcodeModal] = useState(false);
 
-  // Debug: Log highlighted product
-  console.log('📦 Cart - highlightedProductId:', highlightedProductId, 'cartItems:', cartItems.length);
-
   // Handle mouse/touch start
   const handleDragStart = useCallback((e) => {
     const container = scrollContainerRef.current;

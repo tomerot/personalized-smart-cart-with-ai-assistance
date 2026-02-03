@@ -30,7 +30,6 @@ class CartAutoSaveService {
    */
   start(phone, getCartData, hasCartChanged, resetCartChangedFlag) {
     if (this.isRunning) {
-      console.log('⚠️ Cart auto-save already running');
       return;
     }
 
@@ -39,8 +38,6 @@ class CartAutoSaveService {
     this.hasCartChanged = hasCartChanged;
     this.resetCartChangedFlag = resetCartChangedFlag;
     this.isRunning = true;
-
-    console.log('🔄 Cart auto-save started - will sync every 3 minutes');
 
     // Set interval to check and save every 3 minutes
     this.intervalId = setInterval(() => {
@@ -57,10 +54,7 @@ class CartAutoSaveService {
     // Check if cart has changed
     const changed = this.hasCartChanged ? this.hasCartChanged() : false;
     
-    console.log(`💾 Cart auto-save check: hasChanged = ${changed}`);
-    
     if (!changed) {
-      console.log('💾 Cart auto-save: No changes detected, skipping sync');
       return;
     }
 
@@ -70,11 +64,9 @@ class CartAutoSaveService {
     try {
       if (cartItems.length === 0) {
         // Cart is empty - delete the backup instead of syncing empty array
-        console.log('💾 Cart auto-save: Cart is empty, deleting backup...');
         await this.deleteCartBackup(this.phone);
       } else {
         // Cart has items - sync them
-        console.log(`💾 Cart auto-save: Syncing ${cartItems.length} items...`);
         await this.syncCart(this.phone, cartItems);
       }
       
@@ -82,10 +74,8 @@ class CartAutoSaveService {
       if (this.resetCartChangedFlag) {
         this.resetCartChangedFlag();
       }
-      
-      console.log('✅ Cart auto-save: Operation successful');
     } catch (error) {
-      console.error('❌ Cart auto-save: Operation failed', error);
+      console.error('Cart auto-save: Operation failed', error);
     }
   }
 
@@ -109,7 +99,6 @@ class CartAutoSaveService {
     this.getCartData = null;
     this.hasCartChanged = null;
     this.resetCartChangedFlag = null;
-    console.log('🛑 Cart auto-save stopped');
   }
 
   /**
@@ -129,7 +118,6 @@ class CartAutoSaveService {
 
       // 404 is ok - means no cart backup exists
       if (response.status === 404) {
-        console.log('💾 Cart backup deletion: No backup found (already clean)');
         return { success: true };
       }
 
@@ -139,10 +127,9 @@ class CartAutoSaveService {
         throw new Error(data.detail || `HTTP error: ${response.status}`);
       }
 
-      console.log('✅ Cart backup deleted successfully');
       return { success: true };
     } catch (error) {
-      console.error('❌ Failed to delete cart backup:', error);
+      console.error('Failed to delete cart backup:', error);
       return {
         success: false,
         error: error.message || 'Failed to delete cart backup',

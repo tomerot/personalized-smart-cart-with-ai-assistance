@@ -59,22 +59,15 @@ function OtpInputPage() {
 
   const handleSubmit = async () => {
     if (inputValue.length === AUTH_CONFIG.OTP_LENGTH && !isVerifying) {
-      console.log("Submitted OTP:", inputValue);
-      console.log("Phone number being verified:", phoneNumber);
-
       setIsVerifying(true);
 
       // Call auth service to verify OTP
       const result = await authService.verifyOtp(phoneNumber, inputValue);
 
-      console.log("Verification result:", result);
       setIsVerifying(false);
 
       if (result.success) {
         // Correct OTP - store user data in context
-        console.log("OTP verified successfully");
-        console.log("User data:", result.user);
-        
         // Store user data in context (which also persists to sessionStorage)
         if (result.user) {
           login(result.user);
@@ -84,7 +77,6 @@ function OtpInputPage() {
 
         // After fade-out completes, navigate to dashboard loading page
         setTimeout(() => {
-          console.log("Navigating to dashboard loading page");
           navigate("/dashboard/loading", { 
             state: { phoneNumber }, 
             replace: true 
@@ -100,7 +92,6 @@ function OtpInputPage() {
   };
 
   const handleResendCode = async () => {
-    console.log("Resending code to:", phoneNumber);
     await authService.resendOtp(phoneNumber);
     setTimeLeft(AUTH_CONFIG.OTP_TIMER_SECONDS);
     setTimerActive(true);
@@ -108,7 +99,6 @@ function OtpInputPage() {
   };
 
   const handleChangePhoneNumber = () => {
-    console.log("Going back to phone number entry");
     navigate("/auth/phone", { replace: true });
   };
 

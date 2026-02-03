@@ -44,7 +44,6 @@ export function useLeaveSession({ navigate, stopConversation, clearMessages, cle
   }, [navigate, stopConversation, clearMessages, clearCart, logout, user?.phone]);
 
   const handleConfirmLeave = () => {
-    console.log("Leave confirmed - resetting session and returning to landing page");
     setShowLeaveModal(false);
     performSessionCleanup();
   };

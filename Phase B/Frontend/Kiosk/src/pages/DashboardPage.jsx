@@ -28,11 +28,9 @@ function DashboardPage() {
 
   // Enable continuous reconnection when dashboard mounts, disable when unmounting
   useEffect(() => {
-    console.log('📱 Dashboard mounted - enabling continuous controller reconnection');
     controllerService.enableContinuousReconnect();
 
     return () => {
-      console.log('📱 Dashboard unmounted - disabling continuous controller reconnection');
       controllerService.disableContinuousReconnect();
     };
   }, []);

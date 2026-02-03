@@ -26,7 +26,6 @@ export function useCheckout({ user, cartItems, addProduct, hasUncollectedItems }
 
     // Check if there are uncollected items from shopping list
     if (hasUncollectedItems && hasUncollectedItems()) {
-      console.log("User has uncollected items from shopping list - showing warning");
       setShowIncompleteListModal(true);
       return; // Wait for user decision
     }
@@ -39,7 +38,6 @@ export function useCheckout({ user, cartItems, addProduct, hasUncollectedItems }
   const proceedToCheckoutFlow = async () => {
     if (!user?.phone) return;
 
-    console.log("Checkout clicked - fetching suggestions...");
     setIsLoadingSuggestions(true);
 
     // Get barcodes of items currently in cart
@@ -53,11 +51,9 @@ export function useCheckout({ user, cartItems, addProduct, hasUncollectedItems }
     if (result.success) {
       const suggestions = result.data.suggestions || [];
       setCheckoutSuggestions(suggestions);
-      console.log(`Found ${suggestions.length} suggestions`);
       
       // If no suggestions, proceed directly to checkout
       if (suggestions.length === 0) {
-        console.log("No suggestions found - proceeding directly to checkout");
         await handleProceedToCheckout();
       } else {
         // Only open modal if there are suggestions
@@ -78,8 +74,6 @@ export function useCheckout({ user, cartItems, addProduct, hasUncollectedItems }
   };
 
   const handleAddSuggestedItem = (suggestion) => {
-    console.log("Adding suggested item:", suggestion.name);
-
     // Transform suggestion to cart item format
     const cartItem = {
       id: suggestion.barcode,
@@ -106,7 +100,6 @@ export function useCheckout({ user, cartItems, addProduct, hasUncollectedItems }
       return;
     }
 
-    console.log("Processing checkout...");
     setShowForgotItemsModal(false);
 
     // Merge current cart items with additional items being added
@@ -132,7 +125,6 @@ export function useCheckout({ user, cartItems, addProduct, hasUncollectedItems }
     });
 
     // First sync cart to backend (required before checkout)
-    console.log("Syncing cart to backend...", itemsToSync.length, "items");
     const syncResult = await checkoutService.syncCart(user.phone, itemsToSync);
 
     if (!syncResult.success) {
@@ -142,13 +134,10 @@ export function useCheckout({ user, cartItems, addProduct, hasUncollectedItems }
       return;
     }
 
-    console.log("Cart synced successfully, processing checkout...");
-
     // Process the checkout
     const result = await checkoutService.processCheckout(user.phone);
 
     if (result.success) {
-      console.log("Checkout successful:", result.data);
       setShowCheckoutSuccessModal(true);
     } else {
       console.error("Checkout failed:", result.error);

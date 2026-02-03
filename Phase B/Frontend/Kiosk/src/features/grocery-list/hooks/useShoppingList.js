@@ -27,7 +27,6 @@ export function useShoppingList({ user, cartItemsMap }) {
     if (!user?.phone || isLoadingList) return;
     
     setIsLoadingList(true);
-    console.log("Loading grocery list from backend...");
 
     try {
       const result = await shoppingListService.getShoppingList(user.phone);
@@ -36,9 +35,7 @@ export function useShoppingList({ user, cartItemsMap }) {
         // Store the shopping list in state
         setShoppingList(result.data);
         setSkippedItems(new Set()); // Reset skipped items
-        console.log(`✅ Loaded shopping list with ${result.data.items.length} items`);
       } else {
-        console.log("No items in shopping list");
         setShoppingList(null);
       }
     } catch (error) {
