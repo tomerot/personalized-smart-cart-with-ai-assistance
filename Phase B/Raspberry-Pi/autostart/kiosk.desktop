@@ -1,6 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Kiosk Browser
-Exec=chromium-browser --kiosk --noerrdialogs --disable-infobars --disable-session-crashed-bubble http://localhost:8000
-X-GNOME-Autostart-enabled=true
-
