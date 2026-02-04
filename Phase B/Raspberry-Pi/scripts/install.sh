@@ -35,9 +35,6 @@ echo "[2/8] Cloning repository..."
 git clone $REPO_URL $INSTALL_PATH
 cd $INSTALL_PATH
 
-# Install unclutter (hides mouse cursor)
-sudo apt-get install -y unclutter
-
 # Step 3: Create virtual environments
 echo ""
 echo "[3/8] Creating virtual environment for va_controller..."
