@@ -69,14 +69,14 @@ EOF
 
 echo "Environment files created."
 
-# Step 6: Install systemd services (kiosk server + log cleanup)
+# Step 6: Install systemd services
 echo ""
 echo "[6/8] Installing systemd services..."
 sudo cp $INSTALL_PATH/setup/systemd/*.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable kiosk-server cleanup-logs
+sudo systemctl enable va-controller bs-controller kiosk-server cleanup-logs
 
-# Step 7: Setup autostart (controllers + Chromium kiosk)
+# Step 7: Setup autostart (Chromium kiosk + hide cursor)
 echo ""
 echo "[7/8] Setting up autostart..."
 mkdir -p ~/.config/autostart

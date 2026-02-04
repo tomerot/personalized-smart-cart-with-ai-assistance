@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
 Name=Hide Cursor
-Exec=unclutter -idle 0
+Exec=unclutter -idle 0 -grab
 X-GNOME-Autostart-enabled=true
 

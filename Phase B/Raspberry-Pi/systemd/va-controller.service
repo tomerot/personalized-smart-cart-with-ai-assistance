@@ -1,0 +1,18 @@
+[Unit]
+Description=Voice Assistant Controller
+After=network.target
+
+[Service]
+Type=simple
+User=sysadmin
+WorkingDirectory=/home/sysadmin/smart-cart/Controllers/va_controller
+EnvironmentFile=/home/sysadmin/smart-cart/Controllers/va_controller/.env
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+Environment=PULSE_SERVER=unix:/run/user/1000/pulse/native
+ExecStart=/home/sysadmin/smart-cart/Controllers/va_controller/venv/bin/python va_controller.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
