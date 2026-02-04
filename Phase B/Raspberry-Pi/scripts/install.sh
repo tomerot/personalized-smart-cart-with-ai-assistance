@@ -71,7 +71,7 @@ echo ""
 echo "[6/8] Installing systemd services..."
 sudo cp $INSTALL_PATH/setup/systemd/*.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable va-controller bs-controller kiosk-server
+sudo systemctl enable va-controller bs-controller kiosk-server cleanup-logs
 
 # Step 7: Setup autostart
 echo ""
@@ -84,8 +84,8 @@ echo ""
 echo "[8/8] Setting up cron jobs..."
 chmod +x $INSTALL_PATH/setup/scripts/*.sh
 
-# Add cron jobs (cleanup at 2AM, update at 3AM)
-(crontab -l 2>/dev/null | grep -v "smart-cart"; echo "0 2 * * * $INSTALL_PATH/setup/scripts/cleanup-logs.sh"; echo "0 3 * * * $INSTALL_PATH/setup/scripts/update.sh") | crontab -
+# Add cron job (update at 3AM)
+(crontab -l 2>/dev/null | grep -v "smart-cart"; echo "0 3 * * * $INSTALL_PATH/setup/scripts/update.sh") | crontab -
 
 echo ""
 echo "======================================"
