@@ -121,7 +121,9 @@ async def remove_user_allergies(phone: str, allergies: List[str]) -> Optional[Us
         raise
 
 
-async def add_user_dietary_needs(phone: str, dietary_needs: List[str]) -> Optional[User]:
+async def add_user_dietary_needs(
+    phone: str, dietary_needs: List[str]
+) -> Optional[User]:
     """
     Add multiple dietary needs to user's dietary needs list.
 
@@ -154,7 +156,9 @@ async def add_user_dietary_needs(phone: str, dietary_needs: List[str]) -> Option
         raise
 
 
-async def remove_user_dietary_needs(phone: str, dietary_needs: List[str]) -> Optional[User]:
+async def remove_user_dietary_needs(
+    phone: str, dietary_needs: List[str]
+) -> Optional[User]:
     """
     Remove multiple dietary needs from user's dietary needs list.
 
@@ -178,7 +182,9 @@ async def remove_user_dietary_needs(phone: str, dietary_needs: List[str]) -> Opt
 
         # Convert to lowercase and remove
         dietary_needs_lower = [d.lower() for d in dietary_needs]
-        user.dietary_needs = [d for d in user.dietary_needs if d not in dietary_needs_lower]
+        user.dietary_needs = [
+            d for d in user.dietary_needs if d not in dietary_needs_lower
+        ]
 
         await user.save()
         print(f"Removed dietary needs {dietary_needs_lower} for phone: {phone}")

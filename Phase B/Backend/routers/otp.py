@@ -5,8 +5,8 @@ from schemas import OTPCodeRequest, UserResponse
 
 router = APIRouter(prefix="/otp", tags=["OTP"])
 
-# Test phone numbers that always receive OTP code "000000"
-TEST_PHONES = ["+972512345678", "+972500000000", "+972548147277"]
+# Phone numbers that should receive real SMS with random OTP (all others get "000000")
+REAL_SMS_PHONES = ["+972543369711"]
 
 
 @router.post("/{phone}/send")
@@ -25,12 +25,8 @@ async def send_otp(phone: str):
         503: SMS delivery failed
         500: SMS sent but database save failed
     """
-    # Generate OTP code - use fixed "000000" for test phones, random for others
-    if phone in TEST_PHONES:
-        otp_code = "000000"
-        # Skip SMS sending for test phones (Twilio trial won't work)
-        sms_sent = True
-    else:
+    # Generate OTP code - real SMS for REAL_SMS_PHONES, fixed "000000" for all others
+    if phone in REAL_SMS_PHONES:
         otp_code = otp_service.generate_otp()
         # Try to send SMS first before saving to database
         sms_sent = otp_service.send_sms_with_otp(phone, otp_code)
@@ -39,6 +35,10 @@ async def send_otp(phone: str):
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="Failed to send SMS. Please check the phone number or try again later.",
             )
+    else:
+        otp_code = "000000"
+        # Skip SMS sending for all other phones (use fixed OTP)
+        sms_sent = True
 
     # Save to database if SMS was sent successfully (or skipped for test phones)
     saved_otp = await otp_service.create_or_update_otp(phone, otp_code)

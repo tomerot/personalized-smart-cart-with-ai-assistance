@@ -1,0 +1,95 @@
+import { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useUser } from "@/context/UserContext";
+import { userStatusService } from "@/services/userStatusService";
+import { controllerService } from "@/services/controllerService";
+import { UI_CONFIG } from "@/config/ui.config";
+
+function DashboardLoadingPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user, setUserHasShoppingList, setSavedCartData } = useUser();
+  
+  // Get phone number from navigation state or user context
+  const phoneNumber = location.state?.phoneNumber || user?.phone;
+
+  useEffect(() => {
+    // Redirect if no phone number is available
+    if (!phoneNumber) {
+      console.error("No phone number available - redirecting to phone input");
+      navigate("/auth/phone", { replace: true });
+      return;
+    }
+
+    const loadDashboardData = async () => {
+      try {
+        // Fetch user status (shopping list and active cart flags)
+        const statusResult = await userStatusService.getUserStatus(phoneNumber);
+        
+        if (statusResult.success && statusResult.status) {
+          // Save shopping list flag to context
+          setUserHasShoppingList(statusResult.status.has_shopping_list);
+          
+          // If user has an active cart, fetch it
+          if (statusResult.status.has_active_cart) {
+            const cartResult = await userStatusService.getCart(phoneNumber);
+            
+            if (cartResult.success && cartResult.cart) {
+              setSavedCartData(cartResult.cart);
+            } else {
+              console.error("Failed to fetch cart:", cartResult.message);
+            }
+          }
+        } else {
+          console.error("Failed to fetch user status:", statusResult.message);
+        }
+
+        // Connect to Raspberry Pi controllers (Barcode Scanner & Voice Assistant)
+        const connectionResult = await controllerService.connect();
+        
+        if (!connectionResult.barcode && !connectionResult.voice) {
+          console.error("Failed to connect to controllers - will retry on dashboard");
+        }
+
+        // Navigate to dashboard after data is loaded
+        // No artificial delay - navigate immediately after data is ready
+        navigate("/dashboard", { replace: true });
+      } catch (error) {
+        console.error("Error loading dashboard data:", error);
+        // Even on error, navigate to dashboard (it can handle retries)
+        navigate("/dashboard", { replace: true });
+      }
+    };
+
+    loadDashboardData();
+  }, [phoneNumber, navigate, setUserHasShoppingList, setSavedCartData]);
+
+  // Note: We intentionally do NOT disconnect on unmount
+  // The connection should persist from loading page to dashboard
+  // Controllers will be disconnected when user leaves the session (logout/exit)
+
+  return (
+    <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+      {/* Gradient background with fade-in */}
+      <div 
+        className="absolute inset-0 animate-fadeIn"
+        style={{
+          background: 'linear-gradient(to top, #e4fcec 0%, #effdf3 100%)',
+        }}
+      />
+      
+      {/* Loading message */}
+      <p
+        className="relative z-10 pulse-animation text-[clamp(1.5rem,3vw,2.5rem)] font-semibold text-green-600"
+        style={{
+          animationDuration: `${UI_CONFIG.PULSE_ANIMATION_DURATION}s`,
+        }}
+      >
+        Preparing Dashboard...
+      </p>
+    </div>
+  );
+}
+
+export default DashboardLoadingPage;
+

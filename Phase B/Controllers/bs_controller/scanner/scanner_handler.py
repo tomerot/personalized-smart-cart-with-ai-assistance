@@ -143,6 +143,7 @@ class ScannerHandler:
                 # Barcode submission key assertion
                 if key_event.keycode == 'KEY_ENTER':
                     if barcode and barcode_valid:
+                        logger.info(f"Barcode produced: {barcode}")
                         self.barcode_queue.put_nowait(barcode)
                     elif not barcode_valid:
                         await self.event_callback(InvalidBarcodeEvent())
@@ -182,6 +183,7 @@ class ScannerHandler:
         try:
             while True:
                 barcode = await self.barcode_queue.get()
+                logger.info(f"Barcode consumed: {barcode}")
                 await self.event_callback(BarcodeScannedEvent(barcode))
         except asyncio.CancelledError:
             logger.info("Scanner handler 'Consumer Task' stopped.")

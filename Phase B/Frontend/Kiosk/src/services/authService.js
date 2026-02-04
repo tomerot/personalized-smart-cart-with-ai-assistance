@@ -3,78 +3,85 @@
  * Handles all auth-related API calls (OTP sending, verification)
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
-
-// Set to true to use mock responses (when backend is not available)
-const USE_MOCK = true;
-
-// Mock OTP code for testing
-const MOCK_OTP_CODE = '111111';
+import { API_BASE_URL, API_ENDPOINTS, API_CONFIG, fetchWithTimeout } from '@/config/api.config';
+import { formatPhoneForBackend } from '@/utils/formatters';
 
 export const authService = {
   /**
    * Send OTP to phone number
-   * @param {string} phoneNumber - Full phone number (e.g., "0541234567")
-   * @returns {Promise<{success: boolean, message?: string}>}
+   * @param {string} phoneNumber - Full phone number in local format (e.g., "0541234567")
+   * @returns {Promise<{success: boolean, message?: string, user?: object}>}
    */
   sendOtp: async (phoneNumber) => {
-    // Mock mode for development
-    if (USE_MOCK) {
-      console.log(`[MOCK] Sending OTP to ${phoneNumber}`);
-      return { success: true, message: 'OTP sent successfully' };
-    }
-
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/send-otp`, {
+      // Convert phone number from 05XXXXXXXX to +9725XXXXXXXX
+      const internationalPhone = formatPhoneForBackend(phoneNumber);
+      const url = `${API_BASE_URL}${API_ENDPOINTS.OTP.SEND(internationalPhone)}`;
+
+      const response = await fetchWithTimeout(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber }),
+        headers: API_CONFIG.HEADERS,
       });
+
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error(`HTTP error: ${response.status}`);
+        throw new Error(data.detail || `HTTP error: ${response.status}`);
       }
-      return response.json();
+
+      return { success: true, message: data.message };
     } catch (error) {
       console.error('Failed to send OTP:', error);
-      return { success: false, message: 'Failed to send verification code' };
+      return { 
+        success: false, 
+        message: error.message || 'Failed to send verification code' 
+      };
     }
   },
 
   /**
    * Verify OTP code
-   * @param {string} phoneNumber - Full phone number
+   * @param {string} phoneNumber - Full phone number in local format (e.g., "0541234567")
    * @param {string} otpCode - 6-digit OTP code
-   * @returns {Promise<{success: boolean, token?: string, message?: string}>}
+   * @returns {Promise<{success: boolean, user?: object, message?: string}>}
    */
   verifyOtp: async (phoneNumber, otpCode) => {
-    // Mock mode for development
-    if (USE_MOCK) {
-      console.log(`[MOCK] Verifying OTP ${otpCode} for ${phoneNumber}`);
-      if (otpCode === MOCK_OTP_CODE) {
-        return { success: true, token: 'mock-jwt-token' };
-      }
-      return { success: false, message: 'Invalid OTP code' };
-    }
-
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
+      // Convert phone number from 05XXXXXXXX to +9725XXXXXXXX
+      const internationalPhone = formatPhoneForBackend(phoneNumber);
+      const url = `${API_BASE_URL}${API_ENDPOINTS.OTP.VERIFY(internationalPhone)}`;
+      const requestBody = { otp_code: otpCode };
+
+      const response = await fetchWithTimeout(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber, otpCode }),
+        headers: API_CONFIG.HEADERS,
+        body: JSON.stringify(requestBody),
       });
+
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error(`HTTP error: ${response.status}`);
+        throw new Error(data.detail || `HTTP error: ${response.status}`);
       }
-      return response.json();
+
+      // Backend returns: { message: "...", user: { phone, allergies, dietary_needs } }
+      return { 
+        success: true, 
+        user: data.user,
+        message: data.message 
+      };
     } catch (error) {
       console.error('Failed to verify OTP:', error);
-      return { success: false, message: 'Failed to verify code' };
+      return { 
+        success: false, 
+        message: error.message || 'Failed to verify code' 
+      };
     }
   },
 
   /**
    * Resend OTP to phone number
-   * @param {string} phoneNumber - Full phone number
+   * @param {string} phoneNumber - Full phone number in local format
    * @returns {Promise<{success: boolean, message?: string}>}
    */
   resendOtp: async (phoneNumber) => {

@@ -1,11 +1,11 @@
-## 📁 Project Structure
+## 📁 Backend Structure
 
 ```
 Backend/
 ├── main.py                    # FastAPI app entry point, CORS, DB init
 ├── database.py                # MongoDB connection setup
 ├── store_layout.json          # Store grid map
-├── distance_matrix.json       # Pre-calculated walking distances
+├── grid_distance_matrix.json  # Pre-calculated BFS distances (all points to all points)
 │
 ├── clients/                   # External API clients
 │   ├── gemini_client.py       # Google Gemini AI client
@@ -14,7 +14,7 @@ Backend/
 ├── models/                    # MongoDB document models (Beanie)
 │   ├── user.py
 │   ├── product.py
-│   ├── category.py
+│   ├── category.py            
 │   ├── cart_session.py
 │   ├── shopping_list.py
 │   ├── product_purchase_tracking.py
@@ -32,12 +32,11 @@ Backend/
 ├── services/                  # Business logic layer
 │   ├── user.py
 │   ├── product.py
-│   ├── shopping_list.py
+│   ├── shopping_list.py       
 │   ├── product_purchase_tracking.py
 │   ├── cart_session.py
 │   ├── otp.py
-│   ├── pathfinding.py         # BFS algorithm for store navigation
-│   └── route_optimizer.py     # TSP solver using Google OR-Tools
+│   └── route_optimizer.py     # TSP solver using Google OR-Tools + numpy
 │
 ├── routers/                   # API endpoints (thin controllers)
 │   ├── users.py
@@ -45,10 +44,9 @@ Backend/
 │   ├── shopping_list.py
 │   ├── checkout.py
 │   ├── cart_session.py        # Cart sync/recovery
-│   └── otp.py                 # SMS authentication
+│   ├── otp.py                 # SMS authentication
+│   └── vapi_webhook.py        # VAPI voice assistant webhook
 │
-└── maintenance/               # Maintenance scripts
-    ├── store_reference.json   # Store layout with category positions
-    ├── sync_categories_to_db.py  # Sync categories → MongoDB
-    └── calculate_distances.py    # Generate distance matrix
+└── maintenance/               # Maintenance scripts (run manually)
+    └── calculate_grid_distances.py  # Generate grid distance matrix
 ```

@@ -1,0 +1,15 @@
+[Unit]
+Description=Kiosk Web Server
+After=network.target
+
+[Service]
+Type=simple
+User=sysadmin
+WorkingDirectory=/home/sysadmin/smart-cart/Kiosk
+ExecStart=/usr/bin/python3 -m http.server 8000
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+

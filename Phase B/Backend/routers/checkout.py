@@ -64,20 +64,25 @@ async def get_replenishment_suggestions(
     - Time since last purchase
 
     A product is suggested if:
-    - User has bought it at least 2 times (can calculate average interval)
+    - User has bought it at least 3 times (reliable average interval)
     - Days since last purchase is within the due window:
-        - Lower bound: average_interval - 1 day
+        - Lower bound: average_interval - 3 days
         - Upper bound: average_interval * 1.5
     - Product is NOT already in the cart
     - Product is currently available
 
+    Special case - Returning users (inactive ≥30 days):
+    - Upper bound is removed, so ALL frequently-bought products (3+ purchases)
+      are suggested to help them restock after being away
+
     Returns empty list if:
-    - User has insufficient purchase history (< 2 purchases per product)
+    - User has insufficient purchase history (< 3 purchases per product)
     - No products are currently due for repurchase
 
     Examples:
-        - Milk bought every 7 days: suggests between days 6-10.5
-        - Shampoo bought every 30 days: suggests between days 29-45
+        - Milk bought every 7 days: suggests between days 4-10.5
+        - Shampoo bought every 30 days: suggests between days 27-45
+        - Returning user (30+ days away): suggests all frequently-bought items
 
     Args:
         phone: User's phone number

@@ -1,7 +1,31 @@
 from models import ShoppingList, Category
 from schemas.product_item import ProductItemData
-from typing import List, Dict, Any, Optional
-from services.route_optimizer import calculate_shopping_route
+from typing import List, Dict, Any, Optional, Tuple
+from services.route_optimizer import calculate_shopping_route_with_positions
+
+
+async def get_category_positions(category_names: List[str]) -> Dict[str, Tuple[int, int]]:
+    """
+    Fetch category positions from MongoDB.
+    
+    Args:
+        category_names: List of category names to look up
+    
+    Returns:
+        Dict mapping category name -> (y, x) position tuple
+    """
+    positions = {}
+    unique_names = list(set(category_names))
+    
+    for name in unique_names:
+        category = await Category.find_one(Category.name == name)
+        if category:
+            # Store as (y, x) for grid indexing
+            positions[name] = (category.location.y, category.location.x)
+        else:
+            print(f"Warning: Category '{name}' not found in database")
+    
+    return positions
 
 
 async def create_or_update_shopping_list(
@@ -48,30 +72,34 @@ async def create_or_update_shopping_list(
 
         # Calculate optimized route and coordinates
         if items:
-            # Get unique categories from items (now directly from item data)
+            # Get unique categories from items
             categories = [item.category for item in items if item.category]
 
             if categories:
-                # Calculate route using optimizer
-                optimized_route = calculate_shopping_route(categories)
-                shopping_list.category_order = optimized_route
+                # Fetch category positions from database
+                category_positions = await get_category_positions(categories)
+                
+                if category_positions:
+                    # Calculate route using optimizer with positions
+                    optimized_route = calculate_shopping_route_with_positions(category_positions)
+                    shopping_list.category_order = optimized_route
 
-                # Fetch coordinates from database for each category in the route
-                route_coordinates = []
-                for category_name in optimized_route:
-                    category = await Category.find_one(Category.name == category_name)
-                    if category:
-                        route_coordinates.append({
-                            "x": category.location.x,
-                            "y": category.location.y
-                        })
-                    else:
-                        print(f"Warning: Category '{category_name}' not found in database")
+                    # Build route coordinates from the optimized order
+                    route_coordinates = []
+                    for category_name in optimized_route:
+                        if category_name in category_positions:
+                            y, x = category_positions[category_name]
+                            route_coordinates.append({"x": x, "y": y})
 
-                shopping_list.route_coordinates = route_coordinates
-                await shopping_list.save()
-                print(f"Calculated optimized route: {optimized_route}")
-                print(f"Route coordinates: {route_coordinates}")
+                    shopping_list.route_coordinates = route_coordinates
+                    await shopping_list.save()
+                    print(f"Calculated optimized route: {optimized_route}")
+                    print(f"Route coordinates: {route_coordinates}")
+                else:
+                    shopping_list.category_order = []
+                    shopping_list.route_coordinates = []
+                    await shopping_list.save()
+                    print("No valid category positions found in database")
             else:
                 shopping_list.category_order = []
                 shopping_list.route_coordinates = []

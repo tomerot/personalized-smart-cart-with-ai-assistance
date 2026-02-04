@@ -1,6 +1,6 @@
 from beanie import Document, Indexed
 from pydantic import Field
-from typing import List, Optional
+from typing import Optional
 from datetime import datetime
 
 
@@ -10,18 +10,15 @@ class ProductPurchaseTracking(Document):
 
     One document per user+product combination.
     Used to calculate purchase intervals and predict when user needs to buy again.
+
+    Uses incremental average calculation instead of storing all purchase dates
+    for storage efficiency and proper freeze behavior.
     """
 
     phone: str = Field(..., description="User's phone number")
     barcode: str = Field(..., description="Product barcode")
 
-    # Purchase history for this specific product
-    purchase_dates: List[datetime] = Field(
-        default_factory=list,
-        description="All timestamps when this product was purchased",
-    )
-
-    # Cached calculations (updated after each purchase)
+    # Purchase tracking data (incremental approach - no full history stored)
     purchase_count: int = Field(
         default=0, description="Total number of times purchased"
     )
@@ -30,7 +27,8 @@ class ProductPurchaseTracking(Document):
     )
     average_interval_days: Optional[float] = Field(
         default=None,
-        description="Average days between purchases. None if less than 2 purchases.",
+        description="Average days between purchases. None if less than 2 purchases. "
+        "Calculated incrementally: new_avg = (old_avg * (count-1) + new_interval) / count",
     )
 
     class Settings:

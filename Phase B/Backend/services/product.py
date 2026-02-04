@@ -222,13 +222,13 @@ async def get_ai_recommended_alternatives(
     1. Finds all alternatives in the same category as the original product
     2. Filters by availability and user restrictions (allergies/dietary needs)
     3. Sends filtered alternatives to Gemini AI with user's requirement
-    4. Returns top 3 AI-recommended alternatives with explanations
+    4. Returns up to 3 AI-recommended alternatives with explanation
 
     Args:
         barcode: Original product barcode
         allergies: List of user's allergies
         dietary_needs: List of user's dietary needs
-        requirement: User's specific requirement (e.g., "less sugar", "cheaper")
+        requirement: User's specific requirement (e.g., "less sugar", "high protein")
 
     Returns:
         Dict with:
@@ -284,19 +284,16 @@ async def get_ai_recommended_alternatives(
         # Determine how many alternatives to request (max 3)
         num_alternatives = min(len(safe_alternatives), 3)
 
-        # 4. Prepare data for Gemini
+        # 4. Prepare minimal data for Gemini (only fields needed for decision)
         alternatives_data = []
         for product in safe_alternatives:
             alternatives_data.append(
                 {
                     "barcode": product.barcode,
                     "name": product.name,
-                    "company": product.company,
                     "price": product.price,
                     "size": product.size,
                     "ingredients": product.ingredients,
-                    "allergens": product.allergens,
-                    "dietary_tags": product.dietary_tags,
                     "nutritional_info": {
                         "calories_per_100g": product.nutritional_info.calories_per_100g,
                         "fat_per_100g": product.nutritional_info.fat_per_100g,
@@ -314,7 +311,10 @@ async def get_ai_recommended_alternatives(
         # 6. Create prompt for Gemini
         prompt = f"""
 You are a helpful shopping assistant talking directly to a customer. Given the following list of alternative products and their requirement,
-select the TOP {num_alternatives} BEST product(s) that match what they're looking for.
+select UP TO {num_alternatives} BEST product(s) that match what they're looking for.
+
+IMPORTANT: Only recommend products that ACTUALLY meet their requirement. If only 1 or 2 products fit well, recommend only those. 
+Quality over quantity - don't force recommendations just to reach {num_alternatives} products.
 
 What they want: "{requirement}"
 
@@ -331,27 +331,34 @@ Available Alternatives (all safe for their dietary restrictions):
 
 Your task:
 1. Analyze each alternative product based on what they asked for
-2. Select the TOP {num_alternatives} product(s) that best match their needs
+2. Select UP TO {num_alternatives} product(s) that GENUINELY match their needs (can be fewer if others don't fit)
 3. Provide ONE overall explanation (max 20 words) speaking DIRECTLY to them (use "you" and "your")
 4. IMPORTANT: Each product must be UNIQUE - do NOT repeat the same barcode
+5. If NO products truly match the requirement better than the original, return an empty barcodes array with explanation: "Couldn't find any alternatives that match your dietary restrictions"
 
 Example explanations:
 - "These have 50% less sugar than your original choice"
 - "Perfect for your vegan diet with high protein content"
 - "Lower in calories and sodium to match your health goals"
 
-IMPORTANT: Return your response ONLY as a valid JSON object with exactly {num_alternatives} product(s) in this format:
+IMPORTANT: Return your response ONLY as a valid JSON object with 0 to {num_alternatives} product(s) in this format:
 {{
-  "barcodes": ["barcode1", "barcode2", "barcode3"],
+  "barcodes": ["barcode1", "barcode2"],
   "explanation": "Brief overall explanation for all alternatives speaking directly to the customer (max 20 words)"
+}}
+
+If no products match, return:
+{{
+  "barcodes": [],
+  "explanation": "Couldn't find any alternatives that match your dietary restrictions"
 }}
 
 Do not include any other text, markdown formatting, or code blocks. Return ONLY the JSON object.
 """
 
-        # 7. Get Gemini response
+        # 7. Get Gemini response (async)
         print(f"Sending request to Gemini with requirement: {requirement}")
-        response_text = gemini_client.generate_content(prompt)
+        response_text = await gemini_client.generate_content_async(prompt)
 
         # Remove markdown code blocks if present
         if response_text.startswith("```json"):
@@ -407,3 +414,59 @@ Do not include any other text, markdown formatting, or code blocks. Return ONLY 
     except Exception as e:
         print(f"Error in get_ai_recommended_alternatives: {e}")
         raise
+
+
+async def get_product_info(query: str) -> Optional[Dict[str, Any]]:
+    """
+    Get product/category info by name query.
+    If query matches a category, returns location only.
+    If query matches products, returns location + availability grouped by best category.
+
+    Args:
+        query: Product name or category name
+
+    Returns:
+        Dict with category, location, and matched products (if any)
+    """
+    # Step 1: Check if query matches a category name
+    category = await Category.find_one(
+        {"name": {"$regex": f"^{query}s?$", "$options": "i"}}
+    )
+
+    if category:
+        return {
+            "category": category.name,
+            "location": {"x": category.location.x, "y": category.location.y},
+            "products": [],
+        }
+
+    # Step 2: Search products by name
+    # Handle common substitutions
+    search_query = query.replace("percent", "%")
+
+    # Split into words and require all to be present (in any order)
+    words = search_query.split()
+    if len(words) > 1:
+        # Build regex that matches all words in any order using lookaheads
+        pattern = "".join(f"(?=.*{word})" for word in words)
+    else:
+        pattern = search_query
+
+    products = await Product.find(
+        {"name": {"$regex": pattern, "$options": "i"}}
+    ).to_list()
+
+    if not products:
+        return None
+
+    # Step 3: Pick the best matching product (shortest name = closest to query)
+    best_product = min(products, key=lambda p: len(p.name))
+
+    # Step 4: Get category location
+    cat = await Category.find_one({"name": best_product.category})
+
+    return {
+        "category": best_product.category,
+        "location": {"x": cat.location.x, "y": cat.location.y} if cat else None,
+        "products": [{"name": best_product.name, "available": best_product.available}],
+    }

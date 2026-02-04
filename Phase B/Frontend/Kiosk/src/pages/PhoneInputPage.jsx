@@ -4,11 +4,12 @@ import AuthLayout from "@/layouts/AuthLayout";
 import Numpad from "@/components/numpad/Numpad";
 import DigitInputRow from "@/components/digitInput/DigitInputRow";
 import { authService } from "@/services/authService";
-import { AUTH_CONFIG } from "@/data/authConfig";
+import { AUTH_CONFIG } from "@/config/auth.config";
 
 function PhoneInputPage() {
   const navigate = useNavigate();
   const [inputValue, setInputValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleNumberClick = (digit) => {
     if (inputValue.length < AUTH_CONFIG.PHONE_INPUT_DIGITS) {
@@ -21,19 +22,27 @@ function PhoneInputPage() {
   };
 
   const handleSubmit = async () => {
-    if (inputValue.length === AUTH_CONFIG.PHONE_INPUT_DIGITS) {
+    if (inputValue.length === AUTH_CONFIG.PHONE_INPUT_DIGITS && !isLoading) {
       const fullPhoneNumber = AUTH_CONFIG.PHONE_PREFIX + inputValue;
-      console.log("Submitted phone number:", fullPhoneNumber);
+
+      setIsLoading(true);
 
       // Send OTP to phone number
-      await authService.sendOtp(fullPhoneNumber);
+      const result = await authService.sendOtp(fullPhoneNumber);
 
-      // Navigate to OTP page with phone number
-      navigate("/auth/otp", { state: { phoneNumber: fullPhoneNumber } });
+      setIsLoading(false);
+
+      if (result.success) {
+        // Navigate to OTP page with phone number
+        navigate("/auth/otp", { state: { phoneNumber: fullPhoneNumber } });
+      } else {
+        // Log error but don't show to user
+        console.error("Failed to send OTP:", result.message);
+      }
     }
   };
 
-  const isSubmitEnabled = inputValue.length === AUTH_CONFIG.PHONE_INPUT_DIGITS;
+  const isSubmitEnabled = inputValue.length === AUTH_CONFIG.PHONE_INPUT_DIGITS && !isLoading;
   const activeIndex = AUTH_CONFIG.PHONE_PREFIX.length + inputValue.length;
 
   return (

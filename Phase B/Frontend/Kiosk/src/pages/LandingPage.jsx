@@ -1,13 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import LandingLayout from "@/layouts/LandingLayout";
-import { UI_CONFIG } from "@/data/uiConfig";
+import { UI_CONFIG } from "@/config/ui.config";
 
 function LandingPage() {
   const [isFadingOut, setIsFadingOut] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const navigate = useNavigate();
 
+  // Add a delay before accepting touches to prevent
+  // accidental navigation when returning from another page
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsReady(true);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   const handleScreenTouch = () => {
+    // Ignore touches until ready
+    if (!isReady || isFadingOut) return;
+
     // Start fade-out animation
     setIsFadingOut(true);
 

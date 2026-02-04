@@ -6,11 +6,14 @@ from schemas import (
     NutritionalInfoResponse,
     ProductAvailabilityResponse,
     ProductIngredientsResponse,
+    NutritionDetailsResponse,
+    ShelfInfoResponse,
     ProductLocationResponse,
     FindAlternativesResponse,
     ProductScanRequest,
     AIAlternativesRequest,
     AIAlternativesResponse,
+    ProductInfoRequest,
 )
 from typing import List
 
@@ -37,6 +40,32 @@ async def search_products(q: str, limit: int = 5):
     )
 
     return products
+
+
+@router.post("/info")
+async def get_product_info(request: ProductInfoRequest):
+    """
+    Get product or category info by name query.
+    Used by VAPI for voice assistant function calling.
+    """
+    result = await product_service.get_product_info(request.query)
+
+    if not result:
+        return {"result": f"No products or categories found matching '{request.query}'"}
+
+    # Build a simple string response
+    if not result["products"]:
+        # Category match only
+        return {
+            "result": f"{result['category']} is located at coordinates x={result['location']['x']}, y={result['location']['y']}"
+        }
+    else:
+        # Product match
+        product = result["products"][0]
+        availability = "available" if product["available"] else "out of stock"
+        return {
+            "result": f"{product['name']} is {availability}. It is in the {result['category']} section at coordinates x={result['location']['x']}, y={result['location']['y']}"
+        }
 
 
 @router.get("/{barcode}/nutritional-info", response_model=NutritionalInfoResponse)
@@ -125,6 +154,61 @@ async def get_product_location(barcode: str):
         )
 
     return location
+
+
+@router.get("/{barcode}/nutrition-details", response_model=NutritionDetailsResponse)
+async def get_product_nutrition_details(barcode: str):
+    """
+    Get product ingredients and nutritional info combined.
+    Used for AI function calling.
+
+    Args:
+        barcode: Product barcode
+
+    Returns:
+        NutritionDetailsResponse: Ingredients list and nutritional info
+    """
+    product = await Product.find_one(Product.barcode == barcode)
+
+    if not product:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Product with barcode '{barcode}' not found",
+        )
+
+    return {
+        "ingredients": product.ingredients,
+        "nutritional_info": product.nutritional_info,
+    }
+
+
+@router.get("/{barcode}/shelf-info", response_model=ShelfInfoResponse)
+async def get_product_shelf_info(barcode: str):
+    """
+    Get product availability and location combined.
+    Used for AI function calling.
+
+    Args:
+        barcode: Product barcode
+
+    Returns:
+        ShelfInfoResponse: Availability status and location coordinates
+    """
+    product = await Product.find_one(Product.barcode == barcode)
+
+    if not product:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Product with barcode '{barcode}' not found",
+        )
+
+    # Get location (may be None if category not found)
+    location = await product_service.get_product_location(barcode)
+
+    return {
+        "available": product.available,
+        "location": location["location"] if location else None,
+    }
 
 
 @router.post("/{barcode}/scan", response_model=FindAlternativesResponse)

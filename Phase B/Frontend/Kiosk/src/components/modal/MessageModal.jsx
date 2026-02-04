@@ -33,25 +33,16 @@ const MessageModal = ({
   closeIconSize = 32,
   className = "",
 }) => {
-  // Handle ESC key press to close modal
+  // Prevent body scrolling when modal is open
   useEffect(() => {
-    const handleEscape = (e) => {
-      if (e.key === "Escape" && isOpen) {
-        onClose();
-      }
-    };
-
     if (isOpen) {
-      document.addEventListener("keydown", handleEscape);
-      // Prevent body scrolling when modal is open
       document.body.style.overflow = "hidden";
     }
 
     return () => {
-      document.removeEventListener("keydown", handleEscape);
       document.body.style.overflow = "unset";
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -78,10 +69,10 @@ const MessageModal = ({
         style={{ backgroundColor }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close button - top left */}
+        {/* Close button - top right */}
         <button
           onClick={onClose}
-          className="absolute top-[clamp(1rem,2vw,1.5rem)] left-[clamp(1rem,2vw,1.5rem)]
+          className="absolute top-[clamp(1rem,2vw,1.5rem)] right-[clamp(1rem,2vw,1.5rem)]
                      hover:opacity-70 active:opacity-50 transition-opacity
                      cursor-pointer"
           aria-label="Close modal"

@@ -74,8 +74,10 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
+        "http://localhost:8000",
         "http://localhost:5173",
         "https://list-creation-eight.vercel.app",
+        "http://cart-01.local:8000",
         "https://api.vapi.ai",
     ],
     allow_credentials=True,

@@ -1,8 +1,12 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { UserProvider } from "./context/UserContext";
+import { CartProvider } from "./context/CartContext";
+import { VoiceAssistantProvider } from "./context/VoiceAssistantContext";
 import LandingPage from "./pages/LandingPage";
 import PhoneInputPage from "./pages/PhoneInputPage";
 import OtpInputPage from "./pages/OtpInputPage";
-import Test from "./pages/Test";
+import DashboardLoadingPage from "./pages/DashboardLoadingPage";
+import DashboardPage from "./pages/DashboardPage";
 import ShaderGradientBackground from "./components/shadergradient/ShaderGradient";
 
 function AppContent() {
@@ -23,8 +27,8 @@ function AppContent() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/auth/phone" element={<PhoneInputPage />} />
           <Route path="/auth/otp" element={<OtpInputPage />} />
-          <Route path="/test" element={<Test />} />
-          {/* Test page should be removed before build */}
+          <Route path="/dashboard/loading" element={<DashboardLoadingPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
         </Routes>
       </div>
     </div>
@@ -34,7 +38,13 @@ function AppContent() {
 function App() {
   return (
     <BrowserRouter>
-      <AppContent />
+      <UserProvider>
+        <CartProvider>
+          <VoiceAssistantProvider>
+            <AppContent />
+          </VoiceAssistantProvider>
+        </CartProvider>
+      </UserProvider>
     </BrowserRouter>
   );
 }
