@@ -1,8 +1,11 @@
 import os
 from socket import gethostname
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # --- Log File Path ---
-LOG_FILE_PATH = "./logs"
+LOG_FILE_PATH = os.environ.get("LOG_FILE_PATH", "./logs")
 
 # --- Audio Stream Settings ---
 AUDIO_FORMAT = "paInt16"  # 16-bit PCM frames
