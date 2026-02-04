@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Kiosk Browser
+Exec=/home/sysadmin/smart-cart/setup/scripts/kiosk.sh
+X-GNOME-Autostart-enabled=true
+

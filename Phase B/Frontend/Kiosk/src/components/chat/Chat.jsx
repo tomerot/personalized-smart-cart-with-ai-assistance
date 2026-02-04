@@ -140,9 +140,6 @@ const Chat = ({
               const isProductInCart = cartItems.some(item => String(item.id) === forProductId);
               const isCurrentProduct = forProductId && forProductId === currentProductId;
               
-              // Debug logging
-              console.log('🔍 Conflict alternatives check:', { forProductId, currentProductId, isProductInCart, isCurrentProduct });
-              
               // Render ConflictAlternativesContent for product conflict with alternatives (from barcode scan)
               content = (
                 <ConflictAlternativesContent
@@ -161,9 +158,6 @@ const Chat = ({
               const forProductId = message.forProductId ? String(message.forProductId) : null;
               const isProductInCart = cartItems.some(item => String(item.id) === forProductId);
               const isCurrentProduct = forProductId && forProductId === currentProductId;
-              
-              // Debug logging
-              console.log('🔍 AI alternatives check:', { forProductId, currentProductId, isProductInCart, isCurrentProduct });
               
               // Render ProductAlternatives for voice assistant alternatives request
               // Transform alternatives to the format expected by ProductAlternatives

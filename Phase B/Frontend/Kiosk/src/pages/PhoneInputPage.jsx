@@ -4,7 +4,7 @@ import AuthLayout from "@/layouts/AuthLayout";
 import Numpad from "@/components/numpad/Numpad";
 import DigitInputRow from "@/components/digitInput/DigitInputRow";
 import { authService } from "@/services/authService";
-import { AUTH_CONFIG } from "@/data/authConfig";
+import { AUTH_CONFIG } from "@/config/auth.config";
 
 function PhoneInputPage() {
   const navigate = useNavigate();
@@ -24,7 +24,6 @@ function PhoneInputPage() {
   const handleSubmit = async () => {
     if (inputValue.length === AUTH_CONFIG.PHONE_INPUT_DIGITS && !isLoading) {
       const fullPhoneNumber = AUTH_CONFIG.PHONE_PREFIX + inputValue;
-      console.log("Submitted phone number:", fullPhoneNumber);
 
       setIsLoading(true);
 
@@ -34,7 +33,6 @@ function PhoneInputPage() {
       setIsLoading(false);
 
       if (result.success) {
-        console.log("OTP sent successfully");
         // Navigate to OTP page with phone number
         navigate("/auth/otp", { state: { phoneNumber: fullPhoneNumber } });
       } else {

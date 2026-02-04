@@ -1,7 +1,10 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # --- Log File Path ---
-LOG_FILE_PATH = "./logs"
+LOG_FILE_PATH = os.environ.get("LOG_FILE_PATH", "./logs")
 
 # --- Local WebSocket Server Configuration ---
 LOCAL_WS_HOST = "localhost"

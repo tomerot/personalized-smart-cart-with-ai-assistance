@@ -168,7 +168,6 @@ export function CartProvider({ children }) {
    */
   const resetChangedFlag = useCallback(() => {
     hasChangedRef.current = false;
-    console.log('🔄 Cart changed flag reset');
   }, []);
 
   const value = {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
-import { UI_CONFIG } from "@/data/uiConfig";
+import { UI_CONFIG } from "@/config/ui.config";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import { controllerService } from "@/services/controllerService";
 
@@ -28,11 +28,9 @@ function DashboardPage() {
 
   // Enable continuous reconnection when dashboard mounts, disable when unmounting
   useEffect(() => {
-    console.log('📱 Dashboard mounted - enabling continuous controller reconnection');
     controllerService.enableContinuousReconnect();
 
     return () => {
-      console.log('📱 Dashboard unmounted - disabling continuous controller reconnection');
       controllerService.disableContinuousReconnect();
     };
   }, []);

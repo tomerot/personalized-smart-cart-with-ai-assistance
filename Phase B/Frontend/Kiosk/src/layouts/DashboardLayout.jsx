@@ -10,7 +10,7 @@ import { useVoiceAssistant } from "@/context/VoiceAssistantContext";
 import { NAV_VIEWS, VIEW_CONFIG, useViewTransition, DashboardNavRail } from "@/features/navigation";
 import { CompanionView } from "@/features/smart-companion";
 import { GroceryListView, useShoppingList } from "@/features/grocery-list";
-import { DashboardModals, useCheckout, useLeaveSession, useShoppingRoute, useProfile, useAudioSettings } from "@/features/dashboard";
+import { DashboardModals, useCheckout, useLeaveSession, useShoppingRoute, useProfile, useAudioSettings, useHelp } from "@/features/dashboard";
 import ProfileModal from "@/components/modal/ProfileModal";
 import { cartAutoSaveService } from "@/services/cartAutoSaveService";
 
@@ -27,7 +27,16 @@ function DashboardLayout() {
   const { user, hasShoppingList, logout, savedCart, clearSavedCart } = useUser();
   const { cartItems, clearCart, addProduct, loadCart, getHasChanged, resetChangedFlag } = useCart();
   const { activeView, setActiveView, isTransitioning, displayView } = useViewTransition(NAV_VIEWS.GROCERY_LIST);
-  const { highlightedProductId, addConflictMessage, stopConversation, clearMessages } = useVoiceAssistant();
+  const { 
+    highlightedProductId, 
+    addConflictMessage, 
+    stopConversation, 
+    clearMessages,
+    showPolicyViolationModal,
+    setShowPolicyViolationModal,
+    showUnexpectedEndModal,
+    setShowUnexpectedEndModal,
+  } = useVoiceAssistant();
 
   // Ref to always access current cart items (avoids stale closure in auto-save service)
   const cartItemsRef = useRef(cartItems);
@@ -38,8 +47,6 @@ function DashboardLayout() {
   // Load saved cart from crash recovery (if exists)
   useEffect(() => {
     if (savedCart && savedCart.items && savedCart.items.length > 0) {
-      console.log('🔄 Restoring cart from backup:', savedCart.items.length, 'items');
-      
       // Transform backend format to frontend format
       const cartItemsToLoad = savedCart.items.map(item => ({
         id: item.barcode,
@@ -65,7 +72,6 @@ function DashboardLayout() {
       }));
       
       loadCart(cartItemsToLoad);
-      console.log('✅ Cart restored successfully');
       
       // Clear saved cart after loading (so it doesn't reload on re-mount)
       clearSavedCart();
@@ -76,8 +82,6 @@ function DashboardLayout() {
   useEffect(() => {
     if (!user?.phone) return;
 
-    console.log('🔄 Starting cart auto-save service for user:', user.phone);
-    
     // Start the auto-save service
     // Using ref to always get current cart items (avoids stale closure)
     cartAutoSaveService.start(
@@ -90,12 +94,10 @@ function DashboardLayout() {
     // DEVELOPMENT ONLY: Expose service for manual testing
     if (import.meta.env.DEV) {
       window.cartAutoSaveService = cartAutoSaveService;
-      console.log('💡 Dev Mode: You can manually trigger save with: window.cartAutoSaveService.triggerSave()');
     }
 
     // Cleanup: Stop the service when component unmounts
     return () => {
-      console.log('🛑 Stopping cart auto-save service...');
       cartAutoSaveService.stop();
       if (import.meta.env.DEV) {
         delete window.cartAutoSaveService;
@@ -138,20 +140,19 @@ function DashboardLayout() {
   // Audio settings modal hook
   const audioSettings = useAudioSettings();
 
+  // Help modal hook
+  const help = useHelp();
+
   // Barcode scanner integration
   const { manualScan } = useBarcodeScanner({
     autoConnect: true,
-    onScanSuccess: (product, hasConflict) => {
-      console.log("Product scanned:", product.name);
-      if (hasConflict) console.log("⚠️ Product has conflict with user preferences");
-    },
+    onScanSuccess: () => {},
     onScanError: (barcode, error) => {
       console.error(`Scan error for ${barcode}:`, error);
       checkout.setErrorMessage(["Barcode not recognized.", "Please try again."]);
       checkout.setShowErrorModal(true);
     },
     onConflict: ({ product, conflict, alternatives }) => {
-      console.log("Conflict detected:", conflict);
       addConflictMessage({
         originalProduct: product.originalProduct || product,
         conflict, alternatives,
@@ -160,12 +161,9 @@ function DashboardLayout() {
     },
   });
 
-  // Handlers for stub features
-  const handleHelpClick = () => console.log("Help clicked - will open modal");
   
   // Checkout complete reuses session cleanup
   const handleCheckoutComplete = () => {
-    console.log("Checkout complete - resetting session");
     checkout.setShowCheckoutSuccessModal(false);
     leave.performSessionCleanup();
   };
@@ -181,7 +179,7 @@ function DashboardLayout() {
         onViewChange={setActiveView}
         onLeaveClick={leave.handleLeaveClick}
         onProfileClick={handleProfileClick}
-        onHelpClick={handleHelpClick}
+        onHelpClick={help.handleHelpClick}
       />
 
       {/* Main content area wrapper */}
@@ -308,6 +306,12 @@ function DashboardLayout() {
         volume={audioSettings.volume}
         onVolumeChange={audioSettings.handleVolumeChange}
         isLoadingVolume={audioSettings.isLoading}
+        showHelpModal={help.showHelpModal}
+        onCloseHelp={help.handleCloseHelp}
+        showPolicyViolationModal={showPolicyViolationModal}
+        onClosePolicyViolation={() => setShowPolicyViolationModal(false)}
+        showUnexpectedEndModal={showUnexpectedEndModal}
+        onCloseUnexpectedEnd={() => setShowUnexpectedEndModal(false)}
       />
 
       {/* Profile Modal */}

@@ -77,6 +77,10 @@ export function VoiceAssistantProvider({ children }) {
   // Once detected, timer stops for the rest of this turn
   const [activityDetectedInTurn, setActivityDetectedInTurn] = useState(false);
 
+  // Error modals state
+  const [showPolicyViolationModal, setShowPolicyViolationModal] = useState(false);
+  const [showUnexpectedEndModal, setShowUnexpectedEndModal] = useState(false);
+
   // Timer configuration (in milliseconds) - matches vapi_handler.py silence timeout
   const INACTIVITY_TIMEOUT = 5000; // 5 seconds to fill the bar (same as backend)
   const TIMER_INTERVAL = 100; // Update every 100ms for smooth animation
@@ -153,10 +157,8 @@ export function VoiceAssistantProvider({ children }) {
   useEffect(() => {
     if (cartItems.length > 0) {
       setHighlightedProductId(cartItems[0].id);
-      console.log('🎨 Top product highlighted:', cartItems[0].name, 'ID:', cartItems[0].id);
     } else {
       setHighlightedProductId(null);
-      console.log('🎨 Cart empty, no highlight');
     }
   }, [cartItems]);
 
@@ -170,7 +172,6 @@ export function VoiceAssistantProvider({ children }) {
       case VOICE_EVENT_TYPES.START_CALL:
         // Call has started successfully
         if (event.started) {
-          console.log('🎙️ Voice call started');
           callStartedRef.current = true;
           isFirstUserMessageInCallRef.current = true; // Reset for new call
           setChatStatus('user'); // Default to "Speak..." when call starts
@@ -183,11 +184,8 @@ export function VoiceAssistantProvider({ children }) {
         break;
         
       case VOICE_EVENT_TYPES.END_CALL:
-        console.log('🎙️ Voice call ended', event.expected ? 'expectedly' : 'unexpectedly');
-        
         // Handle POLICY_VIOLATION: remove last user message as it caused the violation
         if (event.reason === 'POLICY_VIOLATION') {
-          console.warn('Call ended due to policy violation, removing last user message');
           setMessages(prev => {
             // Find and remove the last user message
             const lastUserIndex = [...prev].reverse().findIndex(msg => msg.type === 'user');
@@ -204,10 +202,9 @@ export function VoiceAssistantProvider({ children }) {
             }
             return prev;
           });
-          // TODO: Show error modal to user about policy violation
+          setShowPolicyViolationModal(true);
         } else if (!event.expected) {
-          // TODO: Show error modal to user about unexpected end
-          console.warn('Call ended unexpectedly:', event.reason);
+          setShowUnexpectedEndModal(true);
         }
         
         setIsConversationActive(false);
@@ -253,13 +250,6 @@ export function VoiceAssistantProvider({ children }) {
               // Use ref to always get the latest cart state (avoids stale closure)
               const currentHighlightedId = cartItemsRef.current.length > 0 ? cartItemsRef.current[0].id : null;
               
-              // Debug logging
-              console.log('🤖 get_ai_alternatives result:', { 
-                currentHighlightedId, 
-                cartLength: cartItemsRef.current.length,
-                topCartItemId: cartItemsRef.current[0]?.id 
-              });
-              
               messageData = {
                 type: 'assistant',
                 content: assistantContent,
@@ -286,7 +276,6 @@ export function VoiceAssistantProvider({ children }) {
                 
                 // If the last message is an assistant message with a tool call, replace its content
                 if (lastMessage.type === 'assistant' && lastMessage.toolCallId) {
-                  console.log('Replacing shimmer text with actual tool result');
                   return [
                     ...prev.slice(0, -1),
                     messageData
@@ -312,6 +301,23 @@ export function VoiceAssistantProvider({ children }) {
         } else {
           // Assistant stopped speaking, user can now speak
           setChatStatus('user');
+          
+          // Check if there's any remaining pending output that arrived after speaking started
+          if (pendingAssistantOutputRef.current) {
+            const remainingContent = pendingAssistantOutputRef.current;
+            pendingAssistantOutputRef.current = '';
+            
+            setMessages(prev => {
+              if (prev.length > 0 && prev[prev.length - 1].type === 'assistant') {
+                const lastMessage = prev[prev.length - 1];
+                return [
+                  ...prev.slice(0, -1),
+                  { ...lastMessage, content: lastMessage.content + remainingContent }
+                ];
+              }
+              return prev;
+            });
+          }
         }
         break;
         
@@ -325,6 +331,10 @@ export function VoiceAssistantProvider({ children }) {
         // Handle user transcription
         if (event.text && event.text.trim()) {
           const userText = event.text.trim();
+          
+          // Clear any pending assistant output from a previous (interrupted) response
+          // This prevents concatenation of old partial responses with new ones
+          pendingAssistantOutputRef.current = '';
           
           setMessages(prev => {
             // Only concatenate if:
@@ -363,8 +373,6 @@ export function VoiceAssistantProvider({ children }) {
         
       case VOICE_EVENT_TYPES.TOOL_CALL:
         // Handle tool call by showing loading message if configured
-        console.log('Tool call received:', event.name, event.arguments);
-        
         // Store the active tool call with its name AND arguments (needed for allergy/dietary updates)
         activeToolCallsRef.current.set(event.execution_id, { 
           name: event.name, 
@@ -409,8 +417,6 @@ export function VoiceAssistantProvider({ children }) {
         
       case VOICE_EVENT_TYPES.TOOL_CALL_RESULT:
         // Tool call completed - the result will be spoken by the assistant
-        console.log('Tool call result:', event.name, event.result);
-        
         // Parse and store the result for use when rendering the assistant message
         if (event.name === 'get_product_info' || event.name === 'get_ai_alternatives') {
           try {
@@ -439,31 +445,27 @@ export function VoiceAssistantProvider({ children }) {
                 : storedToolCall.arguments;
               
               const currentUser = userRef.current;
-              if (currentUser) {
+                if (currentUser) {
                 if (event.name === 'add_allergies') {
                   const items = args.allergies || [];
                   const currentAllergies = currentUser.allergies || [];
                   const newAllergies = [...new Set([...currentAllergies, ...items])];
                   updateUserRef.current({ allergies: newAllergies });
-                  console.log('✅ Updated user allergies (added):', newAllergies);
                 } else if (event.name === 'remove_allergies') {
                   const items = args.allergies || [];
                   const currentAllergies = currentUser.allergies || [];
                   const newAllergies = currentAllergies.filter(a => !items.includes(a));
                   updateUserRef.current({ allergies: newAllergies });
-                  console.log('✅ Updated user allergies (removed):', newAllergies);
                 } else if (event.name === 'add_dietary_needs') {
                   const items = args.dietary_needs || [];
                   const currentDietaryNeeds = currentUser.dietary_needs || [];
                   const newDietaryNeeds = [...new Set([...currentDietaryNeeds, ...items])];
                   updateUserRef.current({ dietary_needs: newDietaryNeeds });
-                  console.log('✅ Updated user dietary needs (added):', newDietaryNeeds);
                 } else if (event.name === 'remove_dietary_needs') {
                   const items = args.dietary_needs || [];
                   const currentDietaryNeeds = currentUser.dietary_needs || [];
                   const newDietaryNeeds = currentDietaryNeeds.filter(d => !items.includes(d));
                   updateUserRef.current({ dietary_needs: newDietaryNeeds });
-                  console.log('✅ Updated user dietary needs (removed):', newDietaryNeeds);
                 }
               }
             } catch (e) {
@@ -482,7 +484,7 @@ export function VoiceAssistantProvider({ children }) {
         break;
         
       default:
-        console.log('Unknown voice event:', eventType);
+        break;
     }
   }, []);
 
@@ -503,7 +505,6 @@ export function VoiceAssistantProvider({ children }) {
     
     // Subscribe to connection status changes
     const unsubscribe = voiceControllerService.onConnectionChange((connected) => {
-      console.log('Voice controller connection status changed:', connected);
       setIsVoiceControllerConnected(connected);
     });
     
@@ -525,8 +526,6 @@ export function VoiceAssistantProvider({ children }) {
       return;
     }
 
-    console.log('🎙️ Starting voice conversation');
-    
     // Reset state for new call
     callStartedRef.current = false;
     isFirstUserMessageInCallRef.current = true; // Will be set to false after first user message
@@ -549,11 +548,25 @@ export function VoiceAssistantProvider({ children }) {
     };
 
     // Prepare messages for context (convert to VAPI format)
+    // Only send last 5 messages to keep context manageable
     const formattedMessages = messages.length > 0 
-      ? messages.map(msg => ({
-          role: msg.type, // 'user' or 'assistant'
-          content: msg.content,
-        }))
+      ? messages.slice(-5).map(msg => {
+          let content = msg.content;
+          
+          // If this message includes tool call data, append it to the content
+          if (msg.toolCallData) {
+            if (msg.toolCallData.name === 'get_product_location') {
+              content += `\n[Tool: get_product_location, Result: ${JSON.stringify(msg.toolCallData.productLocation)}]`;
+            } else if (msg.toolCallData.name === 'get_ai_alternatives') {
+              content += `\n[Tool: get_ai_alternatives, Alternatives: ${JSON.stringify(msg.toolCallData.alternatives)}, Explanation: ${msg.toolCallData.explanation}]`;
+            }
+          }
+          
+          return {
+            role: msg.type, // 'user' or 'assistant'
+            content: content,
+          };
+        })
       : [];
 
     // Start the call with variables and previous messages
@@ -564,8 +577,6 @@ export function VoiceAssistantProvider({ children }) {
    * Stop the current voice conversation
    */
   const stopConversation = useCallback(() => {
-    console.log('🎙️ Stopping voice conversation');
-    
     voiceControllerService.stopCall();
     
     setIsConversationActive(false);
@@ -631,14 +642,6 @@ export function VoiceAssistantProvider({ children }) {
     // Get the product ID to track which product this conflict is for
     const productId = originalProduct.barcode || originalProduct.id;
     
-    // Debug logging
-    console.log('🚨 addConflictMessage:', { 
-      productId, 
-      barcode: originalProduct.barcode, 
-      id: originalProduct.id,
-      productName: originalProduct.name 
-    });
-    
     const messageData = {
       type: 'assistant',
       content: 'I found a conflict with at least one of your dietary needs or allergies:',
@@ -670,6 +673,8 @@ export function VoiceAssistantProvider({ children }) {
     messages,
     highlightedProductId,
     isVoiceControllerConnected,
+    showPolicyViolationModal,
+    showUnexpectedEndModal,
     
     // Actions
     toggleConversation,
@@ -679,6 +684,8 @@ export function VoiceAssistantProvider({ children }) {
     addMessage,
     addConflictMessage,
     playAudio,
+    setShowPolicyViolationModal,
+    setShowUnexpectedEndModal,
     
     // Setters for external control
     setChatStatus,

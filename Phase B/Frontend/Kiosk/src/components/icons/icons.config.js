@@ -36,5 +36,9 @@ export const ICONS = {
   CHECKOUT: "credit_card",
   NO_CHAT: "voice_chat_off",
   PHONE: "call",
-  NOT_FOUND: "search_off"
+  NOT_FOUND: "search_off",
+  LEFT: "chevron_left",
+  RIGHT: "chevron_right",
+  POLICY_VIOLATION: "shield",
+  ERROR: "error"
 };

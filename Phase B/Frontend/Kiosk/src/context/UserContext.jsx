@@ -58,7 +58,6 @@ export function UserProvider({ children }) {
     setUser(userData);
     setIsAuthenticated(true);
     sessionStorage.setItem('user', JSON.stringify(userData));
-    console.log('User logged in:', userData);
   };
 
   /**
@@ -72,7 +71,6 @@ export function UserProvider({ children }) {
     sessionStorage.removeItem('user');
     sessionStorage.removeItem('hasShoppingList');
     sessionStorage.removeItem('savedCart');
-    console.log('User logged out');
   };
 
   /**
@@ -83,7 +81,6 @@ export function UserProvider({ children }) {
     const updatedUser = { ...user, ...updates };
     setUser(updatedUser);
     sessionStorage.setItem('user', JSON.stringify(updatedUser));
-    console.log('User updated:', updatedUser);
   };
 
   /**
@@ -93,7 +90,6 @@ export function UserProvider({ children }) {
   const setUserHasShoppingList = (hasListFlag) => {
     setHasShoppingList(hasListFlag);
     sessionStorage.setItem('hasShoppingList', hasListFlag.toString());
-    console.log('Shopping list status updated:', hasListFlag);
   };
 
   /**
@@ -104,10 +100,8 @@ export function UserProvider({ children }) {
     setSavedCart(cartData);
     if (cartData) {
       sessionStorage.setItem('savedCart', JSON.stringify(cartData));
-      console.log('Saved cart data updated:', cartData);
     } else {
       sessionStorage.removeItem('savedCart');
-      console.log('Saved cart data cleared');
     }
   };
 
@@ -117,7 +111,6 @@ export function UserProvider({ children }) {
   const clearSavedCart = () => {
     setSavedCart(null);
     sessionStorage.removeItem('savedCart');
-    console.log('Saved cart cleared');
   };
 
   const value = {

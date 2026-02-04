@@ -5,6 +5,7 @@ import ForgotItemsModal from "@/components/modal/ForgotItemsModal";
 import CheckoutSuccessModal from "@/components/modal/CheckoutSuccessModal";
 import ShoppingRouteModal from "@/components/modal/ShoppingRouteModal";
 import AudioSettingsModal from "@/components/modal/AudioSettingsModal";
+import HelpModal from "@/components/modal/HelpModal";
 
 /**
  * DashboardModals - Container for all dashboard modal dialogs
@@ -45,6 +46,14 @@ function DashboardModals({
   volume,
   onVolumeChange,
   isLoadingVolume,
+  // Help modal
+  showHelpModal,
+  onCloseHelp,
+  // Voice assistant error modals
+  showPolicyViolationModal,
+  onClosePolicyViolation,
+  showUnexpectedEndModal,
+  onCloseUnexpectedEnd,
 }) {
   return (
     <>
@@ -124,6 +133,38 @@ function DashboardModals({
         volume={volume}
         onVolumeChange={onVolumeChange}
         isLoading={isLoadingVolume}
+      />
+
+      {/* Help Modal */}
+      <HelpModal
+        isOpen={showHelpModal}
+        onClose={onCloseHelp}
+      />
+
+      {/* Policy Violation Modal */}
+      <MessageModal
+        isOpen={showPolicyViolationModal}
+        onClose={onClosePolicyViolation}
+        icon={ICONS.POLICY_VIOLATION}
+        message={
+          <>
+            You Can Only Ask
+            <br />
+            Shopping-Related Questions
+          </>
+        }
+        iconColor="black"
+        textColor="black"
+      />
+
+      {/* Unexpected Call End Modal */}
+      <MessageModal
+        isOpen={showUnexpectedEndModal}
+        onClose={onCloseUnexpectedEnd}
+        icon={ICONS.ERROR}
+        message="The Conversation was Closed Unexpectedly"
+        iconColor="black"
+        textColor="black"
       />
     </>
   );

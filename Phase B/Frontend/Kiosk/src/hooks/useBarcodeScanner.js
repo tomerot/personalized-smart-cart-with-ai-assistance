@@ -55,7 +55,6 @@ export function useBarcodeScanner({
   const handleBarcodeScanned = useCallback(async (barcode) => {
     // Prevent concurrent processing
     if (isProcessing.current) {
-      console.log('Already processing a barcode, skipping...');
       return;
     }
 
@@ -64,14 +63,11 @@ export function useBarcodeScanner({
     setLastError(null);
 
     try {
-      console.log(`Processing scanned barcode: ${barcode}`);
-
       // OPTIMIZATION: Check if product already exists in cart first
       // If it does, just increase quantity without fetching from backend
       const existingProduct = cartItems.find(item => item.id === barcode);
       
       if (existingProduct) {
-        console.log(`Product ${barcode} already in cart, increasing quantity`);
         addProduct({ ...existingProduct, quantity: 1 }); // addProduct will handle incrementing
         setLastScannedProduct(existingProduct);
         
@@ -85,8 +81,6 @@ export function useBarcodeScanner({
       }
 
       // Product not in cart - fetch from backend
-      console.log(`Product ${barcode} not in cart, fetching from backend...`);
-
       // Get user's allergies and dietary needs
       const allergies = user?.allergies || [];
       const dietaryNeeds = user?.dietary_needs || [];
@@ -110,8 +104,6 @@ export function useBarcodeScanner({
 
       // Handle conflict scenario
       if (has_conflict) {
-        console.log('Product has conflict with user preferences:', conflict_with_original);
-        
         // TODO: Show alternatives UI to user when product conflicts with their preferences
         // The alternatives array contains safe alternative products
         // The conflict_with_original object contains details about the conflict:
@@ -143,8 +135,6 @@ export function useBarcodeScanner({
         onScanSuccess(cartItem, has_conflict);
       }
 
-      console.log('Product added to cart:', cartItem.name);
-
     } catch (error) {
       console.error('Error processing barcode:', error);
       setLastError(error.message);
@@ -164,8 +154,6 @@ export function useBarcodeScanner({
    * @param {object} event - Scanner event
    */
   const handleScannerEvent = useCallback((event) => {
-    console.log('Received scanner event:', event);
-
     switch (event.event_type) {
       case BARCODE_EVENT_TYPES.BARCODE_SCANNED:
         handleBarcodeScanned(event.barcode);
@@ -185,7 +173,7 @@ export function useBarcodeScanner({
         break;
 
       default:
-        console.log('Unknown event type:', event.event_type);
+        break;
     }
   }, [handleBarcodeScanned, onScanError]);
 
@@ -231,16 +219,13 @@ export function useBarcodeScanner({
 
     // Auto-connect if enabled and not already connected
     if (autoConnect && !barcodeControllerService.isConnected()) {
-      console.log('Auto-connecting to barcode scanner...');
       connect();
     } else if (barcodeControllerService.isConnected()) {
-      console.log('Already connected to barcode scanner');
       setIsConnected(true);
     }
 
     // Cleanup on unmount - DO NOT disconnect as other components might be using it
     return () => {
-      console.log('useBarcodeScanner hook unmounting, removing event listeners');
       unsubscribeEvents();
       unsubscribeConnection();
     };

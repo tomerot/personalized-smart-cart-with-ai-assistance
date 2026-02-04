@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
 import { userStatusService } from "@/services/userStatusService";
 import { controllerService } from "@/services/controllerService";
-import { UI_CONFIG } from "@/data/uiConfig";
+import { UI_CONFIG } from "@/config/ui.config";
 
 function DashboardLoadingPage() {
   const navigate = useNavigate();
@@ -24,47 +24,35 @@ function DashboardLoadingPage() {
     const loadDashboardData = async () => {
       try {
         // Fetch user status (shopping list and active cart flags)
-        console.log("Fetching user status for:", phoneNumber);
         const statusResult = await userStatusService.getUserStatus(phoneNumber);
         
         if (statusResult.success && statusResult.status) {
-          console.log("✅ User status from backend:", statusResult.status);
-          console.log("📋 has_shopping_list:", statusResult.status.has_shopping_list, "| Type:", typeof statusResult.status.has_shopping_list);
-          
           // Save shopping list flag to context
           setUserHasShoppingList(statusResult.status.has_shopping_list);
           
           // If user has an active cart, fetch it
           if (statusResult.status.has_active_cart) {
-            console.log("User has active cart, fetching cart data...");
             const cartResult = await userStatusService.getCart(phoneNumber);
             
             if (cartResult.success && cartResult.cart) {
-              console.log("Cart fetched successfully:", cartResult.cart);
               setSavedCartData(cartResult.cart);
             } else {
               console.error("Failed to fetch cart:", cartResult.message);
             }
-          } else {
-            console.log("User has no active cart");
           }
         } else {
           console.error("Failed to fetch user status:", statusResult.message);
         }
 
         // Connect to Raspberry Pi controllers (Barcode Scanner & Voice Assistant)
-        console.log("Connecting to Raspberry Pi controllers...");
         const connectionResult = await controllerService.connect();
         
-        if (connectionResult.barcode || connectionResult.voice) {
-          console.log("Controller connections established:", connectionResult);
-        } else {
+        if (!connectionResult.barcode && !connectionResult.voice) {
           console.error("Failed to connect to controllers - will retry on dashboard");
         }
 
         // Navigate to dashboard after data is loaded
         // No artificial delay - navigate immediately after data is ready
-        console.log("Dashboard data loaded - navigating to dashboard");
         navigate("/dashboard", { replace: true });
       } catch (error) {
         console.error("Error loading dashboard data:", error);

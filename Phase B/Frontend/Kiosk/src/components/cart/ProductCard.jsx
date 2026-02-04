@@ -45,11 +45,6 @@ const ProductCard = ({
     if (onDelete) onDelete();
   };
 
-  // Debug log
-  if (isHighlighted) {
-    console.log('🎨 Product is highlighted:', productName);
-  }
-
   return (
     <>
       {isHighlighted && (

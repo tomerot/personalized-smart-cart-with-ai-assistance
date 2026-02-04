@@ -23,7 +23,6 @@ export function useAudioSettings() {
         
         // Update volume level if available
         if (typeof message.level === 'number') {
-          console.log('Received volume level:', message.level);
           setVolume(message.level);
         }
         

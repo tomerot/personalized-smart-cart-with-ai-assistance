@@ -84,7 +84,7 @@ class VoiceControllerService {
         this.ws = new WebSocket(WS_CONFIG.URL);
 
         this.ws.onopen = () => {
-          console.log('✓ Connected to Voice Assistant Controller');
+          console.log('Connected to Voice Assistant Controller');
           this.connected = true;
           this.isConnecting = false;
           this.reconnectAttempts = 0; // Reset counter on successful connection
