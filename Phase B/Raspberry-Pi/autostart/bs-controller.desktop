@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Barcode Scanner Controller
+Exec=/home/sysadmin/smart-cart/Controllers/bs_controller/venv/bin/python /home/sysadmin/smart-cart/Controllers/bs_controller/bs_controller.py
+Path=/home/sysadmin/smart-cart/Controllers/bs_controller
+X-GNOME-Autostart-enabled=true
+

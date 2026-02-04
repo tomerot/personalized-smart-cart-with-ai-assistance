@@ -35,6 +35,9 @@ echo "[2/8] Cloning repository..."
 git clone $REPO_URL $INSTALL_PATH
 cd $INSTALL_PATH
 
+# Install unclutter (hides mouse cursor)
+sudo apt-get install -y unclutter
+
 # Step 3: Create virtual environments
 echo ""
 echo "[3/8] Creating virtual environment for va_controller..."
@@ -66,16 +69,16 @@ EOF
 
 echo "Environment files created."
 
-# Step 6: Install systemd services
+# Step 6: Install systemd services (kiosk server + log cleanup)
 echo ""
 echo "[6/8] Installing systemd services..."
 sudo cp $INSTALL_PATH/setup/systemd/*.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable va-controller bs-controller kiosk-server cleanup-logs
+sudo systemctl enable kiosk-server cleanup-logs
 
-# Step 7: Setup autostart
+# Step 7: Setup autostart (controllers + Chromium kiosk)
 echo ""
-echo "[7/8] Setting up Chromium autostart..."
+echo "[7/8] Setting up autostart..."
 mkdir -p ~/.config/autostart
 cp $INSTALL_PATH/setup/autostart/*.desktop ~/.config/autostart/
 
