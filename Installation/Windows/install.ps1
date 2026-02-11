@@ -27,9 +27,12 @@ $envContent = @"
 VAPI_API_KEY=$VAPI_API_KEY
 VAPI_ASSISTANT_ID=$VAPI_ASSISTANT_ID
 LOG_FILE_PATH=./logs
+
 "@
 
-$envContent | Out-File -FilePath "$AppDir\VA Controller\.env" -Encoding UTF8 -NoNewline
+# Use UTF8 without BOM (Python's dotenv expects this)
+$utf8NoBom = New-Object System.Text.UTF8Encoding $false
+[System.IO.File]::WriteAllText("$AppDir\VA Controller\.env", $envContent, $utf8NoBom)
 Write-Host "Environment file created."
 
 # Step 3: Run the application
@@ -57,10 +60,12 @@ Write-Host "  Press Ctrl+C to stop"
 Write-Host "======================================"
 Write-Host ""
 
-Set-Location "$AppDir\VA Controller"
-& ".\venv\Scripts\python.exe" va_controller.py
-
-# Cleanup when stopped
-Stop-Process -Id $kioskProcess.Id -ErrorAction SilentlyContinue
-Write-Host ""
-Write-Host "Application stopped."
+try {
+    Set-Location "$AppDir\VA Controller"
+    & ".\venv\Scripts\python.exe" va_controller.py
+} finally {
+    # Cleanup when stopped (runs even if Ctrl+C is pressed)
+    Stop-Process -Id $kioskProcess.Id -ErrorAction SilentlyContinue
+    Write-Host ""
+    Write-Host "Application stopped."
+}
