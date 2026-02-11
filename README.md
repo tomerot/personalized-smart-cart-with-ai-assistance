@@ -43,7 +43,7 @@ you many manually enter the following example products (by barcode) into the car
 | Sesame Kabukis | 7290117906477 | Sesame |
 | Za'atar | 7290000134826 | Sesame |
 | Mana-Hama | 7290000073767 | Soy |
-| Milk Chocolate Bar | 729000170053 | Dairy, Soy |
+| Milk Chocolate Bar | 7290000170053 | Dairy, Soy |
 | Bamba | 7290000066318 | Peanuts |
 
 To test the alert mechanism, first ask the assistant to monitor products containing the allergens you wish to avoid, and only then add the product to the cart.
