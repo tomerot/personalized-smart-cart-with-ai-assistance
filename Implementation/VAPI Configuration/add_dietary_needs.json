@@ -1,0 +1,29 @@
+{
+  "type": "function",
+  "function": {
+    "name": "add_dietary_needs",
+    "description": "Used to save new dietary needs of the client to the database.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "phone": {
+          "description": "The client's phone number.",
+          "type": "string",
+          "default": ""
+        },
+        "dietary_needs": {
+          "description": "Array of the dietary needs the client now introduced he has and wants to receive alerts on.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": ""
+        }
+      },
+      "required": [
+        "phone",
+        "dietary_needs"
+      ]
+    }
+  }
+}

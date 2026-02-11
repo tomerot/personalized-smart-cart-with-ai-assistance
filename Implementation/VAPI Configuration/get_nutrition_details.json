@@ -1,0 +1,20 @@
+{
+  "type": "function",
+  "function": {
+    "name": "get_nutrition_details",
+    "description": "Used to search nutrition details for the product the client last interacted with.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "barcode": {
+          "description": "The ID of the product the client last interacted with.",
+          "type": "string",
+          "default": ""
+        }
+      },
+      "required": [
+        "barcode"
+      ]
+    }
+  }
+}

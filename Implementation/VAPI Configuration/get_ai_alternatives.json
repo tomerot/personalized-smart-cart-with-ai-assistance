@@ -1,0 +1,44 @@
+{
+  "type": "function",
+  "function": {
+    "name": "get_ai_alternatives",
+    "description": "Used to search alternatives for the most recent product the client interacted with.\nReturns alternative products along with a short explanation that describes why they were chosen, or simply states that no suitable alternatives were found.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "barcode": {
+          "description": "The ID of the most recent product the client interacted with.",
+          "type": "string",
+          "default": ""
+        },
+        "allergies": {
+          "description": "All client allergies. if no allergies, should be empty array.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": ""
+        },
+        "requirement": {
+          "description": "A short text describing exactly what the client wants from the alternative products.",
+          "type": "string",
+          "default": ""
+        },
+        "dietary_needs": {
+          "description": "A list of the client's dietary needs. should be empty if none.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": ""
+        }
+      },
+      "required": [
+        "barcode",
+        "allergies",
+        "dietary_needs",
+        "requirement"
+      ]
+    }
+  }
+}

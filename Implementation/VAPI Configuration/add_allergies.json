@@ -1,0 +1,29 @@
+{
+  "type": "function",
+  "function": {
+    "name": "add_allergies",
+    "description": "Used to save new allergies of the client to the database.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "phone": {
+          "description": "The client's phone number.",
+          "type": "string",
+          "default": ""
+        },
+        "allergies": {
+          "description": "Array of allergies the client now introduced he has.\nFor example, If the client requested alerts on tree nuts and dairy, this array should be applied: [\"tree-nuts\", \"dairy\"].",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": ""
+        }
+      },
+      "required": [
+        "phone",
+        "allergies"
+      ]
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "type": "function",
+  "function": {
+    "name": "remove_allergies",
+    "description": "Used to remove allergies of the client from the database.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "phone": {
+          "description": "The client's phone number.",
+          "type": "string",
+          "default": ""
+        },
+        "allergies": {
+          "description": "Array of the allergies the client now said he does not want to get alerts on.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": ""
+        }
+      },
+      "required": [
+        "phone",
+        "allergies"
+      ]
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "type": "endCall",
+  "function": {
+    "name": "end_call",
+    "description": "Used to end the call when client asked something not relevant, to prevent spamming.",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    }
+  }
+}
