@@ -39,6 +39,7 @@ To explore the voice assistant capabilities - including allergen alerts, alterna
 you many manually enter the following example products (by barcode) into the cart:
 
 | Product | Barcode Number | Allergens |
+|---------|----------------|-----------|
 | Sesame Kabukis | 7290117906477 | Sesame |
 | Za'atar | 7290000134826 | Sesame |
 | Mana-Hama | 7290000073767 | Soy |
